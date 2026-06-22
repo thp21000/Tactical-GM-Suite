@@ -5,7 +5,11 @@ import type {
   InitiativeParticipant,
   InitiativeParticipantInput,
 } from "../initiativeTypes";
-import { createEmptyEncounter, createParticipant, touchEncounter } from "../services/initiativeParticipants";
+import {
+  createEmptyEncounter,
+  createParticipant,
+  touchEncounter,
+} from "../services/initiativeParticipants";
 import {
   readInitiativeState,
   resetInitiativeState,
@@ -13,6 +17,21 @@ import {
   writeInitiativeState,
 } from "../services/initiativeStorage";
 import { sortParticipantsByInitiative } from "../services/initiativeSorting";
+
+function canTakeTurn(participant: InitiativeParticipant): boolean {
+  return participant.isActive && !participant.isDefeated;
+}
+
+function clampTurnIndex(
+  participants: InitiativeParticipant[],
+  currentTurnIndex: number,
+): number {
+  if (participants.length === 0) {
+    return 0;
+  }
+
+  return Math.min(currentTurnIndex, participants.length - 1);
+}
 
 function getNextActiveIndex(
   participants: InitiativeParticipant[],
@@ -25,7 +44,7 @@ function getNextActiveIndex(
   for (let offset = 1; offset <= participants.length; offset += 1) {
     const index = (startIndex + offset) % participants.length;
 
-    if (participants[index]?.isActive) {
+    if (participants[index] && canTakeTurn(participants[index])) {
       return index;
     }
   }
@@ -45,7 +64,7 @@ function getPreviousActiveIndex(
     const index =
       (startIndex - offset + participants.length) % participants.length;
 
-    if (participants[index]?.isActive) {
+    if (participants[index] && canTakeTurn(participants[index])) {
       return index;
     }
   }
@@ -170,21 +189,56 @@ export function useInitiativeState(isObrReady: boolean) {
     });
   }, []);
 
-  const toggleDefeated = useCallback((participantId: string) => {
-    setEncounter((current) =>
-      touchEncounter({
+  const toggleActive = useCallback((participantId: string) => {
+    setEncounter((current) => {
+      const participants = current.participants.map((participant) =>
+        participant.id === participantId
+          ? {
+              ...participant,
+              isActive: !participant.isActive,
+              updatedAt: new Date().toISOString(),
+            }
+          : participant,
+      );
+      const clampedIndex = clampTurnIndex(participants, current.currentTurnIndex);
+      const currentParticipant = participants[clampedIndex];
+      const currentTurnIndex =
+        currentParticipant && canTakeTurn(currentParticipant)
+          ? clampedIndex
+          : getNextActiveIndex(participants, clampedIndex);
+
+      return touchEncounter({
         ...current,
-        participants: current.participants.map((participant) =>
-          participant.id === participantId
-            ? {
-                ...participant,
-                isDefeated: !participant.isDefeated,
-                updatedAt: new Date().toISOString(),
-              }
-            : participant,
-        ),
-      }),
-    );
+        currentTurnIndex,
+        participants,
+      });
+    });
+  }, []);
+
+  const toggleDefeated = useCallback((participantId: string) => {
+    setEncounter((current) => {
+      const participants = current.participants.map((participant) =>
+        participant.id === participantId
+          ? {
+              ...participant,
+              isDefeated: !participant.isDefeated,
+              updatedAt: new Date().toISOString(),
+            }
+          : participant,
+      );
+      const clampedIndex = clampTurnIndex(participants, current.currentTurnIndex);
+      const currentParticipant = participants[clampedIndex];
+      const currentTurnIndex =
+        currentParticipant && canTakeTurn(currentParticipant)
+          ? clampedIndex
+          : getNextActiveIndex(participants, clampedIndex);
+
+      return touchEncounter({
+        ...current,
+        currentTurnIndex,
+        participants,
+      });
+    });
   }, []);
 
   const toggleHidden = useCallback((participantId: string) => {
@@ -205,13 +259,16 @@ export function useInitiativeState(isObrReady: boolean) {
   }, []);
 
   const sortParticipants = useCallback(() => {
-    setEncounter((current) =>
-      touchEncounter({
+    setEncounter((current) => {
+      const participants = sortParticipantsByInitiative(current.participants);
+      const firstTurnIndex = participants.findIndex(canTakeTurn);
+
+      return touchEncounter({
         ...current,
-        participants: sortParticipantsByInitiative(current.participants),
-        currentTurnIndex: 0,
-      }),
-    );
+        participants,
+        currentTurnIndex: firstTurnIndex >= 0 ? firstTurnIndex : 0,
+      });
+    });
   }, []);
 
   const goToNextTurn = useCallback(() => {
@@ -264,6 +321,7 @@ export function useInitiativeState(isObrReady: boolean) {
     removeParticipant,
     resetEncounter,
     sortParticipants,
+    toggleActive,
     toggleDefeated,
     toggleHidden,
     updateParticipant,

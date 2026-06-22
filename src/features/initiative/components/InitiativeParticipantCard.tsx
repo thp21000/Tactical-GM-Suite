@@ -11,6 +11,7 @@ type InitiativeParticipantCardProps = {
   isCurrentTurn: boolean;
   participant: InitiativeParticipant;
   onRemove: (participantId: string) => void;
+  onToggleActive: (participantId: string) => void;
   onToggleDefeated: (participantId: string) => void;
   onToggleHidden: (participantId: string) => void;
   onUpdate: (participantId: string, input: InitiativeParticipantInput) => void;
@@ -19,6 +20,7 @@ type InitiativeParticipantCardProps = {
 export function InitiativeParticipantCard({
   isCurrentTurn,
   onRemove,
+  onToggleActive,
   onToggleDefeated,
   onToggleHidden,
   onUpdate,
@@ -53,6 +55,7 @@ export function InitiativeParticipantCard({
 
       <div className="initiative-badges">
         {isCurrentTurn ? <Badge tone="warning">tour actif</Badge> : null}
+        {!participant.isActive ? <Badge>inactif</Badge> : null}
         {participant.isDefeated ? <Badge tone="danger">vaincu</Badge> : null}
         {participant.isHiddenFromPlayers ? <Badge>masqué</Badge> : null}
         {participant.conditions.map((condition) => (
@@ -66,6 +69,9 @@ export function InitiativeParticipantCard({
 
       <div className="initiative-participant-card__actions">
         <Button onClick={() => setIsEditing(true)}>Modifier</Button>
+        <Button onClick={() => onToggleActive(participant.id)}>
+          {participant.isActive ? "Désactiver" : "Réactiver"}
+        </Button>
         <Button onClick={() => onToggleDefeated(participant.id)}>
           {participant.isDefeated ? "Restaurer" : "Marquer vaincu"}
         </Button>

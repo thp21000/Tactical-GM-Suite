@@ -26,6 +26,7 @@ export function InitiativePage({ obr }: InitiativePageProps) {
     removeParticipant,
     resetEncounter,
     sortParticipants,
+    toggleActive,
     toggleDefeated,
     toggleHidden,
     updateParticipant,
@@ -86,6 +87,7 @@ export function InitiativePage({ obr }: InitiativePageProps) {
                 isCurrentTurn={index === encounter.currentTurnIndex}
                 participant={participant}
                 onRemove={removeParticipant}
+                onToggleActive={toggleActive}
                 onToggleDefeated={toggleDefeated}
                 onToggleHidden={toggleHidden}
                 onUpdate={updateParticipant}
