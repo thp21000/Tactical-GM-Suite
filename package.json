@@ -16,6 +16,8 @@
     "vite": "latest"
   },
   "devDependencies": {
+    "@types/events": "^3.0.3",
+    "@types/node": "^26.0.0",
     "@types/react": "latest",
     "@types/react-dom": "latest"
   }
