@@ -1,0 +1,1 @@
+export const themeTokens = { background: "#111318", panel: "#181b22", panelSecondary: "#20242d", border: "#2f3542", text: "#f3f4f6", textSecondary: "#a5adba", textMuted: "#6b7280", accent: "#d6a84f", success: "#6fbf73", danger: "#d45b5b", warning: "#d6a84f" } as const;

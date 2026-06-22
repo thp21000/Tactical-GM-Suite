@@ -1,15 +1,9 @@
 {
-  "name": "GM Suite for Owlbear Rodeo",
+  "name": "Tactical GM Suite",
   "version": "0.1.0",
   "manifest_version": 1,
-  "description": "A modular GM suite for initiative, range, stats, calendar and loot tools.",
+  "description": "A modular tactical GM suite for Owlbear Rodeo.",
   "author": "Quentin",
   "icon": "/icon.svg",
-  "action": {
-    "title": "GM Suite",
-    "icon": "/icon.svg",
-    "popover": "/",
-    "width": 520,
-    "height": 720
-  }
+  "action": { "title": "Tactical GM Suite", "icon": "/icon.svg", "popover": "/", "width": 560, "height": 720 }
 }
