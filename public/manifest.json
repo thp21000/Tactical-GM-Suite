@@ -4,6 +4,12 @@
   "manifest_version": 1,
   "description": "A modular tactical GM suite for Owlbear Rodeo.",
   "author": "Quentin",
-  "icon": "/icon.svg",
-  "action": { "title": "Tactical GM Suite", "icon": "/icon.svg", "popover": "/", "width": 560, "height": 720 }
+  "icon": "https://thp21000.github.io/Tactical-GM-Suite/icon.svg",
+  "action": {
+    "title": "Tactical GM Suite",
+    "icon": "https://thp21000.github.io/Tactical-GM-Suite/icon.svg",
+    "popover": "https://thp21000.github.io/Tactical-GM-Suite/",
+    "width": 560,
+    "height": 720
+  }
 }
