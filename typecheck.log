@@ -1,0 +1,769 @@
+
+> typecheck
+> tsc -b --noEmit --pretty false docs index.html node_modules package-lock.json package.json public src tsconfig.json tsconfig.tsbuildinfo vite.config.ts
+
+error TS5083: Cannot read file '/workspaces/Tactical-GM-Suite/docs/tsconfig.json'.
+error TS5083: Cannot read file '/workspaces/Tactical-GM-Suite/index.html/tsconfig.json'.
+error TS5083: Cannot read file '/workspaces/Tactical-GM-Suite/node_modules/tsconfig.json'.
+node_modules/@owlbear-rodeo/sdk/lib/messages/MessageBus.d.ts(1,30): error TS7016: Could not find a declaration file for module 'events'. '/workspaces/Tactical-GM-Suite/node_modules/events/events.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/events` if it exists or add a new declaration (.d.ts) file containing `declare module 'events';`
+node_modules/lucide-react/dist/lucide-react.d.ts(1,24): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+node_modules/lucide-react/dist/lucide-react.d.ts(2,79): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+node_modules/rolldown/dist/shared/define-config-3BX_X2Am.d.mts(1304,11): error TS2550: Property 'asyncDispose' does not exist on type 'SymbolConstructor'. Do you need to change your target library? Try changing the 'lib' compiler option to 'esnext' or later.
+node_modules/vite/dist/node/index.d.ts(1,23): error TS2688: Cannot find type definition file for 'node'.
+node_modules/vite/dist/node/index.d.ts(11,23): error TS2591: Cannot find name 'node:http'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(12,94): error TS2591: Cannot find name 'node:http'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(13,35): error TS2591: Cannot find name 'node:http2'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(14,21): error TS2591: Cannot find name 'node:fs'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(15,30): error TS2591: Cannot find name 'node:events'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(16,76): error TS2591: Cannot find name 'node:https'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(17,22): error TS2591: Cannot find name 'node:net'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(18,47): error TS2591: Cannot find name 'node:stream'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(21,38): error TS2591: Cannot find name 'node:tls'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(22,32): error TS2591: Cannot find name 'node:url'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(23,29): error TS2591: Cannot find name 'node:zlib'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(286,35): error TS2503: Cannot find namespace 'NodeJS'.
+node_modules/vite/dist/node/index.d.ts(348,9): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(464,105): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(465,122): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1307,40): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1337,72): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1342,64): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1345,74): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1350,66): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1353,73): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1358,65): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1361,64): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1366,56): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1369,67): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1374,59): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1384,18): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1384,41): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1388,24): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1388,47): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1392,39): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1392,48): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1416,25): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1447,20): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1447,29): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1506,79): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(2042,61): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(3806,89): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+src/App.tsx(1,26): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/App.tsx(3,31): error TS6142: Module './features/dashboard/DashboardPage' was resolved to '/workspaces/Tactical-GM-Suite/src/features/dashboard/DashboardPage.tsx', but '--jsx' is not set.
+src/App.tsx(4,27): error TS6142: Module './features/debug/DebugPage' was resolved to '/workspaces/Tactical-GM-Suite/src/features/debug/DebugPage.tsx', but '--jsx' is not set.
+src/App.tsx(5,29): error TS6142: Module './features/modules/ModulesPage' was resolved to '/workspaces/Tactical-GM-Suite/src/features/modules/ModulesPage.tsx', but '--jsx' is not set.
+src/App.tsx(6,30): error TS6142: Module './features/settings/SettingsPage' was resolved to '/workspaces/Tactical-GM-Suite/src/features/settings/SettingsPage.tsx', but '--jsx' is not set.
+src/App.tsx(7,26): error TS6142: Module './shared/components/AppShell' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/AppShell.tsx', but '--jsx' is not set.
+src/App.tsx(21,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(27,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(29,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(32,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(37,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(37,6): error TS2741: Property 'children' is missing in type '{ route: any; onRouteChange: any; obr: ObrReadyState; }' but required in type 'AppShellProps'.
+src/features/dashboard/DashboardPage.tsx(7,23): error TS6142: Module '../../shared/components/Badge' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Badge.tsx', but '--jsx' is not set.
+src/features/dashboard/DashboardPage.tsx(8,23): error TS6142: Module '../../shared/components/Panel' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Panel.tsx', but '--jsx' is not set.
+src/features/dashboard/DashboardPage.tsx(19,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(19,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(20,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(20,8): error TS2741: Property 'children' is missing in type '{}' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(21,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(21,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(22,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(22,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(23,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(23,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(23,59): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(24,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(24,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(24,34): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(25,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(25,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(25,51): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(26,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(27,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(27,12): error TS2741: Property 'children' is missing in type '{ tone: "warning"; }' but required in type 'BadgeProps'.
+src/features/dashboard/DashboardPage.tsx(28,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(31,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(31,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(32,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(32,10): error TS2741: Property 'children' is missing in type '{}' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(33,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(33,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(33,70): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(34,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(34,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(34,20): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(36,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(36,10): error TS2741: Property 'children' is missing in type '{}' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(37,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(37,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(37,54): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(38,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(38,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(38,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(40,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(40,10): error TS2741: Property 'children' is missing in type '{}' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(41,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(41,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(41,54): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(42,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(42,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(42,32): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(44,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(46,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(46,8): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(47,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(47,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(49,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(49,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(50,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(50,16): error TS2741: Property 'children' is missing in type '{}' but required in type 'BadgeProps'.
+src/features/dashboard/DashboardPage.tsx(51,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(51,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(51,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(52,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(52,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(52,38): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(53,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(55,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(57,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/debug/DebugPage.tsx(5,23): error TS6142: Module '../../shared/components/Panel' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Panel.tsx', but '--jsx' is not set.
+src/features/debug/DebugPage.tsx(24,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/debug/DebugPage.tsx(24,6): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/debug/DebugPage.tsx(25,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/debug/DebugPage.tsx(25,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/debug/DebugPage.tsx(25,48): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(2,23): error TS6142: Module '../../shared/components/Badge' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Badge.tsx', but '--jsx' is not set.
+src/features/modules/ModuleCard.tsx(3,24): error TS6142: Module '../../shared/components/Toggle' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Toggle.tsx', but '--jsx' is not set.
+src/features/modules/ModuleCard.tsx(21,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(21,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(22,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(22,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(23,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(23,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(24,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(24,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(24,28): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(25,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(25,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(25,35): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(26,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(27,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(27,10): error TS2741: Property 'children' is missing in type '{ tone: "default" | "warning" | "success" | "danger"; }' but required in type 'BadgeProps'.
+src/features/modules/ModuleCard.tsx(28,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(30,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(30,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(30,30): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(32,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(32,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(33,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(33,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(35,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(37,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(43,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(43,12): error TS2741: Property 'children' is missing in type '{ tone: "success"; }' but required in type 'BadgeProps'.
+src/features/modules/ModuleCard.tsx(45,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(46,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModulesPage.tsx(3,23): error TS6142: Module '../../shared/components/Panel' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Panel.tsx', but '--jsx' is not set.
+src/features/modules/ModulesPage.tsx(4,28): error TS6142: Module './ModuleCard' was resolved to '/workspaces/Tactical-GM-Suite/src/features/modules/ModuleCard.tsx', but '--jsx' is not set.
+src/features/modules/ModulesPage.tsx(13,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModulesPage.tsx(13,6): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/modules/ModulesPage.tsx(14,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModulesPage.tsx(14,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModulesPage.tsx(16,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModulesPage.tsx(17,13): error TS2322: Type '{ key: string; module: GmSuiteModule; enabled: boolean; onToggle: (enabled: boolean) => void; }' is not assignable to type 'ModuleCardProps'.
+  Property 'key' does not exist on type 'ModuleCardProps'.
+src/features/modules/ModulesPage.tsx(23,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(1,24): error TS6142: Module '../../shared/components/Button' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Button.tsx', but '--jsx' is not set.
+src/features/settings/SettingsPage.tsx(2,23): error TS6142: Module '../../shared/components/Panel' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Panel.tsx', but '--jsx' is not set.
+src/features/settings/SettingsPage.tsx(10,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(10,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(11,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(11,8): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/settings/SettingsPage.tsx(12,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(12,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(13,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(13,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(14,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(14,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(14,22): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(15,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(15,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(15,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(16,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(17,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(17,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(18,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(18,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(18,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(19,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(19,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(19,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(20,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(21,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(22,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(25,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(25,8): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/settings/SettingsPage.tsx(26,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(26,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(29,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(31,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/main.tsx(1,19): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/main.tsx(2,22): error TS7016: Could not find a declaration file for module 'react-dom/client'. '/workspaces/Tactical-GM-Suite/node_modules/react-dom/client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-dom` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-dom/client';`
+src/main.tsx(3,17): error TS6142: Module './App' was resolved to '/workspaces/Tactical-GM-Suite/src/App.tsx', but '--jsx' is not set.
+src/main.tsx(6,76): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/main.tsx(6,94): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(1,32): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/AppShell.tsx(4,25): error TS6142: Module './Sidebar' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Sidebar.tsx', but '--jsx' is not set.
+src/shared/components/AppShell.tsx(5,24): error TS6142: Module './TopBar' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/TopBar.tsx', but '--jsx' is not set.
+src/shared/components/AppShell.tsx(16,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(16,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(17,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(18,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(18,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(19,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(20,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(20,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(20,45): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(21,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(22,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Badge.tsx(2,32): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/Badge.tsx(10,10): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Badge.tsx(10,10): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Badge.tsx(10,70): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Button.tsx(2,54): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/Button.tsx(10,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Button.tsx(10,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Button.tsx(12,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(8,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(8,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/EmptyState.tsx(9,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(9,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/EmptyState.tsx(9,22): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(10,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(10,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/EmptyState.tsx(10,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(11,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(1,32): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/Panel.tsx(10,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(10,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Panel.tsx(11,16): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(11,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Panel.tsx(11,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(13,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(19,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(19,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Sidebar.tsx(21,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(21,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Sidebar.tsx(27,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Sidebar.tsx(28,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(28,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Sidebar.tsx(28,24): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(29,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(31,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Toggle.tsx(12,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Toggle.tsx(12,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Toggle.tsx(20,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Toggle.tsx(20,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Toggle.tsx(21,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(3,23): error TS6142: Module './Badge' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Badge.tsx', but '--jsx' is not set.
+src/shared/components/TopBar.tsx(11,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(11,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(12,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(12,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(13,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(14,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(14,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(15,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(15,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(15,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(16,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(16,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(16,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(17,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(18,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(19,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(19,8): error TS2741: Property 'children' is missing in type '{ tone: "warning" | "success"; }' but required in type 'BadgeProps'.
+src/shared/components/TopBar.tsx(20,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/hooks/useLocalStorage.ts(1,39): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/hooks/useModulePreferences.ts(1,50): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/hooks/useModulePreferences.ts(8,98): error TS7006: Parameter 'current' implicitly has an 'any' type.
+src/shared/hooks/useObrReady.ts(1,37): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+node_modules/@owlbear-rodeo/sdk/lib/messages/MessageBus.d.ts(1,30): error TS7016: Could not find a declaration file for module 'events'. '/workspaces/Tactical-GM-Suite/node_modules/events/events.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/events` if it exists or add a new declaration (.d.ts) file containing `declare module 'events';`
+node_modules/lucide-react/dist/lucide-react.d.ts(1,24): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+node_modules/lucide-react/dist/lucide-react.d.ts(2,79): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+node_modules/rolldown/dist/shared/define-config-3BX_X2Am.d.mts(1304,11): error TS2550: Property 'asyncDispose' does not exist on type 'SymbolConstructor'. Do you need to change your target library? Try changing the 'lib' compiler option to 'esnext' or later.
+node_modules/vite/dist/node/index.d.ts(1,23): error TS2688: Cannot find type definition file for 'node'.
+node_modules/vite/dist/node/index.d.ts(11,23): error TS2591: Cannot find name 'node:http'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(12,94): error TS2591: Cannot find name 'node:http'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(13,35): error TS2591: Cannot find name 'node:http2'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(14,21): error TS2591: Cannot find name 'node:fs'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(15,30): error TS2591: Cannot find name 'node:events'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(16,76): error TS2591: Cannot find name 'node:https'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(17,22): error TS2591: Cannot find name 'node:net'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(18,47): error TS2591: Cannot find name 'node:stream'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(21,38): error TS2591: Cannot find name 'node:tls'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(22,32): error TS2591: Cannot find name 'node:url'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(23,29): error TS2591: Cannot find name 'node:zlib'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(286,35): error TS2503: Cannot find namespace 'NodeJS'.
+node_modules/vite/dist/node/index.d.ts(348,9): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(464,105): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(465,122): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1307,40): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1337,72): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1342,64): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1345,74): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1350,66): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1353,73): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1358,65): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1361,64): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1366,56): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1369,67): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1374,59): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1384,18): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1384,41): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1388,24): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1388,47): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1392,39): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1392,48): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1416,25): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1447,20): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1447,29): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(1506,79): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(2042,61): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/vite/dist/node/index.d.ts(3806,89): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+src/App.tsx(1,26): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/App.tsx(3,31): error TS6142: Module './features/dashboard/DashboardPage' was resolved to '/workspaces/Tactical-GM-Suite/src/features/dashboard/DashboardPage.tsx', but '--jsx' is not set.
+src/App.tsx(4,27): error TS6142: Module './features/debug/DebugPage' was resolved to '/workspaces/Tactical-GM-Suite/src/features/debug/DebugPage.tsx', but '--jsx' is not set.
+src/App.tsx(5,29): error TS6142: Module './features/modules/ModulesPage' was resolved to '/workspaces/Tactical-GM-Suite/src/features/modules/ModulesPage.tsx', but '--jsx' is not set.
+src/App.tsx(6,30): error TS6142: Module './features/settings/SettingsPage' was resolved to '/workspaces/Tactical-GM-Suite/src/features/settings/SettingsPage.tsx', but '--jsx' is not set.
+src/App.tsx(7,26): error TS6142: Module './shared/components/AppShell' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/AppShell.tsx', but '--jsx' is not set.
+src/App.tsx(21,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(27,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(29,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(32,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(37,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(37,6): error TS2741: Property 'children' is missing in type '{ route: any; onRouteChange: any; obr: ObrReadyState; }' but required in type 'AppShellProps'.
+src/features/dashboard/DashboardPage.tsx(7,23): error TS6142: Module '../../shared/components/Badge' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Badge.tsx', but '--jsx' is not set.
+src/features/dashboard/DashboardPage.tsx(8,23): error TS6142: Module '../../shared/components/Panel' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Panel.tsx', but '--jsx' is not set.
+src/features/dashboard/DashboardPage.tsx(19,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(19,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(20,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(20,8): error TS2741: Property 'children' is missing in type '{}' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(21,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(21,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(22,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(22,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(23,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(23,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(23,59): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(24,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(24,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(24,34): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(25,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(25,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(25,51): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(26,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(27,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(27,12): error TS2741: Property 'children' is missing in type '{ tone: "warning"; }' but required in type 'BadgeProps'.
+src/features/dashboard/DashboardPage.tsx(28,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(31,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(31,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(32,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(32,10): error TS2741: Property 'children' is missing in type '{}' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(33,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(33,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(33,70): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(34,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(34,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(34,20): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(36,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(36,10): error TS2741: Property 'children' is missing in type '{}' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(37,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(37,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(37,54): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(38,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(38,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(38,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(40,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(40,10): error TS2741: Property 'children' is missing in type '{}' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(41,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(41,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(41,54): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(42,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(42,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(42,32): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(44,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(46,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(46,8): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/dashboard/DashboardPage.tsx(47,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(47,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(49,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(49,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(50,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(50,16): error TS2741: Property 'children' is missing in type '{}' but required in type 'BadgeProps'.
+src/features/dashboard/DashboardPage.tsx(51,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(51,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(51,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(52,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(52,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/dashboard/DashboardPage.tsx(52,38): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(53,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(55,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(57,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/debug/DebugPage.tsx(5,23): error TS6142: Module '../../shared/components/Panel' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Panel.tsx', but '--jsx' is not set.
+src/features/debug/DebugPage.tsx(24,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/debug/DebugPage.tsx(24,6): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/debug/DebugPage.tsx(25,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/debug/DebugPage.tsx(25,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/debug/DebugPage.tsx(25,48): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(2,23): error TS6142: Module '../../shared/components/Badge' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Badge.tsx', but '--jsx' is not set.
+src/features/modules/ModuleCard.tsx(3,24): error TS6142: Module '../../shared/components/Toggle' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Toggle.tsx', but '--jsx' is not set.
+src/features/modules/ModuleCard.tsx(21,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(21,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(22,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(22,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(23,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(23,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(24,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(24,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(24,28): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(25,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(25,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(25,35): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(26,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(27,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(27,10): error TS2741: Property 'children' is missing in type '{ tone: "default" | "warning" | "success" | "danger"; }' but required in type 'BadgeProps'.
+src/features/modules/ModuleCard.tsx(28,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(30,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(30,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(30,30): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(32,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(32,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(33,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(33,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(35,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(37,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(43,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModuleCard.tsx(43,12): error TS2741: Property 'children' is missing in type '{ tone: "success"; }' but required in type 'BadgeProps'.
+src/features/modules/ModuleCard.tsx(45,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(46,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModulesPage.tsx(3,23): error TS6142: Module '../../shared/components/Panel' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Panel.tsx', but '--jsx' is not set.
+src/features/modules/ModulesPage.tsx(4,28): error TS6142: Module './ModuleCard' was resolved to '/workspaces/Tactical-GM-Suite/src/features/modules/ModuleCard.tsx', but '--jsx' is not set.
+src/features/modules/ModulesPage.tsx(13,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModulesPage.tsx(13,6): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/modules/ModulesPage.tsx(14,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModulesPage.tsx(14,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModulesPage.tsx(16,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/modules/ModulesPage.tsx(17,13): error TS2322: Type '{ key: string; module: GmSuiteModule; enabled: boolean; onToggle: (enabled: boolean) => void; }' is not assignable to type 'ModuleCardProps'.
+  Property 'key' does not exist on type 'ModuleCardProps'.
+src/features/modules/ModulesPage.tsx(23,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(1,24): error TS6142: Module '../../shared/components/Button' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Button.tsx', but '--jsx' is not set.
+src/features/settings/SettingsPage.tsx(2,23): error TS6142: Module '../../shared/components/Panel' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Panel.tsx', but '--jsx' is not set.
+src/features/settings/SettingsPage.tsx(10,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(10,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(11,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(11,8): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/settings/SettingsPage.tsx(12,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(12,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(13,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(13,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(14,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(14,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(14,22): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(15,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(15,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(15,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(16,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(17,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(17,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(18,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(18,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(18,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(19,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(19,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(19,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(20,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(21,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(22,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(25,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(25,8): error TS2741: Property 'children' is missing in type '{ title: string; }' but required in type 'PanelProps'.
+src/features/settings/SettingsPage.tsx(26,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(26,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/features/settings/SettingsPage.tsx(29,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(31,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/main.tsx(1,19): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/main.tsx(2,22): error TS7016: Could not find a declaration file for module 'react-dom/client'. '/workspaces/Tactical-GM-Suite/node_modules/react-dom/client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-dom` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-dom/client';`
+src/main.tsx(3,17): error TS6142: Module './App' was resolved to '/workspaces/Tactical-GM-Suite/src/App.tsx', but '--jsx' is not set.
+src/main.tsx(6,76): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/main.tsx(6,94): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(1,32): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/AppShell.tsx(4,25): error TS6142: Module './Sidebar' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Sidebar.tsx', but '--jsx' is not set.
+src/shared/components/AppShell.tsx(5,24): error TS6142: Module './TopBar' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/TopBar.tsx', but '--jsx' is not set.
+src/shared/components/AppShell.tsx(16,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(16,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(17,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(18,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(18,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(19,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(20,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(20,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/AppShell.tsx(20,45): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(21,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(22,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Badge.tsx(2,32): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/Badge.tsx(10,10): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Badge.tsx(10,10): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Badge.tsx(10,70): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Button.tsx(2,54): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/Button.tsx(10,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Button.tsx(10,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Button.tsx(12,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(8,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(8,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/EmptyState.tsx(9,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(9,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/EmptyState.tsx(9,22): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(10,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(10,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/EmptyState.tsx(10,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(11,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(1,32): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/Panel.tsx(10,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(10,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Panel.tsx(11,16): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(11,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Panel.tsx(11,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(13,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(19,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(19,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Sidebar.tsx(21,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(21,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Sidebar.tsx(27,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Sidebar.tsx(28,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(28,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Sidebar.tsx(28,24): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(29,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(31,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Toggle.tsx(12,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Toggle.tsx(12,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Toggle.tsx(20,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Toggle.tsx(20,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/Toggle.tsx(21,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(3,23): error TS6142: Module './Badge' was resolved to '/workspaces/Tactical-GM-Suite/src/shared/components/Badge.tsx', but '--jsx' is not set.
+src/shared/components/TopBar.tsx(11,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(11,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(12,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(12,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(13,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(14,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(14,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(15,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(15,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(15,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(16,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(16,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(16,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(17,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(18,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(19,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/shared/components/TopBar.tsx(19,8): error TS2741: Property 'children' is missing in type '{ tone: "warning" | "success"; }' but required in type 'BadgeProps'.
+src/shared/components/TopBar.tsx(20,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/hooks/useLocalStorage.ts(1,39): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/hooks/useModulePreferences.ts(1,50): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/hooks/useModulePreferences.ts(8,98): error TS7006: Parameter 'current' implicitly has an 'any' type.
+src/shared/hooks/useObrReady.ts(1,37): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+error TS5083: Cannot read file '/workspaces/Tactical-GM-Suite/public/tsconfig.json'.
+error TS5083: Cannot read file '/workspaces/Tactical-GM-Suite/src/tsconfig.json'.
+src/App.tsx(1,26): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/App.tsx(21,11): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/features/dashboard/DashboardPage.tsx(19,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(19,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/features/dashboard/DashboardPage.tsx(21,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(22,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(23,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(23,59): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(24,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(24,34): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(25,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(25,51): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(26,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(28,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(31,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(33,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(33,70): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(34,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(34,20): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(37,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(37,54): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(38,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(38,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(41,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(41,54): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(42,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(42,32): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(44,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(47,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(49,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(51,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(51,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(52,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(52,38): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(53,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(55,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/dashboard/DashboardPage.tsx(57,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/debug/DebugPage.tsx(24,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/features/debug/DebugPage.tsx(25,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/debug/DebugPage.tsx(25,48): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(21,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(21,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/features/modules/ModuleCard.tsx(22,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(23,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(24,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(24,28): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(25,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(25,35): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(26,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(28,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(30,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(30,30): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(32,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(33,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(35,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(45,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModuleCard.tsx(46,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModulesPage.tsx(13,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/features/modules/ModulesPage.tsx(14,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/modules/ModulesPage.tsx(17,13): error TS2322: Type '{ key: string; module: GmSuiteModule; enabled: boolean; onToggle: (enabled: boolean) => void; }' is not assignable to type 'ModuleCardProps'.
+  Property 'key' does not exist on type 'ModuleCardProps'.
+src/features/modules/ModulesPage.tsx(23,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(10,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(10,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/features/settings/SettingsPage.tsx(12,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(13,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(14,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(14,22): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(15,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(15,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(16,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(17,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(18,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(18,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(19,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(19,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(20,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(21,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(26,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(29,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/features/settings/SettingsPage.tsx(31,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/main.tsx(1,19): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/main.tsx(2,22): error TS7016: Could not find a declaration file for module 'react-dom/client'. '/workspaces/Tactical-GM-Suite/node_modules/react-dom/client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-dom` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-dom/client';`
+src/main.tsx(6,76): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/shared/components/AppShell.tsx(1,32): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/AppShell.tsx(16,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(16,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/shared/components/AppShell.tsx(18,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(20,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(20,45): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(21,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/AppShell.tsx(22,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Badge.tsx(2,32): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/Badge.tsx(10,10): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Badge.tsx(10,10): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/shared/components/Badge.tsx(10,70): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Button.tsx(2,54): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/Button.tsx(10,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Button.tsx(10,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/shared/components/Button.tsx(12,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(8,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(8,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/shared/components/EmptyState.tsx(9,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(9,22): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(10,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(10,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/EmptyState.tsx(11,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(1,32): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/components/Panel.tsx(10,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(10,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/shared/components/Panel.tsx(11,16): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(11,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Panel.tsx(13,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(19,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(19,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/shared/components/Sidebar.tsx(21,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(28,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(28,24): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(29,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Sidebar.tsx(31,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Toggle.tsx(12,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Toggle.tsx(12,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/shared/components/Toggle.tsx(20,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/Toggle.tsx(21,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(11,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(11,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/workspaces/Tactical-GM-Suite/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+src/shared/components/TopBar.tsx(12,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(14,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(15,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(15,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(16,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(16,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(17,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(18,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/components/TopBar.tsx(20,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/shared/hooks/useLocalStorage.ts(1,39): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/hooks/useModulePreferences.ts(1,50): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+src/shared/hooks/useModulePreferences.ts(8,98): error TS7006: Parameter 'current' implicitly has an 'any' type.
+src/shared/hooks/useObrReady.ts(1,37): error TS7016: Could not find a declaration file for module 'react'. '/workspaces/Tactical-GM-Suite/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+error TS5083: Cannot read file '/workspaces/Tactical-GM-Suite/tsconfig.tsbuildinfo/tsconfig.json'.
+error TS5083: Cannot read file '/workspaces/Tactical-GM-Suite/vite.config.ts/tsconfig.json'.
