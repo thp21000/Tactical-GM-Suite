@@ -24,7 +24,7 @@ export function DashboardPage({ obr, moduleStates }: DashboardPageProps) {
             <h1>Tactical GM Suite</h1>
             <p>Version 0.1.0 · Core / Dashboard V1</p>
           </div>
-          <Badge tone="warning">Bloc actif : Initiative Tracker</Badge>
+          <Badge tone="warning">Bloc actif : Distance / Déplacement / Portée</Badge>
         </div>
       </Panel>
 

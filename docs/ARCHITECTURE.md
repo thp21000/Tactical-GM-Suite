@@ -39,3 +39,8 @@ Tactical GM Suite est une extension Owlbear Rodeo modulaire destinée aux MJ. El
 ## Bloc 2 — Initiative Tracker V1
 
 Le code spécifique à l'initiative vit dans `src/features/initiative/` avec ses composants, hooks et services dédiés. Le stockage utilise les metadata Owlbear quand la room est prête, puis `localStorage` en fallback hors Owlbear. Les modules Distance, Stats, Calendar et Loot Table restent uniquement déclarés dans le registre tant que leurs blocs ne sont pas développés.
+
+
+## Bloc 3 — Distance / Déplacement / Portée V1
+
+Le code spécifique aux distances et portées vit dans `src/features/range/`. Il mesure et interprète des distances entre items Owlbear sans développer le Stat Tracker, Calendar, Loot Table, ni automatiser les attaques ou dégâts.

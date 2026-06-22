@@ -1,2 +1,2 @@
-export type AppRoute = "dashboard" | "initiative" | "modules" | "settings" | "debug";
+export type AppRoute = "dashboard" | "initiative" | "range" | "modules" | "settings" | "debug";
 export type AppInfo = { name: string; version: string };

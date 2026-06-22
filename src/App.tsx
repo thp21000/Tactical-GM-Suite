@@ -4,6 +4,7 @@ import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { DebugPage } from "./features/debug/DebugPage";
 import { InitiativePage } from "./features/initiative/InitiativePage";
 import { ModulesPage } from "./features/modules/ModulesPage";
+import { RangePage } from "./features/range/RangePage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { AppShell } from "./shared/components/AppShell";
 import { useModulePreferences } from "./shared/hooks/useModulePreferences";
@@ -19,6 +20,8 @@ export default function App() {
     switch (route) {
       case "initiative":
         return <InitiativePage obr={obr} />;
+      case "range":
+        return <RangePage obr={obr} />;
       case "modules":
         return (
           <ModulesPage
