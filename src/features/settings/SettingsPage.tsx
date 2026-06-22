@@ -1,33 +1,48 @@
-import { Button } from "../../shared/components/Button";
+import type { ModuleStateMap } from "../../core/modules/moduleState";
+import type { ObrReadyState } from "../../core/obr/obrReady";
+import { CollapsibleSection } from "../../shared/components/CollapsibleSection";
 import { Panel } from "../../shared/components/Panel";
+import { SettingsAboutSection } from "./components/SettingsAboutSection";
+import { SettingsAppearanceSection } from "./components/SettingsAppearanceSection";
+import { SettingsDebugSection } from "./components/SettingsDebugSection";
+import { SettingsModulesSection } from "./components/SettingsModulesSection";
+import { SettingsStorageSection } from "./components/SettingsStorageSection";
 
 type SettingsPageProps = {
+  obr: ObrReadyState;
+  moduleStates: ModuleStateMap;
+  onToggleModule: (moduleId: string, enabled: boolean) => void;
   onReset: () => void;
 };
 
-export function SettingsPage({ onReset }: SettingsPageProps) {
+export function SettingsPage({ obr, moduleStates, onToggleModule, onReset }: SettingsPageProps) {
   return (
-    <div className="stack">
-      <Panel title="Paramètres locaux">
-        <dl className="settings-list">
-          <div>
-            <dt>Thème</dt>
-            <dd>Sombre</dd>
-          </div>
-          <div>
-            <dt>Langue</dt>
-            <dd>Français</dd>
-          </div>
-        </dl>
-        <Button onClick={onReset}>Réinitialiser les préférences locales</Button>
-      </Panel>
-
-      <Panel title="Modules futurs">
+    <div className="stack settings-page">
+      <Panel title="Paramètres">
         <p className="muted">
-          Calendar et Loot Table apparaissent dans le registre pour préparer
-          l’architecture, mais seront intégrés plus tard.
+          Administration centrale de Tactical GM Suite : apparence, modules, debug, stockage et version.
         </p>
       </Panel>
+
+      <CollapsibleSection title="Apparence / Thème" summary="Neutral Glass" defaultOpen>
+        <SettingsAppearanceSection />
+      </CollapsibleSection>
+
+      <CollapsibleSection title="Modules" summary="Activation et roadmap">
+        <SettingsModulesSection moduleStates={moduleStates} onToggleModule={onToggleModule} />
+      </CollapsibleSection>
+
+      <CollapsibleSection title="Debug" summary="Résumés techniques compacts">
+        <SettingsDebugSection obr={obr} moduleStates={moduleStates} />
+      </CollapsibleSection>
+
+      <CollapsibleSection title="Stockage / Réinitialisation" summary="Préférences locales">
+        <SettingsStorageSection onReset={onReset} />
+      </CollapsibleSection>
+
+      <CollapsibleSection title="À propos / Version" summary="V1 stabilisée">
+        <SettingsAboutSection />
+      </CollapsibleSection>
     </div>
   );
 }

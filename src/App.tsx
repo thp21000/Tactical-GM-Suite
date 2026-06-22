@@ -33,7 +33,14 @@ export default function App() {
           />
         );
       case "settings":
-        return <SettingsPage onReset={resetLocalPreferences} />;
+        return (
+          <SettingsPage
+            obr={obr}
+            moduleStates={moduleStates}
+            onToggleModule={setModuleEnabled}
+            onReset={resetLocalPreferences}
+          />
+        );
       case "debug":
         return <DebugPage obr={obr} moduleStates={moduleStates} />;
       case "dashboard":
