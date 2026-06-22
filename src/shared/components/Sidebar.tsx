@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { Activity, ListOrdered, LayoutDashboard, Menu, Ruler, Settings } from "lucide-react";
+import { useEffect, useRef, useState, type FocusEvent } from "react";
+import { Activity, ListOrdered, LayoutDashboard, Ruler, Settings } from "lucide-react";
 import clsx from "clsx";
 import type { AppRoute } from "../../core/types/coreTypes";
 
@@ -13,48 +13,52 @@ const items = [
 
 type SidebarProps = {
   route: AppRoute;
-  isOpen: boolean;
-  onToggle: () => void;
-  onClose: () => void;
   onRouteChange: (route: AppRoute) => void;
 };
 
-export function Sidebar({ route, isOpen, onToggle, onClose, onRouteChange }: SidebarProps) {
+export function Sidebar({ route, onRouteChange }: SidebarProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isHoverSuppressed, setIsHoverSuppressed] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!isOpen) {
-      return undefined;
-    }
-
-    function handlePointerDown(event: PointerEvent) {
-      if (!sidebarRef.current?.contains(event.target as Node)) {
-        onClose();
-      }
-    }
-
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        onClose();
+        setIsOpen(false);
+        setIsHoverSuppressed(true);
       }
     }
 
-    document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, []);
+
+  function handleBlur(event: FocusEvent<HTMLElement>) {
+    if (!sidebarRef.current?.contains(event.relatedTarget as Node | null)) {
+      setIsOpen(false);
+    }
+  }
 
   return (
-    <nav ref={sidebarRef} className={clsx("sidebar", isOpen && "sidebar--open")} aria-label="Navigation principale">
-      <button className="sidebar__toggle" type="button" onClick={onToggle} aria-expanded={isOpen} aria-label="Ouvrir ou fermer la navigation">
-        <Menu size={18} aria-hidden="true" />
-        <span className="sidebar__toggle-label">Menu</span>
-      </button>
-
+    <nav
+      ref={sidebarRef}
+      className={clsx("sidebar", isOpen && "sidebar--open")}
+      aria-label="Navigation principale"
+      onMouseEnter={() => {
+        if (!isHoverSuppressed) {
+          setIsOpen(true);
+        }
+      }}
+      onMouseLeave={() => {
+        setIsOpen(false);
+        setIsHoverSuppressed(false);
+      }}
+      onFocus={() => setIsOpen(true)}
+      onBlur={handleBlur}
+    >
       <div className="sidebar__items">
         {items.map(({ id, label, Icon }) => (
           <button
@@ -62,13 +66,16 @@ export function Sidebar({ route, isOpen, onToggle, onClose, onRouteChange }: Sid
             className={clsx("nav-item", route === id && "nav-item--active")}
             onClick={() => {
               onRouteChange(id);
-              onClose();
+              setIsOpen(false);
+              setIsHoverSuppressed(true);
             }}
             type="button"
             title={!isOpen ? label : undefined}
             aria-label={label}
           >
-            <Icon size={16} aria-hidden="true" />
+            <span className="nav-item__icon">
+              <Icon size={18} aria-hidden="true" />
+            </span>
             <span className="nav-item__label">{label}</span>
           </button>
         ))}
