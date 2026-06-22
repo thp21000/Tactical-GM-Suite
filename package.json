@@ -1,4 +1,8 @@
 {
+  "name": "tactical-gm-suite",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://thp21000.github.io/Tactical-GM-Suite/",
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",

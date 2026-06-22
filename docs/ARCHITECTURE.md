@@ -91,3 +91,7 @@ Calendar et Loot Table sont reportés à plus tard car ils existent déjà en st
 3. Créer un dossier de feature dédié.
 4. Documenter la frontière du module dans ce fichier.
 5. Confirmer que Calendar et Loot Table restent reportés tant que leur intégration n'est pas explicitement demandée.
+
+## Release V1 — 0.1.0
+
+La version V1 `0.1.0` est une release de stabilisation. Aucun nouveau module ne doit être ajouté avant les tests terrain ou un polish ciblé des modules déjà intégrés.

@@ -6,6 +6,7 @@ import { readJson } from "../../core/storage/localStorage";
 import type { InitiativeEncounterState } from "../initiative/initiativeTypes";
 import type { RangePreferences } from "../range/rangeTypes";
 import type { StatTrackerState } from "../stats/statTypes";
+import { APP_VERSION } from "../../core/constants/version";
 import { Panel } from "../../shared/components/Panel";
 
 type DebugPageProps = {
@@ -28,7 +29,7 @@ export function DebugPage({ obr, moduleStates }: DebugPageProps) {
 
   const summaryRows = [
     ["Extension", EXTENSION_ID],
-    ["Version", "0.2.6"],
+    ["Version", APP_VERSION],
     ["OBR disponible", formatEnabled(obr.isAvailable)],
     ["OBR prêt", formatEnabled(obr.isReady)],
     ["Modules activés", `${enabledModules.length}/${moduleRegistry.length}`],
