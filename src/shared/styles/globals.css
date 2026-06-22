@@ -313,3 +313,128 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+.initiative-page h1 {
+  font-size: 22px;
+  margin: 4px 0;
+}
+
+.initiative-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.initiative-header p {
+  margin: 0;
+  color: #a5adba;
+}
+
+.initiative-toolbar,
+.initiative-round-controls__buttons,
+.initiative-participant-card__actions,
+.initiative-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.initiative-round-controls {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.initiative-round-controls__buttons {
+  grid-column: 1 / -1;
+}
+
+.initiative-label {
+  display: block;
+  color: #a5adba;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.initiative-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.initiative-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #a5adba;
+  font-size: 12px;
+}
+
+.initiative-form input,
+.initiative-form select,
+.initiative-form textarea {
+  width: 100%;
+  border: 1px solid #2f3542;
+  border-radius: 9px;
+  background: #111318;
+  color: #f3f4f6;
+  padding: 8px;
+}
+
+.initiative-form__wide,
+.initiative-form__actions {
+  grid-column: 1 / -1;
+}
+
+.initiative-list {
+  display: grid;
+  gap: 10px;
+}
+
+.initiative-participant-card {
+  background: #20242d;
+  border: 1px solid #2f3542;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.initiative-participant-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.initiative-participant-card__header h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.initiative-participant-card__header span,
+.initiative-participant-card__notes {
+  color: #a5adba;
+  font-size: 12px;
+}
+
+.initiative-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.initiative-participant-card__notes {
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+@media (max-width: 520px) {
+  .initiative-form,
+  .initiative-round-controls {
+    grid-template-columns: 1fr;
+  }
+}

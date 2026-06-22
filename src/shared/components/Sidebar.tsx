@@ -1,9 +1,10 @@
-import { Bug, LayoutDashboard, LayoutGrid, Settings } from "lucide-react";
+import { Bug, ListOrdered, LayoutDashboard, LayoutGrid, Settings } from "lucide-react";
 import clsx from "clsx";
 import type { AppRoute } from "../../core/types/coreTypes";
 
 const items = [
   { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { id: "initiative", label: "Initiative", Icon: ListOrdered },
   { id: "modules", label: "Modules", Icon: LayoutGrid },
   { id: "settings", label: "Paramètres", Icon: Settings },
   { id: "debug", label: "Debug", Icon: Bug },

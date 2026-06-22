@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { AppRoute } from "./core/types/coreTypes";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { DebugPage } from "./features/debug/DebugPage";
+import { InitiativePage } from "./features/initiative/InitiativePage";
 import { ModulesPage } from "./features/modules/ModulesPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { AppShell } from "./shared/components/AppShell";
@@ -16,6 +17,8 @@ export default function App() {
 
   const page = (() => {
     switch (route) {
+      case "initiative":
+        return <InitiativePage obr={obr} />;
       case "modules":
         return (
           <ModulesPage

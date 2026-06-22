@@ -12,8 +12,10 @@ export const MODULE_IDS = {
 export const STORAGE_KEYS = {
   PREFERENCES: `${EXTENSION_ID}/preferences`,
   MODULE_STATES: `${EXTENSION_ID}/module-states`,
+  INITIATIVE_FALLBACK_STATE: `${EXTENSION_ID}/initiative-fallback-state`,
 } as const;
 
 export const ROOM_METADATA_KEYS = {
   CORE_STATE: `${EXTENSION_ID}/core-state`,
+  INITIATIVE_STATE: `${EXTENSION_ID}/initiative-state`,
 } as const;
