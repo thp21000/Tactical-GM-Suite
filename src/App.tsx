@@ -11,7 +11,31 @@ import { useObrReady } from "./shared/hooks/useObrReady";
 export default function App() {
   const [route, setRoute] = useState<AppRoute>("dashboard");
   const obr = useObrReady();
-  const { moduleStates, setModuleEnabled, resetLocalPreferences } = useModulePreferences();
-  const page = route === "dashboard" ? <DashboardPage obr={obr} moduleStates={moduleStates} /> : route === "modules" ? <ModulesPage moduleStates={moduleStates} onToggleModule={setModuleEnabled} /> : route === "settings" ? <SettingsPage onReset={resetLocalPreferences} /> : <DebugPage obr={obr} moduleStates={moduleStates} />;
-  return <AppShell route={route} onRouteChange={setRoute} obr={obr}>{page}</AppShell>;
+  const { moduleStates, setModuleEnabled, resetLocalPreferences } =
+    useModulePreferences();
+
+  const page = (() => {
+    switch (route) {
+      case "modules":
+        return (
+          <ModulesPage
+            moduleStates={moduleStates}
+            onToggleModule={setModuleEnabled}
+          />
+        );
+      case "settings":
+        return <SettingsPage onReset={resetLocalPreferences} />;
+      case "debug":
+        return <DebugPage obr={obr} moduleStates={moduleStates} />;
+      case "dashboard":
+      default:
+        return <DashboardPage obr={obr} moduleStates={moduleStates} />;
+    }
+  })();
+
+  return (
+    <AppShell route={route} onRouteChange={setRoute} obr={obr}>
+      {page}
+    </AppShell>
+  );
 }

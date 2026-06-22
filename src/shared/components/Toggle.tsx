@@ -1,2 +1,23 @@
 import clsx from "clsx";
-export function Toggle({ checked, disabled, onChange, label }: { checked: boolean; disabled?: boolean; onChange: (checked: boolean) => void; label: string }) { return <button type="button" className={clsx("toggle", checked && "toggle--checked")} disabled={disabled} onClick={() => onChange(!checked)} aria-pressed={checked} aria-label={label}><span /></button>; }
+
+type ToggleProps = {
+  checked: boolean;
+  disabled?: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
+};
+
+export function Toggle({ checked, disabled, label, onChange }: ToggleProps) {
+  return (
+    <button
+      aria-label={label}
+      aria-pressed={checked}
+      className={clsx("toggle", checked && "toggle--checked")}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      type="button"
+    >
+      <span />
+    </button>
+  );
+}
