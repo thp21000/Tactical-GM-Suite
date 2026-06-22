@@ -18,14 +18,12 @@ type SidebarProps = {
 
 export function Sidebar({ route, onRouteChange }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isHoverSuppressed, setIsHoverSuppressed] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsOpen(false);
-        setIsHoverSuppressed(true);
       }
     }
 
@@ -47,15 +45,8 @@ export function Sidebar({ route, onRouteChange }: SidebarProps) {
       ref={sidebarRef}
       className={clsx("sidebar", isOpen && "sidebar--open")}
       aria-label="Navigation principale"
-      onMouseEnter={() => {
-        if (!isHoverSuppressed) {
-          setIsOpen(true);
-        }
-      }}
-      onMouseLeave={() => {
-        setIsOpen(false);
-        setIsHoverSuppressed(false);
-      }}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
       onFocus={() => setIsOpen(true)}
       onBlur={handleBlur}
     >
@@ -67,7 +58,6 @@ export function Sidebar({ route, onRouteChange }: SidebarProps) {
             onClick={() => {
               onRouteChange(id);
               setIsOpen(false);
-              setIsHoverSuppressed(true);
             }}
             type="button"
             title={!isOpen ? label : undefined}
