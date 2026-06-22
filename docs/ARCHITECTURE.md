@@ -49,3 +49,45 @@ Le code spécifique aux distances et portées vit dans `src/features/range/`. Il
 ## Bloc 4 — Stat Tracker graphique avancé V1
 
 Le code spécifique au suivi de statistiques vit dans `src/features/stats/`. Cette V1 reste un outil MJ visuel pour PV, CA, conditions, ressources et notes, sans automatiser les règles PF2e, les dégâts, Calendar ou Loot Table.
+
+## État V1 stabilisé
+
+### Modules intégrés
+
+- Core / Dashboard : shell, navigation, paramètres locaux et registre de modules.
+- Initiative Tracker V1 : suivi manuel de participants, rounds, tours et import contextuel Owlbear.
+- Distance / Déplacement / Portée V1 : mesures entre items Owlbear, presets de portée et préférences locales.
+- Stat Tracker V1 : suivi visuel MJ des PV, CA, conditions, ressources simples et notes.
+
+### Modules reportés
+
+Calendar et Loot Table sont reportés à plus tard car ils existent déjà en standalone et ne doivent pas être intégrés tant que les fondations tactiques ne sont pas stabilisées.
+
+### Règles d'architecture
+
+- Garder la séparation stricte `src/core/`, `src/features/` et `src/shared/`.
+- Chaque feature conserve ses types, hooks, services et composants dans son propre dossier.
+- Ne pas créer de dossier `utils` fourre-tout.
+- `App.tsx` reste limité au routage interne et au shell.
+- Ne pas fusionner Initiative, Range et Stats.
+
+### Règles de stockage
+
+- Les préférences personnelles restent en `localStorage`.
+- Les états actifs partagés peuvent utiliser les metadata Owlbear si leur taille reste raisonnable.
+- Ne pas stocker d'historique lourd, de logs de dégâts ou de gros statblocks.
+- Toute lecture doit rester robuste si la donnée est absente ou invalide.
+
+### Règles Owlbear
+
+- Les hooks Owlbear doivent no-op hors Owlbear et nettoyer leurs abonnements.
+- Les menus contextuels doivent être créés uniquement quand OBR est prêt.
+- Les erreurs de scène, grille, bounds ou item sans nom ne doivent pas faire crasher l'application.
+
+### Avant d'ajouter un nouveau module
+
+1. Vérifier que `npm run typecheck` et `npm run build` passent.
+2. Ajouter les IDs et clés nécessaires dans `src/core/constants/ids.ts`.
+3. Créer un dossier de feature dédié.
+4. Documenter la frontière du module dans ce fichier.
+5. Confirmer que Calendar et Loot Table restent reportés tant que leur intégration n'est pas explicitement demandée.

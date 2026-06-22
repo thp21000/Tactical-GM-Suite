@@ -4,10 +4,10 @@ import type { AppRoute } from "../../core/types/coreTypes";
 
 const items = [
   { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { id: "modules", label: "Modules", Icon: LayoutGrid },
   { id: "initiative", label: "Initiative", Icon: ListOrdered },
   { id: "range", label: "Distances", Icon: Ruler },
   { id: "stats", label: "Stats", Icon: Activity },
-  { id: "modules", label: "Modules", Icon: LayoutGrid },
   { id: "settings", label: "Paramètres", Icon: Settings },
   { id: "debug", label: "Debug", Icon: Bug },
 ] as const;
