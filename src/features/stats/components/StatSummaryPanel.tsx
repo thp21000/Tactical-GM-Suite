@@ -1,0 +1,2 @@
+type Props = { total: number; defeated: number; critical: number; currentHp: number; maxHp: number };
+export function StatSummaryPanel({ critical, currentHp, defeated, maxHp, total }: Props) { return <div className="stat-summary"><div><strong>{total}</strong><span>Entités</span></div><div><strong>{defeated}</strong><span>Vaincues</span></div><div><strong>{critical}</strong><span>Critiques</span></div><div><strong>{currentHp}/{maxHp}</strong><span>PV totaux</span></div></div>; }

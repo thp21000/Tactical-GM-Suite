@@ -532,3 +532,29 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+.stat-page h1 { font-size: 22px; margin: 4px 0; }
+.stat-header, .stat-card__header, .stat-health__meta, .stat-resource-list > div { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.stat-header p, .stat-card span, .stat-notes { color: #a5adba; font-size: 12px; margin: 0; }
+.stat-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stat-summary div { background: #20242d; border: 1px solid #2f3542; border-radius: 10px; padding: 10px; }
+.stat-summary strong { display: block; font-size: 18px; }
+.stat-summary span { color: #a5adba; font-size: 11px; }
+.stat-toolbar, .stat-card__actions, .stat-form__actions, .stat-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.stat-form, .stat-editor form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+.stat-form label, .stat-editor label { display: flex; flex-direction: column; gap: 5px; color: #a5adba; font-size: 12px; }
+.stat-form input, .stat-form select, .stat-form textarea, .stat-editor input { border: 1px solid #2f3542; border-radius: 9px; background: #111318; color: #f3f4f6; padding: 8px; width: 100%; }
+.stat-form__wide, .stat-form__actions { grid-column: 1 / -1; }
+.stat-list { display: grid; gap: 10px; }
+.stat-card { background: #20242d; border: 1px solid #2f3542; border-radius: 12px; padding: 12px; }
+.stat-card h3 { margin: 0; font-size: 15px; }
+.stat-health { margin: 10px 0; }
+.stat-health__track { height: 8px; background: #111318; border-radius: 999px; overflow: hidden; border: 1px solid #2f3542; }
+.stat-health__track span { display: block; height: 100%; background: #6fbf73; }
+.stat-health--hurt .stat-health__track span { background: #d6a84f; }
+.stat-health--bloodied .stat-health__track span { background: #d68b4f; }
+.stat-health--critical .stat-health__track span, .stat-health--defeated .stat-health__track span { background: #d45b5b; }
+.stat-editor { margin-top: 10px; border-top: 1px solid #2f3542; padding-top: 10px; }
+.stat-editor button { background: transparent; border: 0; padding: 0; }
+.stat-resource-list { display: grid; gap: 6px; }
+@media (max-width: 520px) { .stat-summary, .stat-form, .stat-editor form { grid-template-columns: 1fr; } }

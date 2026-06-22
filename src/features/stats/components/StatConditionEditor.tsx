@@ -1,0 +1,6 @@
+import { FormEvent, useState } from "react";
+import { Badge } from "../../../shared/components/Badge";
+import { Button } from "../../../shared/components/Button";
+import type { StatCondition } from "../statTypes";
+type Props = { conditions: StatCondition[]; onAdd: (condition: StatCondition) => void; onRemove: (conditionId: string) => void };
+export function StatConditionEditor({ conditions, onAdd, onRemove }: Props) { const [name, setName] = useState(""); const [value, setValue] = useState(""); function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); onAdd({ id: `condition-${Date.now()}`, name, value: value ? Number(value) : undefined }); setName(""); setValue(""); } return <div className="stat-editor"><div className="stat-badges">{conditions.map((condition) => <button key={condition.id} type="button" onClick={() => onRemove(condition.id)}><Badge>{condition.name}{condition.value !== undefined ? ` ${condition.value}` : ""} ×</Badge></button>)}</div><form onSubmit={submit}><label>Condition<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>Valeur<input value={value} onChange={(event) => setValue(event.target.value)} type="number" /></label><Button type="submit">Ajouter condition</Button></form></div>; }

@@ -6,6 +6,7 @@ import { InitiativePage } from "./features/initiative/InitiativePage";
 import { ModulesPage } from "./features/modules/ModulesPage";
 import { RangePage } from "./features/range/RangePage";
 import { SettingsPage } from "./features/settings/SettingsPage";
+import { StatTrackerPage } from "./features/stats/StatTrackerPage";
 import { AppShell } from "./shared/components/AppShell";
 import { useModulePreferences } from "./shared/hooks/useModulePreferences";
 import { useObrReady } from "./shared/hooks/useObrReady";
@@ -22,6 +23,8 @@ export default function App() {
         return <InitiativePage obr={obr} />;
       case "range":
         return <RangePage obr={obr} />;
+      case "stats":
+        return <StatTrackerPage obr={obr} />;
       case "modules":
         return (
           <ModulesPage

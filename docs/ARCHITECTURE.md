@@ -44,3 +44,8 @@ Le code spécifique à l'initiative vit dans `src/features/initiative/` avec ses
 ## Bloc 3 — Distance / Déplacement / Portée V1
 
 Le code spécifique aux distances et portées vit dans `src/features/range/`. Il mesure et interprète des distances entre items Owlbear sans développer le Stat Tracker, Calendar, Loot Table, ni automatiser les attaques ou dégâts.
+
+
+## Bloc 4 — Stat Tracker graphique avancé V1
+
+Le code spécifique au suivi de statistiques vit dans `src/features/stats/`. Cette V1 reste un outil MJ visuel pour PV, CA, conditions, ressources et notes, sans automatiser les règles PF2e, les dégâts, Calendar ou Loot Table.
