@@ -17,8 +17,16 @@ export function SettingsAppearanceSection({ theme }: SettingsAppearanceSectionPr
           <dd>{theme.mode ?? "non disponible"}</dd>
         </div>
         <div>
-          <dt>Accent</dt>
+          <dt>Accent détecté</dt>
           <dd>{theme.accent ?? "non détecté"}</dd>
+        </div>
+        <div>
+          <dt>Background OBR détecté</dt>
+          <dd>{theme.obr?.backgroundDefault ?? "fallback #202230"}</dd>
+        </div>
+        <div>
+          <dt>Surface OBR détectée</dt>
+          <dd>{theme.obr?.backgroundPaper ?? "fallback #282a3a"}</dd>
         </div>
         <div>
           <dt>Synchronisation</dt>
@@ -28,10 +36,12 @@ export function SettingsAppearanceSection({ theme }: SettingsAppearanceSectionPr
 
       <div className="theme-preview-card">
         <div>
-          <strong>Aperçu glass</strong>
-          <span>Surface + accent du thème actif.</span>
+          <strong>Aperçu OBR glass</strong>
+          <span>Fond, surface et couleurs du thème actif.</span>
         </div>
         <div className="theme-preview-swatches" aria-label="Aperçu des couleurs du thème">
+          <span className="theme-swatch theme-swatch--background" title="Fond" />
+          <span className="theme-swatch theme-swatch--surface" title="Surface" />
           <span className="theme-swatch theme-swatch--accent" title="Accent" />
           <span className="theme-swatch theme-swatch--danger" title="Danger" />
           <span className="theme-swatch theme-swatch--warning" title="Warning" />
