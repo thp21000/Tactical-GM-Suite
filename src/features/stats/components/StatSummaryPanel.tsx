@@ -2,13 +2,22 @@ import type { StatTrackerSummary } from "../statTypes";
 
 type Props = StatTrackerSummary;
 
-export function StatSummaryPanel({ groupCount, tokenCount, trackerCount, visibleOnTokenCount }: Props) {
+const SUMMARY_ITEMS = [
+  { key: "tokenCount", label: "Tokens suivis" },
+  { key: "trackerCount", label: "Trackers" },
+  { key: "groupCount", label: "Groupes" },
+  { key: "visibleOnTokenCount", label: "Affichages token" },
+] as const;
+
+export function StatSummaryPanel(props: Props) {
   return (
     <div className="stat-summary">
-      <div><strong>{tokenCount}</strong><span>Tokens suivis</span></div>
-      <div><strong>{trackerCount}</strong><span>Trackers</span></div>
-      <div><strong>{groupCount}</strong><span>Groupes</span></div>
-      <div><strong>{visibleOnTokenCount}</strong><span>Visibles sur token</span></div>
+      {SUMMARY_ITEMS.map((item) => (
+        <div key={item.key}>
+          <strong>{props[item.key]}</strong>
+          <span>{item.label}</span>
+        </div>
+      ))}
     </div>
   );
 }
