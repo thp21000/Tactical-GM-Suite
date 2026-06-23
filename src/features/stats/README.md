@@ -40,48 +40,73 @@ Le développement doit respecter ce découpage :
 
 Il ne faut pas implémenter plusieurs étapes en même temps sans validation explicite.
 
-## Étape actuelle
+## État actuel
 
-L’étape prioritaire est :
+Les étapes actuellement implémentées sont :
 
 ```txt
 Stats V2.1 — Base des trackers personnalisables
+Stats V2.2A — Presets internes et application automatique
 ```
 
-Cette étape doit se concentrer sur :
+## V2.1 implémentée — trackers personnalisables
 
-* le modèle de données des trackers ;
-* les types visuels de trackers ;
-* la bibliothèque interne simple d’icônes ;
-* l’ajout, la modification et la suppression de trackers ;
-* l’affichage en blocs verticaux repliables par token ou groupe ;
-* les valeurs modifiables ou non selon le type de tracker ;
-* une structure prête pour les presets futurs.
+La base Stats V2.1 est en place : le module utilise désormais un modèle `tokens + trackers` plutôt que des champs directs de type PV/CA sur l'entité suivie.
 
-## À ne pas faire en V2.1
+Inclus dans cette étape :
 
-Ne pas développer maintenant :
+* ajout manuel d'un token suivi ;
+* ajout depuis le menu contextuel Owlbear `Ajouter au Stat Tracker` ;
+* blocs verticaux repliables par token ou groupe simple ;
+* trackers personnalisables avec cinq types visuels : icône, barre, compteur, lecture seule et toggle ;
+* bibliothèque interne simple d'icônes textuelles ;
+* migration robuste des anciens états V1 `entities` vers `tokens` + `trackers` ;
+* sélecteurs internes pour permettre aux futurs modules de lire les trackers.
 
-* assignation joueur ;
-* permissions joueur avancées ;
-* conditions complètes ;
-* menu clic droit des conditions ;
-* affichage direct sur token ;
-* mode placement autour du token ;
+## Stats V2.2A — presets internes
+
+Les presets internes sont en place dans :
+
+```txt
+src/features/stats/services/statPresets.ts
+```
+
+Ils permettent d’appliquer automatiquement des trackers selon le type de token.
+
+Types couverts :
+
+* PJ ;
+* PNJ ;
+* Ennemi ;
+* Monture ;
+* Objet ;
+* Piège ;
+* Familier ;
+* Autre.
+
+Comportement actuel :
+
+* l’ajout manuel d’un token applique le preset du type choisi ;
+* l’ajout depuis le menu contextuel Owlbear applique un preset par défaut de type Ennemi ;
+* le bouton `Appliquer preset` ajoute les trackers manquants du type actuel ;
+* les trackers existants ne sont pas écrasés ;
+* aucun doublon n’est créé si un tracker du même nom existe déjà.
+
+## Ce qui reste reporté
+
+Restent volontairement reportés à des étapes ultérieures :
+
+* V2.2B — édition complète des presets par le MJ ;
+* V2.3 — assignation joueur ;
+* V2.4 — conditions complètes ;
+* V2.5 — affichage direct sur token ;
 * automatisation complète PF2e ;
-* calcul automatique de dégâts ;
 * intégration Calendar ;
 * intégration Loot Table.
 
 ## Règles d’architecture
 
 Le code spécifique au module Stats doit rester dans :
-
-```txt
-src/features/stats/
-```
-
-Les types propres au module doivent rester dans :
 
 ```txt
 src/features/stats/
@@ -119,19 +144,3 @@ Exemples futurs :
 * les conditions peuvent influencer des affichages tactiques.
 
 Il faut donc garder une structure de données claire, stable et exploitable.
-
-## V2.1 implémentée — trackers personnalisables
-
-La base Stats V2.1 est en place : le module utilise désormais un modèle `tokens + trackers` plutôt que des champs directs de type PV/CA sur l'entité suivie.
-
-Inclus dans cette étape :
-
-* ajout manuel d'un token suivi ;
-* ajout depuis le menu contextuel Owlbear `Add to Stat Tracker` ;
-* blocs verticaux repliables par token ou groupe simple ;
-* trackers personnalisables avec cinq types visuels : icône, barre, compteur, lecture seule et toggle ;
-* bibliothèque interne simple d'icônes textuelles ;
-* migration robuste des anciens états V1 `entities` vers `tokens` + `trackers` ;
-* sélecteurs internes pour permettre aux futurs modules de lire les trackers.
-
-Restent volontairement reportés à des étapes ultérieures : presets automatiques, assignation joueur, conditions complètes et affichage direct sur token.

@@ -15,6 +15,7 @@ import { StatTrackerForm } from "./StatTrackerForm";
 type Props = {
   group: StatDisplayGroup;
   onAddTracker: (tokenId: string, input: StatTrackerInput) => void;
+  onApplyPreset: (tokenId: string) => void;
   onChangeTrackerValue: (tokenId: string, trackerId: string, delta: number) => void;
   onRemoveToken: (tokenId: string) => void;
   onRemoveTracker: (tokenId: string, trackerId: string) => void;
@@ -34,6 +35,7 @@ function formatCount(value: number, singular: string, plural: string): string {
 export function StatTrackedTokenBlock({
   group,
   onAddTracker,
+  onApplyPreset,
   onChangeTrackerValue,
   onRemoveToken,
   onRemoveTracker,
@@ -42,7 +44,9 @@ export function StatTrackedTokenBlock({
   onUpdateTracker,
 }: Props) {
   const [editingTokenId, setEditingTokenId] = useState<string | null>(null);
-  const [addingTrackerTokenId, setAddingTrackerTokenId] = useState<string | null>(null);
+  const [addingTrackerTokenId, setAddingTrackerTokenId] = useState<string | null>(
+    null,
+  );
 
   const trackerCount = group.tokens.reduce(
     (total, token) => total + token.trackers.length,
@@ -111,6 +115,10 @@ export function StatTrackedTokenBlock({
                   Ajouter tracker
                 </Button>
 
+                <Button onClick={() => onApplyPreset(token.id)}>
+                  Appliquer preset
+                </Button>
+
                 <Button onClick={() => onRemoveToken(token.id)}>
                   Supprimer token
                 </Button>
@@ -128,7 +136,8 @@ export function StatTrackedTokenBlock({
 
               {token.trackers.length === 0 ? (
                 <p className="muted">
-                  Aucun tracker. Ajoutez PV, CA, munitions ou tout autre suivi utile.
+                  Aucun tracker. Appliquez le preset du type ou ajoutez un suivi
+                  personnalisé.
                 </p>
               ) : (
                 <div className="stat-tracker-list">
