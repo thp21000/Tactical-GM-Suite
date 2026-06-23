@@ -8,7 +8,7 @@
   --tgm-border-strong: rgba(255, 255, 255, 0.20);
   --tgm-text: #f3f4f6;
   --tgm-text-muted: #a5adba;
-  --tgm-accent: #7dd3fc;
+  --tgm-accent: #c084fc;
   --tgm-danger: #f87171;
   --tgm-warning: #f59e0b;
   --tgm-success: #86efac;
@@ -55,8 +55,8 @@ body {
   margin: 0 auto;
   overflow: hidden;
   background:
-    radial-gradient(circle at 12% 0%, rgba(125, 211, 252, 0.16), transparent 34%),
-    radial-gradient(circle at 90% 12%, rgba(148, 163, 184, 0.10), transparent 28%),
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--tgm-accent) 18%, transparent), transparent 34%),
+    radial-gradient(circle at 90% 12%, color-mix(in srgb, var(--tgm-text-muted) 10%, transparent), transparent 28%),
     var(--tgm-bg);
   backdrop-filter: blur(var(--tgm-blur-glass));
   -webkit-backdrop-filter: blur(var(--tgm-blur-glass));
@@ -127,9 +127,9 @@ body {
 
 .nav-item--active,
 .nav-item:hover {
-  background: rgba(125, 211, 252, 0.12);
+  background: color-mix(in srgb, var(--tgm-accent) 12%, transparent);
   color: var(--tgm-text);
-  border-color: rgba(125, 211, 252, 0.22);
+  border-color: color-mix(in srgb, var(--tgm-accent) 22%, transparent);
 }
 
 .content {
@@ -288,12 +288,12 @@ body {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #a5adba;
+  background: var(--tgm-text-muted);
   transition: 0.15s;
 }
 
 .toggle--checked {
-  background: #d6a84f;
+  background: var(--tgm-accent);
 }
 
 .toggle--checked span {
@@ -302,7 +302,7 @@ body {
 }
 
 .button {
-  border: 1px solid #d6a84f;
+  border: 1px solid var(--tgm-accent);
   border-radius: 10px;
   background: var(--tgm-surface-strong);
   color: var(--tgm-text);
@@ -586,7 +586,7 @@ pre {
 .stat-health { margin: 10px 0; }
 .stat-health__track { height: 8px; background: var(--tgm-bg-soft); border-radius: 999px; overflow: hidden; border: 1px solid var(--tgm-border); }
 .stat-health__track span { display: block; height: 100%; background: #6fbf73; }
-.stat-health--hurt .stat-health__track span { background: #d6a84f; }
+.stat-health--hurt .stat-health__track span { background: var(--tgm-accent); }
 .stat-health--bloodied .stat-health__track span { background: #d68b4f; }
 .stat-health--critical .stat-health__track span, .stat-health--defeated .stat-health__track span { background: #d45b5b; }
 .stat-editor { margin-top: 10px; border-top: 1px solid var(--tgm-border); padding-top: 10px; }
@@ -734,8 +734,8 @@ pre {
 }
 
 .button {
-  border-color: rgba(125, 211, 252, 0.38);
-  background: rgba(125, 211, 252, 0.08);
+  border-color: color-mix(in srgb, var(--tgm-accent) 38%, transparent);
+  background: color-mix(in srgb, var(--tgm-accent) 8%, transparent);
   color: var(--tgm-text);
 }
 

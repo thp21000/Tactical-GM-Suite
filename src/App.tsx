@@ -10,10 +10,12 @@ import { StatTrackerPage } from "./features/stats/StatTrackerPage";
 import { AppShell } from "./shared/components/AppShell";
 import { useModulePreferences } from "./shared/hooks/useModulePreferences";
 import { useObrReady } from "./shared/hooks/useObrReady";
+import { useObrTheme } from "./shared/hooks/useObrTheme";
 
 export default function App() {
   const [route, setRoute] = useState<AppRoute>("dashboard");
   const obr = useObrReady();
+  const theme = useObrTheme(obr);
   const { moduleStates, setModuleEnabled, resetLocalPreferences } =
     useModulePreferences();
 
@@ -39,10 +41,11 @@ export default function App() {
             moduleStates={moduleStates}
             onToggleModule={setModuleEnabled}
             onReset={resetLocalPreferences}
+            theme={theme}
           />
         );
       case "debug":
-        return <DebugPage obr={obr} moduleStates={moduleStates} />;
+        return <DebugPage obr={obr} moduleStates={moduleStates} theme={theme} />;
       case "dashboard":
       default:
         return <DashboardPage obr={obr} moduleStates={moduleStates} />;

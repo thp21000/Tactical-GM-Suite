@@ -1,5 +1,6 @@
 import type { ModuleStateMap } from "../../core/modules/moduleState";
 import type { ObrReadyState } from "../../core/obr/obrReady";
+import type { TgmTheme } from "../../core/theme/obrTheme";
 import { CollapsibleSection } from "../../shared/components/CollapsibleSection";
 import { Panel } from "../../shared/components/Panel";
 import { SettingsAboutSection } from "./components/SettingsAboutSection";
@@ -13,9 +14,10 @@ type SettingsPageProps = {
   moduleStates: ModuleStateMap;
   onToggleModule: (moduleId: string, enabled: boolean) => void;
   onReset: () => void;
+  theme: TgmTheme;
 };
 
-export function SettingsPage({ obr, moduleStates, onToggleModule, onReset }: SettingsPageProps) {
+export function SettingsPage({ obr, moduleStates, onToggleModule, onReset, theme }: SettingsPageProps) {
   return (
     <div className="stack settings-page">
       <Panel title="Paramètres">
@@ -25,7 +27,7 @@ export function SettingsPage({ obr, moduleStates, onToggleModule, onReset }: Set
       </Panel>
 
       <CollapsibleSection title="Apparence / Thème" summary="Neutral Glass" defaultOpen>
-        <SettingsAppearanceSection />
+        <SettingsAppearanceSection theme={theme} />
       </CollapsibleSection>
 
       <CollapsibleSection title="Modules" summary="Activation et roadmap">
@@ -33,7 +35,7 @@ export function SettingsPage({ obr, moduleStates, onToggleModule, onReset }: Set
       </CollapsibleSection>
 
       <CollapsibleSection title="Debug" summary="Résumés techniques compacts">
-        <SettingsDebugSection obr={obr} moduleStates={moduleStates} />
+        <SettingsDebugSection obr={obr} moduleStates={moduleStates} theme={theme} />
       </CollapsibleSection>
 
       <CollapsibleSection title="Stockage / Réinitialisation" summary="Préférences locales">
