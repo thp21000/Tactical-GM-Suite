@@ -29,6 +29,14 @@ export function SettingsAppearanceSection({ theme }: SettingsAppearanceSectionPr
           <dd>{theme.obr?.backgroundPaper ?? "fallback #282a3a"}</dd>
         </div>
         <div>
+          <dt>App panel généré</dt>
+          <dd>{theme.variables["--tgm-app-panel"]}</dd>
+        </div>
+        <div>
+          <dt>Surface générée</dt>
+          <dd>{theme.variables["--tgm-surface-glass"]}</dd>
+        </div>
+        <div>
           <dt>Synchronisation</dt>
           <dd>Les couleurs suivent Owlbear quand l’API thème est disponible.</dd>
         </div>
