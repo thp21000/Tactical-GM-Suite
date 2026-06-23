@@ -61,7 +61,7 @@ export function StatTrackedTokenBlock({
       defaultOpen={!group.isCollapsed}
     >
       <div className="stat-token-group">
-        {group.isGroup ? <Badge tone="info">Groupe lié</Badge> : null}
+        {group.isGroup ? <Badge>Groupe lié</Badge> : null}
 
         {group.tokens.map((token) => {
           const tokenTypeLabel = STAT_TOKEN_TYPE_LABELS[token.tokenType];
