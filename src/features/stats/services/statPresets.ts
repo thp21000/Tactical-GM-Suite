@@ -1,1 +1,3 @@
-export const statResourceExamples = ["Focus", "Rage", "Munitions", "Pouvoir"] as const;
+import type { StatTrackerInput } from "../statTypes";
+
+export const STAT_TRACKER_PRESET_PLACEHOLDER: StatTrackerInput[] = [];

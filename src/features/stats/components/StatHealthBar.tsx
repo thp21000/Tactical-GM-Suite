@@ -1,4 +1,8 @@
-import { getDangerLevel, getHpPercent } from "../services/statCalculations";
-import type { StatEntity } from "../statTypes";
-type Props = { entity: StatEntity };
-export function StatHealthBar({ entity }: Props) { const percent = getHpPercent(entity); const danger = getDangerLevel(entity); return <div className={`stat-health stat-health--${danger}`}><div className="stat-health__meta"><span>{percent === undefined ? "PV inconnus" : `${entity.currentHp}/${entity.maxHp} PV`}</span>{entity.tempHp > 0 ? <span>Temp {entity.tempHp}</span> : null}</div><div className="stat-health__track"><span style={{ width: `${percent ?? 0}%` }} /></div></div>; }
+import type { StatTracker } from "../statTypes";
+
+type Props = { tracker: StatTracker };
+
+export function StatHealthBar({ tracker }: Props) {
+  const percent = tracker.max ? Math.max(0, Math.min(100, ((tracker.current ?? 0) / tracker.max) * 100)) : 0;
+  return <div className="stat-health"><div className="stat-health__meta"><span>{tracker.current ?? 0}/{tracker.max ?? 0}</span></div><div className="stat-health__track"><span style={{ width: `${percent}%` }} /></div></div>;
+}

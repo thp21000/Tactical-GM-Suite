@@ -1,126 +1,17 @@
-import { useState } from "react";
-import { Badge } from "../../../shared/components/Badge";
-import { Button } from "../../../shared/components/Button";
-import { getDangerLevel } from "../services/statCalculations";
-import type { StatCondition, StatEntity, StatEntityInput, StatResource } from "../statTypes";
-import { StatBlockForm } from "./StatBlockForm";
-import { StatConditionEditor } from "./StatConditionEditor";
-import { StatHealthBar } from "./StatHealthBar";
-import { StatResourceEditor } from "./StatResourceEditor";
+import type { StatDisplayGroup, StatTokenInput, StatTrackerInput } from "../statTypes";
+import { StatTrackedTokenBlock } from "./StatTrackedTokenBlock";
 
 type Props = {
-  entity: StatEntity;
-  onAddCondition: (entityId: string, condition: StatCondition) => void;
-  onAddResource: (entityId: string, resource: StatResource) => void;
-  onChangeHp: (entityId: string, delta: number) => void;
-  onChangeResource: (entityId: string, resourceId: string, delta: number) => void;
-  onRemove: (entityId: string) => void;
-  onRemoveCondition: (entityId: string, conditionId: string) => void;
-  onRemoveResource: (entityId: string, resourceId: string) => void;
-  onSetTempHp: (entityId: string, tempHp: number) => void;
-  onToggleDefeated: (entityId: string) => void;
-  onToggleHidden: (entityId: string) => void;
-  onUpdate: (entityId: string, input: StatEntityInput) => void;
+  group: StatDisplayGroup;
+  onAddTracker: (tokenId: string, input: StatTrackerInput) => void;
+  onChangeTrackerValue: (tokenId: string, trackerId: string, delta: number) => void;
+  onRemoveToken: (tokenId: string) => void;
+  onRemoveTracker: (tokenId: string, trackerId: string) => void;
+  onToggleTracker: (tokenId: string, trackerId: string) => void;
+  onUpdateToken: (tokenId: string, input: Partial<StatTokenInput>) => void;
+  onUpdateTracker: (tokenId: string, trackerId: string, input: Partial<StatTrackerInput>) => void;
 };
 
-export function StatBlockCard({
-  entity,
-  onAddCondition,
-  onAddResource,
-  onChangeHp,
-  onChangeResource,
-  onRemove,
-  onRemoveCondition,
-  onRemoveResource,
-  onSetTempHp,
-  onToggleDefeated,
-  onToggleHidden,
-  onUpdate,
-}: Props) {
-  const [editing, setEditing] = useState(false);
-  const [tempHpValue, setTempHpValue] = useState(String(entity.tempHp));
-  const danger = getDangerLevel(entity);
-
-  if (editing) {
-    return (
-      <article className="stat-card">
-        <StatBlockForm
-          entity={entity}
-          onCancel={() => setEditing(false)}
-          onSubmit={(input) => {
-            onUpdate(entity.id, input);
-            setEditing(false);
-          }}
-        />
-      </article>
-    );
-  }
-
-  return (
-    <article className={`stat-card stat-card--${danger}`}>
-      <div className="stat-card__header">
-        <div>
-          <h3>{entity.name}</h3>
-          <span>
-            {entity.type}
-            {entity.armorClass ? ` · CA ${entity.armorClass}` : ""}
-          </span>
-        </div>
-        <Badge tone={danger === "defeated" || danger === "critical" ? "danger" : danger === "bloodied" ? "warning" : "default"}>{danger}</Badge>
-      </div>
-
-      <StatHealthBar entity={entity} />
-
-      <div className="stat-badges">
-        {entity.isDefeated ? <Badge tone="danger">vaincu</Badge> : null}
-        {entity.isHiddenFromPlayers ? <Badge>masqué</Badge> : null}
-        {entity.conditions.map((condition) => (
-          <Badge key={condition.id}>
-            {condition.name}
-            {condition.value !== undefined ? ` ${condition.value}` : ""}
-          </Badge>
-        ))}
-      </div>
-
-      {entity.notes ? <p className="stat-notes">{entity.notes}</p> : null}
-
-      <div className="stat-card__actions">
-        <Button onClick={() => setEditing(true)}>Modifier</Button>
-        <Button onClick={() => onChangeHp(entity.id, 1)}>+1 PV</Button>
-        <Button onClick={() => onChangeHp(entity.id, -1)}>-1 PV</Button>
-        <Button onClick={() => onChangeHp(entity.id, 5)}>+5 PV</Button>
-        <Button onClick={() => onChangeHp(entity.id, -5)}>-5 PV</Button>
-        <label className="stat-temp-control">
-          Temp PV
-          <input
-            value={tempHpValue}
-            onChange={(event) => setTempHpValue(event.target.value)}
-            type="number"
-          />
-        </label>
-        <Button onClick={() => onSetTempHp(entity.id, Number(tempHpValue) || 0)}>
-          Appliquer Temp PV
-        </Button>
-        <Button onClick={() => onToggleDefeated(entity.id)}>
-          {entity.isDefeated ? "Restaurer" : "Marquer vaincu"}
-        </Button>
-        <Button onClick={() => onToggleHidden(entity.id)}>
-          {entity.isHiddenFromPlayers ? "Afficher" : "Masquer"}
-        </Button>
-        <Button onClick={() => onRemove(entity.id)}>Supprimer</Button>
-      </div>
-
-      <StatConditionEditor
-        conditions={entity.conditions}
-        onAdd={(condition) => onAddCondition(entity.id, condition)}
-        onRemove={(conditionId) => onRemoveCondition(entity.id, conditionId)}
-      />
-      <StatResourceEditor
-        resources={entity.resources}
-        onAdd={(resource) => onAddResource(entity.id, resource)}
-        onChange={(resourceId, delta) => onChangeResource(entity.id, resourceId, delta)}
-        onRemove={(resourceId) => onRemoveResource(entity.id, resourceId)}
-      />
-    </article>
-  );
+export function StatBlockCard(props: Props) {
+  return <StatTrackedTokenBlock {...props} />;
 }

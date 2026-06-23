@@ -39,7 +39,7 @@ export function SettingsDebugSection({ obr, moduleStates, theme }: SettingsDebug
     ["Modules activés", `${enabledModules.length}/${moduleRegistry.length}`],
     ["Initiative", `${initiative.participants?.length ?? 0} participants · round ${initiative.round ?? 1}`],
     ["Distances", `${range.presets?.length ?? 0} presets · mode ${range.measurementMode ?? "défaut"}`],
-    ["Stats", `${stats.entities?.length ?? 0} entités suivies`],
+    ["Stats", `${stats.tokens?.length ?? 0} tokens suivis · ${stats.tokens?.reduce((total, token) => total + (token.trackers?.length ?? 0), 0) ?? 0} trackers`],
   ];
 
   return (

@@ -119,3 +119,19 @@ Exemples futurs :
 * les conditions peuvent influencer des affichages tactiques.
 
 Il faut donc garder une structure de données claire, stable et exploitable.
+
+## V2.1 implémentée — trackers personnalisables
+
+La base Stats V2.1 est en place : le module utilise désormais un modèle `tokens + trackers` plutôt que des champs directs de type PV/CA sur l'entité suivie.
+
+Inclus dans cette étape :
+
+* ajout manuel d'un token suivi ;
+* ajout depuis le menu contextuel Owlbear `Add to Stat Tracker` ;
+* blocs verticaux repliables par token ou groupe simple ;
+* trackers personnalisables avec cinq types visuels : icône, barre, compteur, lecture seule et toggle ;
+* bibliothèque interne simple d'icônes textuelles ;
+* migration robuste des anciens états V1 `entities` vers `tokens` + `trackers` ;
+* sélecteurs internes pour permettre aux futurs modules de lire les trackers.
+
+Restent volontairement reportés à des étapes ultérieures : presets automatiques, assignation joueur, conditions complètes et affichage direct sur token.

@@ -1,2 +1,14 @@
-type Props = { total: number; defeated: number; critical: number; currentHp: number; maxHp: number };
-export function StatSummaryPanel({ critical, currentHp, defeated, maxHp, total }: Props) { return <div className="stat-summary"><div><strong>{total}</strong><span>Entités</span></div><div><strong>{defeated}</strong><span>Vaincues</span></div><div><strong>{critical}</strong><span>Critiques</span></div><div><strong>{currentHp}/{maxHp}</strong><span>PV totaux</span></div></div>; }
+import type { StatTrackerSummary } from "../statTypes";
+
+type Props = StatTrackerSummary;
+
+export function StatSummaryPanel({ groupCount, tokenCount, trackerCount, visibleOnTokenCount }: Props) {
+  return (
+    <div className="stat-summary">
+      <div><strong>{tokenCount}</strong><span>Tokens suivis</span></div>
+      <div><strong>{trackerCount}</strong><span>Trackers</span></div>
+      <div><strong>{groupCount}</strong><span>Groupes</span></div>
+      <div><strong>{visibleOnTokenCount}</strong><span>Visibles sur token</span></div>
+    </div>
+  );
+}

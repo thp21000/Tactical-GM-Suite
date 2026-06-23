@@ -1,5 +1,3 @@
-import { FormEvent, useState } from "react";
-import { Button } from "../../../shared/components/Button";
-import type { StatResource } from "../statTypes";
-type Props = { resources: StatResource[]; onAdd: (resource: StatResource) => void; onChange: (resourceId: string, delta: number) => void; onRemove: (resourceId: string) => void };
-export function StatResourceEditor({ onAdd, onChange, onRemove, resources }: Props) { const [name, setName] = useState(""); const [max, setMax] = useState("1"); function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const parsedMax = Number(max) || 1; onAdd({ id: `resource-${Date.now()}`, name, current: parsedMax, max: parsedMax }); setName(""); setMax("1"); } return <div className="stat-editor"><div className="stat-resource-list">{resources.map((resource) => <div key={resource.id}><span>{resource.name}: {resource.current}/{resource.max}</span><Button onClick={() => onChange(resource.id, -1)}>-1</Button><Button onClick={() => onChange(resource.id, 1)}>+1</Button><Button onClick={() => onRemove(resource.id)}>Supprimer</Button></div>)}</div><form onSubmit={submit}><label>Ressource<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>Max<input value={max} onChange={(event) => setMax(event.target.value)} type="number" /></label><Button type="submit">Ajouter ressource</Button></form></div>; }
+export function StatResourceEditor() {
+  return null;
+}
