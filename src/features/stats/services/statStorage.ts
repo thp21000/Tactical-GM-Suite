@@ -35,6 +35,10 @@ type LegacyEntity = {
   resources?: LegacyResource[];
   notes?: string;
   isHiddenFromPlayers?: boolean;
+  assignedPlayerId?: string;
+  assignedPlayerName?: string;
+  playerId?: string;
+  playerName?: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -50,6 +54,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function cleanOptionalText(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
 function isV21State(value: unknown): value is StatTrackerState {
   return isRecord(value) && Array.isArray(value.tokens) && Array.isArray(value.groups);
 }
@@ -59,6 +72,8 @@ function migrateLegacyEntity(entity: LegacyEntity) {
     sourceItemId: entity.sourceItemId,
     name: entity.name || "Token",
     tokenType: normalizeTokenType(entity.type),
+    assignedPlayerId: entity.assignedPlayerId ?? entity.playerId,
+    assignedPlayerName: entity.assignedPlayerName ?? entity.playerName,
     notes: entity.notes,
     isHiddenFromPlayers: entity.isHiddenFromPlayers ?? false,
   });
@@ -148,6 +163,8 @@ export function normalizeStatTrackerState(value: unknown): StatTrackerState {
       id: typeof value.id === "string" ? value.id : fallback.id,
       tokens: value.tokens.map((token) => ({
         ...token,
+        assignedPlayerId: cleanOptionalText(token.assignedPlayerId),
+        assignedPlayerName: cleanOptionalText(token.assignedPlayerName),
         trackers: Array.isArray(token.trackers) ? token.trackers : [],
       })),
       groups: value.groups,

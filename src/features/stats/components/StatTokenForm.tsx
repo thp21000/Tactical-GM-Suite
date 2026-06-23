@@ -18,11 +18,19 @@ export function StatTokenForm({ onCancel, onSubmit, token }: Props) {
   const [tokenType, setTokenType] = useState<StatTokenType>(
     token?.tokenType ?? "other",
   );
+  const [assignedPlayerName, setAssignedPlayerName] = useState(
+    token?.assignedPlayerName ?? "",
+  );
+  const [assignedPlayerId, setAssignedPlayerId] = useState(
+    token?.assignedPlayerId ?? "",
+  );
   const [notes, setNotes] = useState(token?.notes ?? "");
 
   useEffect(() => {
     setName(token?.name ?? "");
     setTokenType(token?.tokenType ?? "other");
+    setAssignedPlayerName(token?.assignedPlayerName ?? "");
+    setAssignedPlayerId(token?.assignedPlayerId ?? "");
     setNotes(token?.notes ?? "");
   }, [token]);
 
@@ -33,6 +41,8 @@ export function StatTokenForm({ onCancel, onSubmit, token }: Props) {
       sourceItemId: token?.sourceItemId,
       name,
       tokenType,
+      assignedPlayerName,
+      assignedPlayerId,
       notes,
       isHiddenFromPlayers: token?.isHiddenFromPlayers,
     });
@@ -40,6 +50,8 @@ export function StatTokenForm({ onCancel, onSubmit, token }: Props) {
     if (!token) {
       setName("");
       setTokenType("other");
+      setAssignedPlayerName("");
+      setAssignedPlayerId("");
       setNotes("");
     }
   }
@@ -69,6 +81,24 @@ export function StatTokenForm({ onCancel, onSubmit, token }: Props) {
             </option>
           ))}
         </select>
+      </label>
+
+      <label>
+        Joueur assigné
+        <input
+          value={assignedPlayerName}
+          onChange={(event) => setAssignedPlayerName(event.target.value)}
+          placeholder="Nom affiché du joueur"
+        />
+      </label>
+
+      <label>
+        ID joueur
+        <input
+          value={assignedPlayerId}
+          onChange={(event) => setAssignedPlayerId(event.target.value)}
+          placeholder="Optionnel, pour liaison future"
+        />
       </label>
 
       <label className="stat-form__wide">

@@ -48,6 +48,7 @@ Les étapes actuellement implémentées sont :
 Stats V2.1 — Base des trackers personnalisables
 Stats V2.2A — Presets internes et application automatique
 Stats V2.2B — Gestion simple des presets par le MJ
+Stats V2.3A — Assignation joueur simple
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -112,11 +113,34 @@ Les presets modifiés s’appliquent aux prochains tokens ajoutés et au bouton 
 
 Le bouton `Appliquer preset` reste prudent : il ajoute les trackers manquants et ne supprime pas les trackers déjà présents sur le token.
 
+## Stats V2.3A — assignation joueur simple
+
+Les tokens suivis peuvent maintenant recevoir une assignation joueur manuelle.
+
+Champs ajoutés au token :
+
+* `assignedPlayerName` ;
+* `assignedPlayerId`.
+
+Le MJ peut renseigner ces champs depuis le formulaire de token.
+
+Le bloc token affiche ensuite le joueur assigné.
+
+Cette étape ne met pas encore en place :
+
+* la récupération automatique des joueurs connectés Owlbear ;
+* le filtrage automatique côté joueur ;
+* les permissions réelles par joueur ;
+* l’édition directe côté joueur.
+
+Ces éléments restent prévus pour une étape ultérieure de V2.3.
+
 ## Ce qui reste reporté
 
 Restent volontairement reportés à des étapes ultérieures :
 
-* assignation joueur ;
+* permissions joueur réelles ;
+* récupération des joueurs connectés Owlbear ;
 * conditions complètes ;
 * affichage direct sur token ;
 * automatisation complète PF2e ;

@@ -53,6 +53,8 @@ export type StatTrackedToken = {
   tokenType: StatTokenType;
   trackers: StatTracker[];
   groupId?: string;
+  assignedPlayerId?: string;
+  assignedPlayerName?: string;
   notes?: string;
   isHiddenFromPlayers: boolean;
   createdAt: string;
@@ -107,6 +109,8 @@ export type StatTokenInput = {
   sourceItemId?: string;
   name: string;
   tokenType: StatTokenType;
+  assignedPlayerId?: string;
+  assignedPlayerName?: string;
   notes?: string;
   isHiddenFromPlayers?: boolean;
 };

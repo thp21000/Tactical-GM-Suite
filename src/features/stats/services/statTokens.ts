@@ -18,6 +18,11 @@ function now(): string {
   return new Date().toISOString();
 }
 
+function cleanOptionalText(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
 export function createEmptyStatTrackerState(): StatTrackerState {
   const timestamp = now();
 
@@ -40,7 +45,10 @@ export function createTrackedToken(input: StatTokenInput): StatTrackedToken {
     name: input.name.trim() || "Token",
     tokenType: input.tokenType,
     trackers: [],
-    notes: input.notes?.trim() || undefined,
+    groupId: undefined,
+    assignedPlayerId: cleanOptionalText(input.assignedPlayerId),
+    assignedPlayerName: cleanOptionalText(input.assignedPlayerName),
+    notes: cleanOptionalText(input.notes),
     isHiddenFromPlayers: input.isHiddenFromPlayers ?? false,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -63,7 +71,16 @@ export function updateTrackedToken(
     ...token,
     ...patch,
     name: patch.name !== undefined ? patch.name.trim() || "Token" : token.name,
-    notes: patch.notes !== undefined ? patch.notes.trim() || undefined : token.notes,
+    assignedPlayerId:
+      patch.assignedPlayerId !== undefined
+        ? cleanOptionalText(patch.assignedPlayerId)
+        : token.assignedPlayerId,
+    assignedPlayerName:
+      patch.assignedPlayerName !== undefined
+        ? cleanOptionalText(patch.assignedPlayerName)
+        : token.assignedPlayerName,
+    notes:
+      patch.notes !== undefined ? cleanOptionalText(patch.notes) : token.notes,
     updatedAt: now(),
   };
 }

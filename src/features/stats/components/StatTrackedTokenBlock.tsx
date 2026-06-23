@@ -32,6 +32,21 @@ function formatCount(value: number, singular: string, plural: string): string {
   return `${value} ${value > 1 ? plural : singular}`;
 }
 
+function getPlayerAssignmentLabel(token: {
+  assignedPlayerId?: string;
+  assignedPlayerName?: string;
+}): string | null {
+  if (token.assignedPlayerName) {
+    return token.assignedPlayerName;
+  }
+
+  if (token.assignedPlayerId) {
+    return token.assignedPlayerId;
+  }
+
+  return null;
+}
+
 export function StatTrackedTokenBlock({
   group,
   onAddTracker,
@@ -70,6 +85,7 @@ export function StatTrackedTokenBlock({
         {group.tokens.map((token) => {
           const tokenTypeLabel = STAT_TOKEN_TYPE_LABELS[token.tokenType];
           const sourceLabel = token.sourceItemId ? "Owlbear" : "Manuel";
+          const playerAssignmentLabel = getPlayerAssignmentLabel(token);
           const isEditing = editingTokenId === token.id;
           const isAddingTracker = addingTrackerTokenId === token.id;
 
@@ -80,11 +96,17 @@ export function StatTrackedTokenBlock({
                   <h3>{token.name}</h3>
                   <span>
                     {tokenTypeLabel} · {sourceLabel}
+                    {playerAssignmentLabel
+                      ? ` · Assigné à ${playerAssignmentLabel}`
+                      : ""}
                   </span>
                 </div>
 
                 <div className="stat-token-block__badges">
                   {group.isGroup ? <Badge>Lié</Badge> : null}
+                  {playerAssignmentLabel ? (
+                    <Badge>Joueur : {playerAssignmentLabel}</Badge>
+                  ) : null}
                   <Badge>{token.isHiddenFromPlayers ? "Masqué joueurs" : "MJ"}</Badge>
                 </div>
               </div>
