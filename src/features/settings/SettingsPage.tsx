@@ -41,7 +41,7 @@ export function SettingsPage({ obr, moduleStates, onToggleModule, onReset }: Set
       </CollapsibleSection>
 
       <CollapsibleSection title="À propos / Version" summary="V1 stabilisée">
-        <SettingsAboutSection />
+        <SettingsAboutSection obr={obr} />
       </CollapsibleSection>
     </div>
   );

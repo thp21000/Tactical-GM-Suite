@@ -50,7 +50,7 @@ export default function App() {
   })();
 
   return (
-    <AppShell route={route} onRouteChange={setRoute} obr={obr}>
+    <AppShell route={route} onRouteChange={setRoute}>
       {page}
     </AppShell>
   );
