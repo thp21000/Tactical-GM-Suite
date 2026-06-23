@@ -69,15 +69,6 @@ export type StatTokenGroup = {
   updatedAt: string;
 };
 
-export type StatTrackerState = {
-  id: string;
-  tokens: StatTrackedToken[];
-  groups: StatTokenGroup[];
-  selectedTokenId?: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type StatTrackerInput = {
   name: string;
   visualType: StatTrackerVisualType;
@@ -89,6 +80,27 @@ export type StatTrackerInput = {
   visibility?: StatTrackerVisibility;
   canPlayerEdit?: boolean;
   showOnToken?: boolean;
+};
+
+export type StatTrackerPreset = {
+  id: string;
+  label: string;
+  tokenType: StatTokenType;
+  trackers: StatTrackerInput[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type StatTrackerPresetMap = Record<StatTokenType, StatTrackerPreset>;
+
+export type StatTrackerState = {
+  id: string;
+  tokens: StatTrackedToken[];
+  groups: StatTokenGroup[];
+  presets: StatTrackerPresetMap;
+  selectedTokenId?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type StatTokenInput = {

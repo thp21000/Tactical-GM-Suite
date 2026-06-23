@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ObrReadyState } from "../../core/obr/obrReady";
 import { Badge } from "../../shared/components/Badge";
 import { Panel } from "../../shared/components/Panel";
+import { StatPresetManager } from "./components/StatPresetManager";
 import { StatSummaryPanel } from "./components/StatSummaryPanel";
 import { StatTokenForm } from "./components/StatTokenForm";
 import { StatTrackedTokenBlock } from "./components/StatTrackedTokenBlock";
@@ -16,6 +17,7 @@ type Props = {
 
 export function StatTrackerPage({ obr }: Props) {
   const [formOpen, setFormOpen] = useState(false);
+  const [presetPanelOpen, setPresetPanelOpen] = useState(false);
   const stats = useStatTrackerState(obr.isReady);
 
   useStatTrackerContextMenu({
@@ -53,6 +55,16 @@ export function StatTrackerPage({ obr }: Props) {
           onToggleForm={() => setFormOpen((current) => !current)}
         />
 
+        <div className="stat-card__actions">
+          <button
+            className="button"
+            type="button"
+            onClick={() => setPresetPanelOpen((current) => !current)}
+          >
+            {presetPanelOpen ? "Masquer les presets" : "Gérer les presets"}
+          </button>
+        </div>
+
         {formOpen ? (
           <StatTokenForm
             onSubmit={(input) => {
@@ -62,6 +74,18 @@ export function StatTrackerPage({ obr }: Props) {
           />
         ) : null}
       </Panel>
+
+      {presetPanelOpen ? (
+        <Panel title="Presets Stats">
+          <StatPresetManager
+            presets={stats.presets}
+            onAddTracker={stats.addTrackerToPreset}
+            onRemoveTracker={stats.removeTrackerFromPreset}
+            onResetPreset={stats.resetPreset}
+            onResetPresets={stats.resetPresets}
+          />
+        </Panel>
+      ) : null}
 
       <Panel title="Tokens suivis">
         {stats.tokens.length === 0 ? (

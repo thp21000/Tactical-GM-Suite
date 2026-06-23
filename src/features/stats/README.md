@@ -47,6 +47,7 @@ Les étapes actuellement implémentées sont :
 ```txt
 Stats V2.1 — Base des trackers personnalisables
 Stats V2.2A — Presets internes et application automatique
+Stats V2.2B — Gestion simple des presets par le MJ
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -92,14 +93,32 @@ Comportement actuel :
 * les trackers existants ne sont pas écrasés ;
 * aucun doublon n’est créé si un tracker du même nom existe déjà.
 
+## Stats V2.2B — gestion simple des presets
+
+Les presets sont désormais stockés dans l’état Stats.
+
+Le MJ peut :
+
+* ouvrir le panneau `Gérer les presets` ;
+* sélectionner un type de token ;
+* ajouter un tracker au preset sélectionné ;
+* retirer un tracker d’un preset ;
+* réinitialiser un preset ;
+* réinitialiser tous les presets.
+
+Cette étape reste volontairement simple.
+
+Les presets modifiés s’appliquent aux prochains tokens ajoutés et au bouton `Appliquer preset`.
+
+Le bouton `Appliquer preset` reste prudent : il ajoute les trackers manquants et ne supprime pas les trackers déjà présents sur le token.
+
 ## Ce qui reste reporté
 
 Restent volontairement reportés à des étapes ultérieures :
 
-* V2.2B — édition complète des presets par le MJ ;
-* V2.3 — assignation joueur ;
-* V2.4 — conditions complètes ;
-* V2.5 — affichage direct sur token ;
+* assignation joueur ;
+* conditions complètes ;
+* affichage direct sur token ;
 * automatisation complète PF2e ;
 * intégration Calendar ;
 * intégration Loot Table.
