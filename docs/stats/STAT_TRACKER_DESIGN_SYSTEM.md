@@ -2,20 +2,26 @@
 
 Document de référence pour le module **Stats / Stat Tracker** de Tactical GM Suite, addon Owlbear Rodeo.
 
-Emplacement recommandé dans le dépôt :
+Emplacement recommandé :
 
 ```txt
-Tactical-GM-Suite/
-  docs/
-    stats/
-      STAT_TRACKER_DESIGN_SYSTEM.md
+Tactical-GM-Suite/docs/stats/STAT_TRACKER_DESIGN_SYSTEM.md
 ```
 
 ## 1. Contexte
 
-Tactical GM Suite est une suite MJ pour Owlbear Rodeo. Les modules actuels validés sont : Core / Dashboard, Initiative Tracker, Distance / Déplacement / Portée, et Stat Tracker. Calendar et Loot Table existent comme idées futures, mais sont reportés.
+Tactical GM Suite est une suite MJ pour Owlbear Rodeo.
 
-Ce document concerne uniquement le module **Stats / Stat Tracker**.
+Modules actuels validés :
+
+1. Core / Dashboard
+2. Initiative Tracker
+3. Distance / Déplacement / Portée
+4. Stat Tracker
+
+Calendar et Loot Table existent comme idées futures, mais sont reportés.
+
+Ce document concerne uniquement le design visuel du module **Stats / Stat Tracker**.
 
 État validé du module Stats :
 
@@ -23,19 +29,15 @@ Ce document concerne uniquement le module **Stats / Stat Tracker**.
 - Stats V2.2A : presets internes appliqués selon le type de token.
 - Stats V2.2B : gestion simple des presets par le MJ.
 - Stats V2.3A : assignation joueur simple avec `assignedPlayerName` et `assignedPlayerId`.
-- La suite concernant les permissions joueur avancées est gardée pour Codex plus tard.
+- La suite code / permissions joueur avancées est gardée pour plus tard.
 
-L’objectif du présent document est de fixer le design system visuel des trackers, sans modifier le dépôt immédiatement.
+## 2. Règle centrale
 
-## 2. Principe central
-
-Un tracker est une donnée libre créée par le MJ. Le système ne doit jamais associer de manière obligatoire une icône à une statistique précise.
-
-La règle principale est :
+Un tracker est une donnée libre créée par le MJ.
 
 > Un tracker est une donnée libre. L’icône est un symbole libre. Le type de rendu est un comportement d’affichage. Le skin est une ambiance visuelle. Les presets ne sont que des raccourcis modifiables.
 
-Conséquences :
+Conséquences obligatoires :
 
 - Une icône de cœur ne signifie pas automatiquement PV.
 - Une icône de bouclier ne signifie pas automatiquement CA.
@@ -43,6 +45,7 @@ Conséquences :
 - Une icône de pièce ne signifie pas automatiquement monnaie.
 - Le MJ peut utiliser n’importe quelle icône pour n’importe quelle stat.
 - Le système ne doit pas bloquer les choix sémantiques du MJ, même s’ils semblent étranges.
+- Le système ne doit pas remplacer automatiquement un rendu valide par un autre.
 
 ## 3. Modèle conceptuel
 
@@ -73,11 +76,11 @@ Un tracker peut déjà contenir notamment :
 - `canPlayerEdit`
 - `showOnToken`
 
-Pour l’évolution visuelle, il est recommandé de prévoir éventuellement :
+Ajout recommandé :
 
 | Champ | Rôle | Remarque |
 |---|---|---|
-| `skinId` | Skin visuel choisi par l’utilisateur | Optionnel, fallback sur `neutral` |
+| `skinId` | Skin visuel choisi par l’utilisateur | Optionnel, fallback `neutral` |
 | `displayOptions` | Options propres au visual type | Optionnel, pas nécessaire en première étape |
 
 Il n’est pas recommandé de rendre `statId` obligatoire pour le système visuel, car le sens de la stat appartient à l’utilisateur. Les presets peuvent avoir des identifiants internes, mais l’affichage doit rester libre.
@@ -95,7 +98,9 @@ Les visual types sont des comportements d’affichage, pas des catégories de st
 | `toggle` | Actif / inactif | booléen ou équivalent | Oui |
 | `units` | Répétition de l’icône en unités | `current` + `max` | Oui |
 
-## 6. Règle de liberté utilisateur
+`units` signifie : répéter l’icône choisie par l’utilisateur selon `current` et `max`. Cela ne signifie pas “cœurs”.
+
+## 6. Liberté utilisateur sur le rendu
 
 Le système doit respecter le visual type choisi par l’utilisateur, même si le résultat paraît peu optimal.
 
@@ -107,7 +112,12 @@ Exemples à accepter :
 - `toggle` avec une icône de projectile.
 - `counter` avec une icône de cœur.
 
-Le système ne doit pas remplacer automatiquement un rendu par un autre pour des raisons de lisibilité, de logique métier ou de cohérence supposée.
+Interdits :
+
+- basculer automatiquement `units` vers `bar` parce que `max` est élevé ;
+- regrouper automatiquement les unités sans option explicite ;
+- refuser une icône parce qu’elle semble incohérente avec le nom de la stat ;
+- imposer une couleur ou un skin en fonction du nom de la stat.
 
 ## 7. Fallbacks autorisés
 
@@ -124,12 +134,7 @@ Les fallbacks doivent exister uniquement pour éviter un rendu cassé, pas pour 
 | Choix peu lisible mais techniquement valide | respecter le choix utilisateur |
 | Max élevé avec `units` | afficher toutes les unités demandées |
 
-Interdit :
-
-- basculer automatiquement `units` vers `bar` parce que `max` est élevé ;
-- regrouper automatiquement les unités sans option explicite ;
-- refuser une icône parce qu’elle semble incohérente avec le nom de la stat ;
-- imposer une couleur ou un skin en fonction du nom de la stat.
+Le fallback recommandé pour les icônes est `object_circle`.
 
 ## 8. États dynamiques génériques
 
@@ -224,77 +229,125 @@ Recommandations :
 
 Recommandations :
 
+- rendu compact ;
 - valeur claire ;
-- icône à gauche ;
-- fallback général si le type est inconnu ;
-- afficher `—` si la valeur manque.
+- fallback principal pour type inconnu ou rendu impossible ;
+- afficher `—` si aucune valeur n’est disponible.
 
 ### `toggle`
 
-`toggle` affiche un état actif / inactif.
+`toggle` représente un état actif / inactif.
 
 Recommandations :
 
-- icône pleine ou lumineuse si actif ;
-- icône atténuée si inactive ;
-- interaction au clic seulement si autorisée ;
-- sur token, icône seule recommandée.
+- actif : icône pleine, bordure ou glow léger ;
+- inactif : icône atténuée ;
+- désactivé : opacité basse ;
+- clic uniquement si l’utilisateur a le droit d’éditer.
 
 ### `units`
 
-`units` répète l’icône choisie par l’utilisateur selon `current` et `max`.
+`units` répète l’icône choisie par le MJ.
 
 Recommandations :
 
-- une unité pleine pour chaque point disponible ;
-- une unité vide ou atténuée pour chaque point manquant ;
-- afficher le nombre d’unités demandé par `max`, sans seuil automatique ;
-- ne jamais basculer automatiquement en barre ;
-- si l’utilisateur choisit 30 unités, afficher 30 unités.
+- `current` définit le nombre d’unités pleines ;
+- `max` définit le nombre total d’unités ;
+- ne pas limiter automatiquement le nombre d’unités ;
+- ne pas grouper automatiquement ;
+- afficher toutes les unités demandées si la configuration est valide.
 
-## 11. Rendu sur token
+## 11. Picker d’icônes V1
 
-Le rendu sur token doit être plus compact que le popover. Il sert de résumé visuel, pas d’interface complète.
+Le picker d’icônes doit permettre au MJ de choisir une icône librement.
 
-| Type | Rendu token recommandé |
+Onglets validés :
+
+| Onglet | Rôle |
 |---|---|
-| `icon` | icône seule, badge optionnel |
-| `bar` | mini-barre + valeur optionnelle |
-| `counter` | icône + valeur, sans gros boutons |
-| `readonly` | icône + valeur |
-| `toggle` | icône active / inactive |
-| `units` | unités affichées selon configuration utilisateur |
+| Récents | icônes utilisées récemment |
+| Corps & Protection | vivant, blessure, défense, armure |
+| Arcane & Combat | magie, énergie, armes, combat |
+| Ressources & Richesses | consommables, équipement, monnaie |
+| Objets & Marques | objets, mécanismes, pièges, marqueurs |
 
-Même sur token, il ne faut pas changer automatiquement le visual type choisi.
+Règles :
 
-## 12. Presets internes
+- une icône appartient à une seule catégorie principale ;
+- `Récents` est un onglet dynamique, pas une catégorie d’asset ;
+- pas de recherche en V1 ;
+- affichage en onglets + grille ;
+- icônes 28 à 32 px dans la grille ;
+- cellules autour de 40 à 44 px ;
+- tooltip recommandé avec le nom visible de l’icône ;
+- hover : pastille sombre translucide ;
+- sélection : pastille plus visible + accent violet ou accent UI.
 
-Les presets sont des modèles de création, pas des règles métier verrouillées.
+Changer d’icône ne doit jamais modifier le nom, le type, les valeurs ou le skin.
 
-Un preset peut préremplir :
+## 12. Skins V1
 
-- un nom ;
-- un visual type ;
-- des valeurs ;
-- une icône ;
-- un skin ;
-- des options d’affichage.
+Les skins sont des ambiances visuelles libres appliquées autour de l’icône.
 
-Après application, le tracker doit rester entièrement modifiable.
+Les icônes illustrées PNG ne doivent pas être recolorées automatiquement.
 
-Exemples de presets possibles :
+Skins V1 proposés :
 
-| Preset | Préremplissage possible | Modifiable ? |
+| Skin ID | Nom visible | Ambiance |
 |---|---|---|
-| PV | nom `PV`, type `bar`, icône cœur, skin rouge | Oui |
-| CA | nom `CA`, type `readonly`, icône bouclier, skin acier | Oui |
-| Munitions | nom `Munitions`, type `counter`, icône projectile, skin orange | Oui |
-| Charges | nom `Charges`, type `counter` ou `units`, icône cristal, skin violet | Oui |
-| Point héroïsme | nom `Point héroïsme`, type `units`, icône étoile, skin or | Oui |
+| `neutral` | Neutre | générique, sobre, fallback |
+| `red` | Rouge | danger, intensité, blessure, énergie vitale |
+| `blue` | Bleu | calme, mana, froid, contrôle |
+| `purple` | Violet | magie, mystère, rituel |
+| `gold` | Or | valeur, héroïsme, faveur, rareté |
+| `green` | Vert | nature, poison, soin, croissance |
+| `orange` | Orange | feu, charge, munition, énergie |
+| `steel` | Acier | armure, objet, solidité, mécanique |
+| `dark` | Sombre | ombre, malédiction, corruption, menace |
 
-## 13. Structure technique cible
+Chaque skin peut définir :
 
-Structure recommandée :
+- `accent`
+- `accentSoft`
+- `accentStrong`
+- `surface`
+- `surfaceSoft`
+- `border`
+- `barFill`
+- `barEmpty`
+- `text`
+- `textMuted`
+- `glow`
+
+Fallback skin : `neutral`.
+
+## 13. Aperçu live V1
+
+L’aperçu live doit montrer le rendu du tracker pendant la création ou l’édition.
+
+Il doit refléter :
+
+- `name`
+- `visualType`
+- valeurs (`current`, `max`, `value`)
+- `iconId`
+- `skinId`
+
+Règle technique recommandée :
+
+```txt
+StatPreview
+  reçoit l’état temporaire du formulaire
+  crée un previewTracker non sauvegardé
+  applique les fallbacks techniques
+  appelle le même StatTrackerRenderer que les trackers réels
+```
+
+En V1, l’aperçu concerne uniquement le rendu panel, pas le rendu token.
+
+L’aperçu ne doit jamais corriger automatiquement les choix du MJ.
+
+## 14. Structure technique recommandée
 
 ```txt
 src/features/stats/
@@ -332,17 +385,22 @@ src/features/stats/
     stat-animations.css
 ```
 
-Les renderers doivent rester génériques. Ils ne doivent pas contenir de logique du type : `si PV alors rouge` ou `si CA alors bouclier`.
+Si des composants équivalents existent déjà, il faut les adapter plutôt que recréer une architecture parallèle.
 
-## 14. Ordre de développement recommandé
+## 15. Presets
 
-1. Stabiliser les fichiers de design system dans `docs/stats/`.
-2. Stabiliser la bibliothèque d’icônes V1.
-3. Ajouter les skins indépendants.
-4. Ajouter ou améliorer les renderers existants.
-5. Ajouter le visual type `units` si nécessaire.
-6. Ajouter l’aperçu live dans l’écran de création.
-7. Ajouter les micro-animations CSS.
-8. Ajouter les fallbacks techniques.
-9. Améliorer les presets sans les verrouiller.
+Les presets sont des raccourcis de création. Ils peuvent proposer un nom, un visual type, une icône, un skin et des valeurs, mais tout doit rester modifiable après application.
 
+Exemples de presets possibles :
+
+| Preset | Icône proposée | Type proposé | Skin proposé |
+|---|---|---|---|
+| PV | `body_heart` | `bar` | `red` |
+| CA | `body_shield` | `readonly` | `steel` |
+| Munitions | `arcane_projectile` | `counter` | `orange` |
+| Sort | `arcane_rune` | `units` ou `counter` | `purple` |
+| Point héroïsme | `arcane_star` | `units` | `gold` |
+| Charges | `arcane_crystal` | `counter` ou `units` | `purple` ou `orange` |
+| Compteur | `object_circle` | `counter` | `neutral` |
+
+Ce tableau est une aide, pas une règle métier.

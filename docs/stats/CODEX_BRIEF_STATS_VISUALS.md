@@ -1,21 +1,20 @@
-# Tactical GM Suite — Codex Brief: Stats Visual Design System
+# Tactical GM Suite — Codex Brief: Stats Visuals
 
-Document court à donner à Codex pour implémenter ou modifier le système visuel du module Stats.
+Document court à donner à Codex pour implémenter progressivement le design visuel du module Stats.
 
-Emplacement recommandé dans le dépôt :
+Emplacement recommandé :
 
 ```txt
-Tactical-GM-Suite/
-  docs/
-    stats/
-      CODEX_BRIEF_STATS_VISUALS.md
+Tactical-GM-Suite/docs/stats/CODEX_BRIEF_STATS_VISUALS.md
 ```
 
-## 1. But
+## 1. Objectif
 
-Implémenter progressivement un design system pour les trackers du module Stats / Stat Tracker.
+Mettre en place progressivement un design system visuel pour les trackers Stats, sans casser le module existant.
 
-Le système doit rester compatible avec l’architecture actuelle et ne doit pas verrouiller les choix du MJ.
+Le travail concerne uniquement **Stats / Stat Tracker**.
+
+Ne pas toucher aux modules Calendar, Loot Table, Initiative, Distance, Core sauf nécessité technique directe.
 
 ## 2. Règle absolue
 
@@ -28,6 +27,7 @@ Exemples autorisés :
 - cœur utilisé pour autre chose que les PV ;
 - bouclier utilisé pour autre chose que la CA ;
 - projectile utilisé pour autre chose que les munitions ;
+- pièce utilisée pour autre chose que de la monnaie ;
 - `units` avec une valeur max élevée ;
 - icône étrange avec visual type valide.
 
@@ -41,7 +41,9 @@ Ne pas faire :
 - `if visualType === units && max > X then bar` ;
 - remplacement automatique d’un visual type valide ;
 - regroupement automatique des unités ;
-- blocage sémantique d’une configuration utilisateur.
+- blocage sémantique d’une configuration utilisateur ;
+- recoloration automatique destructive des PNG illustrés ;
+- suppression ou migration risquée des anciens trackers.
 
 Les seuls fallbacks autorisés sont techniques : icône introuvable, skin introuvable, type inconnu ou données obligatoires manquantes.
 
@@ -79,6 +81,8 @@ Ajout recommandé :
 
 - `skinId`, optionnel, fallback `neutral`.
 
+Ne pas rendre `statId` obligatoire pour le design visuel.
+
 ## 6. Bibliothèque d’icônes V1
 
 Créer ou prévoir une bibliothèque de 48 icônes réparties en 4 catégories :
@@ -92,71 +96,9 @@ Ajouter aussi un onglet UI `Récents`, qui ne change pas la catégorie principal
 
 Une icône appartient à une seule catégorie principale.
 
-## 7. Liste des icônes V1
+## 7. Lot test prioritaire
 
-### body
-
-- `body_heart` — Cœur
-- `body_broken_heart` — Cœur brisé
-- `body_drop` — Goutte
-- `body_skull` — Crâne
-- `body_bone` — Os
-- `body_heal_cross` — Soin
-- `body_shield` — Bouclier
-- `body_cracked_shield` — Bouclier fissuré
-- `body_helmet` — Casque
-- `body_armor` — Armure
-- `body_lock` — Cadenas
-- `body_wall` — Rempart
-
-### arcane
-
-- `arcane_rune` — Rune
-- `arcane_crystal` — Cristal
-- `arcane_star` — Étoile
-- `arcane_eye` — Œil
-- `arcane_portal` — Portail
-- `arcane_flame` — Flamme
-- `arcane_sword` — Épée
-- `arcane_bow` — Arc
-- `arcane_projectile` — Projectile
-- `arcane_target` — Cible
-- `arcane_explosion` — Explosion
-- `arcane_lightning` — Éclair
-
-### resource
-
-- `resource_vial` — Fiole
-- `resource_pouch` — Sacoche
-- `resource_torch` — Torche
-- `resource_ration` — Ration
-- `resource_apple` — Pomme
-- `resource_tool` — Outil
-- `resource_coin` — Pièce
-- `resource_platinum` — Platine
-- `resource_gold` — Or
-- `resource_silver` — Argent
-- `resource_copper` — Cuivre
-- `resource_gem` — Gemme
-
-### object
-
-- `object_gear` — Engrenage
-- `object_key` — Clé
-- `object_bomb` — Bombe
-- `object_hourglass` — Sablier
-- `object_flag` — Drapeau
-- `object_seal` — Sceau
-- `object_circle` — Cercle
-- `object_diamond` — Losange
-- `object_square` — Carré
-- `object_dot` — Point
-- `object_arrow_up` — Flèche haut
-- `object_arrow_down` — Flèche bas
-
-## 8. Lot test prioritaire
-
-Avant les 48 icônes, produire ou intégrer 8 icônes test :
+Intégrer d’abord le lot test suivant :
 
 - `body_heart`
 - `body_shield`
@@ -166,99 +108,64 @@ Avant les 48 icônes, produire ou intégrer 8 icônes test :
 - `resource_coin`
 - `object_gear`
 - `object_hourglass`
+- `object_circle` comme fallback technique si validé.
 
-## 9. Direction artistique des icônes
+Ces assets doivent être de vrais PNG transparents. Ne pas intégrer une image avec un damier dessiné en fond.
 
-Les icônes doivent être originales, non copiées depuis un autre addon.
-
-Style validé :
-
-- fantasy stylisé / jeu vidéo ;
-- léger semi-réalisme ;
-- légère vue 3/4 ;
-- contours visibles mais propres ;
-- ombres légères ;
-- couleurs lisibles mais non flashy ;
-- fond transparent ;
-- format source 256×256 px ;
-- format final PNG ou WebP transparent ;
-- lisible à 24–32 px.
-
-Ne pas intégrer de disque ou plaque de fond dans les icônes : le fond, la sélection, le hover et le skin doivent être gérés par l’UI.
-
-## 10. Structure recommandée
+## 8. Emplacement des assets
 
 ```txt
-src/features/stats/
-  design/
-    iconLibrary.ts
-    iconCategories.ts
-    trackerSkins.ts
-    visualTypes.ts
-    trackerStates.ts
-    trackerFallbacks.ts
+src/features/stats/assets/icons/
+  body/
+    body_heart.png
+    body_shield.png
 
-  components/
-    StatTrackerRenderer.tsx
-    StatIconPicker.tsx
-    StatSkinPicker.tsx
-    StatPreview.tsx
+  arcane/
+    arcane_rune.png
+    arcane_sword.png
 
-  components/renderers/
-    IconTrackerRenderer.tsx
-    BarTrackerRenderer.tsx
-    CounterTrackerRenderer.tsx
-    ReadonlyTrackerRenderer.tsx
-    ToggleTrackerRenderer.tsx
-    UnitsTrackerRenderer.tsx
+  resource/
+    resource_vial.png
+    resource_coin.png
 
-  assets/icons/
-    body/
-    arcane/
-    resource/
-    object/
-
-  styles/
-    stat-trackers.css
-    stat-skins.css
-    stat-animations.css
+  object/
+    object_gear.png
+    object_hourglass.png
+    object_circle.png
 ```
 
-## 11. Comportement du picker
+Ne pas déplacer les assets dans `public/` sauf si l’architecture réelle du repo l’impose déjà.
 
-Le picker V1 doit être simple : onglets + grille.
+## 9. Fichiers techniques recommandés
 
-Onglets :
+```txt
+src/features/stats/design/iconCategories.ts
+src/features/stats/design/iconLibrary.ts
+src/features/stats/design/trackerSkins.ts
+src/features/stats/components/StatIconPicker.tsx
+src/features/stats/components/StatSkinPicker.tsx
+src/features/stats/components/StatPreview.tsx
+```
 
-- Récents
-- Corps & Protection
-- Arcane & Combat
-- Ressources & Richesses
-- Objets & Marques
+Si des composants équivalents existent déjà, les adapter plutôt que recréer des doublons.
 
-États UI :
+## 10. Picker d’icônes
 
-- normal : icône seule ;
-- hover : cercle gris translucide ;
-- sélectionné : cercle plus marqué + accent violet ;
-- focus clavier : contour clair ;
-- icône manquante : fallback générique.
+Le picker doit :
 
-## 12. Skins
+- afficher 4 catégories + Récents ;
+- utiliser une grille d’icônes ;
+- ne pas avoir de recherche en V1 ;
+- afficher une pastille au hover ;
+- afficher une sélection claire ;
+- proposer un fallback si l’icône manque ;
+- ne jamais modifier le nom, le type, les valeurs ou le skin quand l’icône change.
 
-Les skins ne doivent pas recolorer obligatoirement l’icône. Pour les icônes illustrées, `supportsTint` est `false` par défaut.
+## 11. Skins
 
-Le skin agit plutôt sur :
+Les skins sont des ambiances visuelles libres.
 
-- fond du tracker ;
-- barre ;
-- bordure ;
-- halo ;
-- badge ;
-- état sélectionné ;
-- texte ou accent UI.
-
-Skins de base recommandés :
+Skins V1 :
 
 - `neutral`
 - `red`
@@ -270,30 +177,60 @@ Skins de base recommandés :
 - `steel`
 - `dark`
 
-## 13. Animations
+Le fallback de skin est toujours `neutral`.
 
-Animations CSS légères recommandées :
+Les skins modifient le conteneur, la bordure, la barre, les badges, les boutons, le glow et les états. Ils ne recolorent pas automatiquement les PNG illustrés.
 
-- `value-pop`
-- `increase-glow`
-- `decrease-flash`
-- `bar-transition`
-- `unit-fill`
-- `toggle-switch`
-- `disabled-fade`
+## 12. Aperçu live
 
-Respecter `prefers-reduced-motion`.
+Ajouter un aperçu live dans le formulaire de création/édition des trackers Stats.
 
-## 14. Implémentation par étapes
+L’aperçu doit utiliser le même renderer que les trackers réels, via un tracker temporaire construit depuis l’état du formulaire.
 
-1. Ajouter ces documents de référence dans `docs/stats/`.
-2. Créer les types et registres de design sans modifier la logique métier.
-3. Créer la bibliothèque d’icônes V1 avec placeholders si besoin.
-4. Ajouter le picker d’icônes par onglets.
-5. Ajouter `skinId` optionnel avec fallback `neutral`.
-6. Refactoriser les renderers pour les rendre génériques.
-7. Ajouter `units` seulement si les autres types sont stables.
-8. Ajouter l’aperçu live.
-9. Ajouter les animations CSS.
-10. Ajuster les presets pour préremplir sans verrouiller.
+Il doit refléter :
 
+- nom ;
+- visualType ;
+- valeurs ;
+- icône ;
+- skin.
+
+Il ne doit jamais corriger automatiquement les choix du MJ.
+
+En V1, l’aperçu concerne uniquement le rendu panel, pas le rendu token.
+
+## 13. Ordre de travail recommandé
+
+Lot 1 — Documentation + assets :
+
+1. Ajouter / mettre à jour les fichiers dans `docs/stats/`.
+2. Ajouter les icônes validées dans `src/features/stats/assets/icons/`.
+3. Vérifier vraie transparence des PNG.
+4. Ne pas modifier la logique fonctionnelle des trackers.
+
+Lot 2 — Bibliothèque + picker :
+
+1. Créer ou compléter `iconCategories.ts`.
+2. Créer ou compléter `iconLibrary.ts`.
+3. Brancher le picker sur cette bibliothèque.
+4. Ajouter le fallback `object_circle`.
+5. Préserver tous les trackers existants.
+
+Lot 3 — Skins + aperçu live :
+
+1. Ajouter `trackerSkins.ts` et CSS variables associées.
+2. Ajouter / adapter le choix de skin dans le formulaire.
+3. Ajouter `StatPreview`.
+4. Brancher l’aperçu sur le vrai renderer.
+5. Tester `icon`, `bar`, `counter`, `readonly`, `toggle`, `units`.
+
+## 14. Tests minimum
+
+À la fin de chaque lot :
+
+- `npm run build`
+- `npm run lint` si disponible
+- vérifier que les trackers existants s’affichent encore ;
+- créer un tracker custom avec une icône libre ;
+- vérifier qu’un tracker sans `iconId` utilise le fallback ;
+- vérifier qu’un tracker sans `skinId` utilise `neutral`.
