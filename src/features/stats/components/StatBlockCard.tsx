@@ -3,10 +3,13 @@ import type {
   StatTokenInput,
   StatTrackerInput,
 } from "../statTypes";
+import type { StatPermissionViewer } from "../services/statPermissions";
 import { StatTrackedTokenBlock } from "./StatTrackedTokenBlock";
 
 type Props = {
   group: StatDisplayGroup;
+  isGm: boolean;
+  viewer: StatPermissionViewer;
   onAddTracker: (tokenId: string, input: StatTrackerInput) => void;
   onApplyPreset: (tokenId: string) => void;
   onChangeTrackerValue: (tokenId: string, trackerId: string, delta: number) => void;

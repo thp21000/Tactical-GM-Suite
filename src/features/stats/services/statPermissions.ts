@@ -55,6 +55,26 @@ export function canViewerEditTracker(
   return isTokenAssignedToViewer(token, viewer);
 }
 
+
+export function filterTrackersForViewer(
+  token: StatTrackedToken,
+  viewer: StatPermissionViewer,
+): StatTracker[] {
+  if (viewer.role === "gm") return token.trackers;
+  return token.trackers.filter((tracker) => canViewerSeeTracker(token, tracker, viewer));
+}
+
+export function filterTokensForViewer(
+  tokens: StatTrackedToken[],
+  viewer: StatPermissionViewer,
+): StatTrackedToken[] {
+  if (viewer.role === "gm") return tokens;
+
+  return tokens
+    .map((token) => ({ ...token, trackers: filterTrackersForViewer(token, viewer) }))
+    .filter((token) => token.trackers.length > 0);
+}
+
 export function getTrackerVisibilityBadgeLabel(tracker: StatTracker): string {
   if (tracker.visibility === "public") return "Public";
   if (tracker.visibility === "private") return "Privé";

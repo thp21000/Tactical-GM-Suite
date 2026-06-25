@@ -3,6 +3,7 @@ import { Badge } from "../../../shared/components/Badge";
 import { Button } from "../../../shared/components/Button";
 import { CollapsibleSection } from "../../../shared/components/CollapsibleSection";
 import { STAT_TOKEN_TYPE_LABELS } from "../services/statLabels";
+import { canViewerEditTracker, type StatPermissionViewer } from "../services/statPermissions";
 import type {
   StatDisplayGroup,
   StatTokenInput,
@@ -14,6 +15,8 @@ import { StatTrackerForm } from "./StatTrackerForm";
 
 type Props = {
   group: StatDisplayGroup;
+  isGm: boolean;
+  viewer: StatPermissionViewer;
   onAddTracker: (tokenId: string, input: StatTrackerInput) => void;
   onApplyPreset: (tokenId: string) => void;
   onChangeTrackerValue: (tokenId: string, trackerId: string, delta: number) => void;
@@ -49,6 +52,8 @@ function getPlayerAssignmentLabel(token: {
 
 export function StatTrackedTokenBlock({
   group,
+  isGm,
+  viewer,
   onAddTracker,
   onApplyPreset,
   onChangeTrackerValue,
@@ -124,29 +129,31 @@ export function StatTrackedTokenBlock({
                 />
               ) : null}
 
-              <div className="stat-card__actions">
-                <Button onClick={() => setEditingTokenId(token.id)}>
-                  Modifier token
-                </Button>
+              {isGm ? (
+                <div className="stat-card__actions">
+                  <Button onClick={() => setEditingTokenId(token.id)}>
+                    Modifier token
+                  </Button>
 
-                <Button
-                  onClick={() =>
-                    setAddingTrackerTokenId(isAddingTracker ? null : token.id)
-                  }
-                >
-                  Ajouter tracker
-                </Button>
+                  <Button
+                    onClick={() =>
+                      setAddingTrackerTokenId(isAddingTracker ? null : token.id)
+                    }
+                  >
+                    Ajouter tracker
+                  </Button>
 
-                <Button onClick={() => onApplyPreset(token.id)}>
-                  Appliquer preset
-                </Button>
+                  <Button onClick={() => onApplyPreset(token.id)}>
+                    Appliquer preset
+                  </Button>
 
-                <Button onClick={() => onRemoveToken(token.id)}>
-                  Supprimer token
-                </Button>
-              </div>
+                  <Button onClick={() => onRemoveToken(token.id)}>
+                    Supprimer token
+                  </Button>
+                </div>
+              ) : null}
 
-              {isAddingTracker ? (
+              {isGm && isAddingTracker ? (
                 <StatTrackerForm
                   onCancel={() => setAddingTrackerTokenId(null)}
                   onSubmit={(input) => {
@@ -166,6 +173,8 @@ export function StatTrackedTokenBlock({
                   {token.trackers.map((tracker) => (
                     <StatTrackerCard
                       key={tracker.id}
+                      canEdit={canViewerEditTracker(token, tracker, viewer)}
+                      isGm={isGm}
                       token={token}
                       tracker={tracker}
                       onChangeValue={(delta) =>

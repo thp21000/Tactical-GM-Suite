@@ -10,6 +10,8 @@ import { StatTrackerForm } from "./StatTrackerForm";
 import { StatTrackerValueControls } from "./StatTrackerValueControls";
 
 type Props = {
+  canEdit: boolean;
+  isGm: boolean;
   token: StatTrackedToken;
   tracker: StatTracker;
   onChangeValue: (delta: number) => void;
@@ -31,6 +33,8 @@ export function StatTrackerCard({
   onRemove,
   onToggle,
   onUpdate,
+  canEdit,
+  isGm,
   token,
   tracker,
 }: Props) {
@@ -93,21 +97,21 @@ export function StatTrackerCard({
         </strong>
       )}
 
-      {tracker.visualType === "toggle" ? (
+      {tracker.visualType === "toggle" && canEdit ? (
         <Button onClick={onToggle}>
           {tracker.enabled ? "Désactiver" : "Activer"}
         </Button>
       ) : null}
 
-      <StatTrackerValueControls tracker={tracker} onChange={onChangeValue} />
+      <StatTrackerValueControls canEdit={canEdit} tracker={tracker} onChange={onChangeValue} />
 
       <div className="stat-tracker-card__actions">
         {tracker.showOnToken ? (
           <Badge tone="success">Affichage token prévu</Badge>
         ) : null}
 
-        <Button onClick={() => setEditing(true)}>Modifier</Button>
-        <Button onClick={onRemove}>Supprimer</Button>
+        {isGm ? <Button onClick={() => setEditing(true)}>Modifier</Button> : null}
+        {isGm ? <Button onClick={onRemove}>Supprimer</Button> : null}
       </div>
     </article>
   );

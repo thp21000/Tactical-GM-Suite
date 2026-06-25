@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ObrReadyState } from "../../core/obr/obrReady";
 import { Badge } from "../../shared/components/Badge";
 import { Panel } from "../../shared/components/Panel";
@@ -8,8 +8,10 @@ import { StatTokenForm } from "./components/StatTokenForm";
 import { StatTrackedTokenBlock } from "./components/StatTrackedTokenBlock";
 import { StatTrackerEmptyState } from "./components/StatTrackerEmptyState";
 import { StatTrackerToolbar } from "./components/StatTrackerToolbar";
+import { useStatPermissionViewer } from "./hooks/useStatPermissionViewer";
 import { useStatTrackerContextMenu } from "./hooks/useStatTrackerContextMenu";
 import { useStatTrackerState } from "./hooks/useStatTrackerState";
+import { filterTokensForViewer } from "./services/statPermissions";
 
 type Props = {
   obr: ObrReadyState;
@@ -19,6 +21,10 @@ export function StatTrackerPage({ obr }: Props) {
   const [formOpen, setFormOpen] = useState(false);
   const [presetPanelOpen, setPresetPanelOpen] = useState(false);
   const stats = useStatTrackerState(obr.isReady);
+  const { isGm, viewer, viewerLabel } = useStatPermissionViewer(obr.isReady);
+  const visibleDisplayGroups = useMemo(() => stats.displayGroups
+    .map((group) => ({ ...group, tokens: filterTokensForViewer(group.tokens, viewer) }))
+    .filter((group) => group.tokens.length > 0), [stats.displayGroups, viewer]);
 
   useStatTrackerContextMenu({
     isReady: obr.isReady,
@@ -38,9 +44,12 @@ export function StatTrackerPage({ obr }: Props) {
             </p>
           </div>
 
-          <Badge tone={obr.isReady ? "success" : "warning"}>
-            {obr.modeLabel}
-          </Badge>
+          <div className="stat-header__badges">
+            <Badge tone={obr.isReady ? "success" : "warning"}>
+              {obr.modeLabel}
+            </Badge>
+            <Badge>{viewerLabel}</Badge>
+          </div>
         </div>
       </Panel>
 
@@ -48,34 +57,36 @@ export function StatTrackerPage({ obr }: Props) {
         <StatSummaryPanel {...stats.summary} />
       </Panel>
 
-      <Panel>
-        <StatTrackerToolbar
-          isFormOpen={formOpen}
-          onReset={stats.resetTracker}
-          onToggleForm={() => setFormOpen((current) => !current)}
-        />
-
-        <div className="stat-card__actions">
-          <button
-            className="button"
-            type="button"
-            onClick={() => setPresetPanelOpen((current) => !current)}
-          >
-            {presetPanelOpen ? "Masquer les presets" : "Gérer les presets"}
-          </button>
-        </div>
-
-        {formOpen ? (
-          <StatTokenForm
-            onSubmit={(input) => {
-              stats.addToken(input);
-              setFormOpen(false);
-            }}
+      {isGm ? (
+        <Panel>
+          <StatTrackerToolbar
+            isFormOpen={formOpen}
+            onReset={stats.resetTracker}
+            onToggleForm={() => setFormOpen((current) => !current)}
           />
-        ) : null}
-      </Panel>
 
-      {presetPanelOpen ? (
+          <div className="stat-card__actions">
+            <button
+              className="button"
+              type="button"
+              onClick={() => setPresetPanelOpen((current) => !current)}
+            >
+              {presetPanelOpen ? "Masquer les presets" : "Gérer les presets"}
+            </button>
+          </div>
+
+          {formOpen ? (
+            <StatTokenForm
+              onSubmit={(input) => {
+                stats.addToken(input);
+                setFormOpen(false);
+              }}
+            />
+          ) : null}
+        </Panel>
+      ) : null}
+
+      {isGm && presetPanelOpen ? (
         <Panel title="Presets Stats">
           <StatPresetManager
             presets={stats.presets}
@@ -88,14 +99,16 @@ export function StatTrackerPage({ obr }: Props) {
       ) : null}
 
       <Panel title="Tokens suivis">
-        {stats.tokens.length === 0 ? (
+        {visibleDisplayGroups.length === 0 ? (
           <StatTrackerEmptyState />
         ) : (
           <div className="stat-list">
-            {stats.displayGroups.map((group) => (
+            {visibleDisplayGroups.map((group) => (
               <StatTrackedTokenBlock
                 key={group.id}
                 group={group}
+                isGm={isGm}
+                viewer={viewer}
                 onAddTracker={stats.addTracker}
                 onApplyPreset={stats.applyPresetToToken}
                 onChangeTrackerValue={stats.changeTrackerValue}

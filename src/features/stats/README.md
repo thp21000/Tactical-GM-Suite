@@ -49,6 +49,8 @@ Stats V2.1 — Base des trackers personnalisables
 Stats V2.2A — Presets internes et application automatique
 Stats V2.2B — Gestion simple des presets par le MJ
 Stats V2.3A — Assignation joueur simple
+Stats V2.3B — Permissions joueur préparées
+Stats V2.3C — Mode joueur minimal / filtrage préparé
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -208,3 +210,22 @@ Règles d’édition joueur préparées :
 
 Cette étape prépare seulement les fonctions de permissions et les badges courts dans l’UI MJ (`MJ`, `Public`, `Privé`, `Joueur mod.`, `Lecture seule`).
 La récupération automatique des joueurs Owlbear, le filtrage complet de l’interface et la vraie interface joueur restent reportés.
+
+## Stats V2.3C — mode joueur réel minimal / filtrage préparé
+
+Les règles de permissions préparées en V2.3B sont maintenant utilisées pour construire une vue filtrée selon le viewer courant.
+
+Comportement préparé :
+
+* le viewer Stats est centralisé dans un hook dédié ;
+* le MJ voit tous les tokens et tous les trackers ;
+* un joueur ne voit jamais les trackers `gm` ;
+* un joueur voit les trackers `public` ;
+* un joueur assigné au token voit aussi les trackers `private` de ce token ;
+* si aucun tracker n’est visible pour un joueur, le token peut être masqué dans cette vue ;
+* les contrôles rapides de tracker sont préparés selon `canPlayerEdit` et l’assignation du token ;
+* les boutons MJ restent masqués en vue joueur.
+
+Le hook utilise l’API joueur Owlbear disponible (`OBR.player.getRole()`, `getId()`, `getName()` et `onChange()`) quand elle est prête. En dehors d’Owlbear ou en cas d’erreur API, l’interface reste volontairement en `Mode MJ` pour éviter de masquer des informations au MJ.
+
+L’interface joueur complète, l’édition joueur avancée, les conditions et l’affichage direct sur token restent reportés.

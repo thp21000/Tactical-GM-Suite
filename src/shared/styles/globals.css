@@ -790,3 +790,10 @@ pre {
   justify-content: flex-end;
   gap: 4px;
 }
+
+.stat-header__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
