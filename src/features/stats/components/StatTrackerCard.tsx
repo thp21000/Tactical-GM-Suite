@@ -1,17 +1,16 @@
 import { useState } from "react";
 import { Badge } from "../../../shared/components/Badge";
 import { Button } from "../../../shared/components/Button";
-import {
-  STAT_TRACKER_VISIBILITY_LABELS,
-  STAT_TRACKER_VISUAL_TYPE_LABELS,
-} from "../services/statLabels";
+import { STAT_TRACKER_VISUAL_TYPE_LABELS } from "../services/statLabels";
+import { getTrackerEditBadgeLabel, getTrackerVisibilityBadgeLabel } from "../services/statPermissions";
 import { getTrackerDisplayValue } from "../services/statTrackers";
 import { getTrackerIcon } from "../services/statTrackerIcons";
-import type { StatTracker, StatTrackerInput } from "../statTypes";
+import type { StatTrackedToken, StatTracker, StatTrackerInput } from "../statTypes";
 import { StatTrackerForm } from "./StatTrackerForm";
 import { StatTrackerValueControls } from "./StatTrackerValueControls";
 
 type Props = {
+  token: StatTrackedToken;
   tracker: StatTracker;
   onChangeValue: (delta: number) => void;
   onRemove: () => void;
@@ -32,6 +31,7 @@ export function StatTrackerCard({
   onRemove,
   onToggle,
   onUpdate,
+  token,
   tracker,
 }: Props) {
   const [editing, setEditing] = useState(false);
@@ -39,7 +39,8 @@ export function StatTrackerCard({
   const icon = getTrackerIcon(tracker.iconId);
   const percent = getTrackerPercent(tracker);
   const visualTypeLabel = STAT_TRACKER_VISUAL_TYPE_LABELS[tracker.visualType];
-  const visibilityLabel = STAT_TRACKER_VISIBILITY_LABELS[tracker.visibility];
+  const visibilityLabel = getTrackerVisibilityBadgeLabel(tracker);
+  const editLabel = getTrackerEditBadgeLabel(token, tracker);
 
   if (editing) {
     return (
@@ -70,7 +71,10 @@ export function StatTrackerCard({
           </span>
         </div>
 
-        <Badge>{visibilityLabel}</Badge>
+        <div className="stat-tracker-card__badges">
+          <Badge>{visibilityLabel}</Badge>
+          <Badge>{editLabel}</Badge>
+        </div>
       </div>
 
       {tracker.visualType === "bar" ? (

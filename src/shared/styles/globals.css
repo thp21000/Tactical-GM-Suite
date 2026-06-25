@@ -783,3 +783,10 @@ pre {
   color: var(--tgm-text-muted);
   font-size: var(--tgm-font-xs);
 }
+
+.stat-tracker-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}

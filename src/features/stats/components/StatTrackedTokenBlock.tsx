@@ -166,6 +166,7 @@ export function StatTrackedTokenBlock({
                   {token.trackers.map((tracker) => (
                     <StatTrackerCard
                       key={tracker.id}
+                      token={token}
                       tracker={tracker}
                       onChangeValue={(delta) =>
                         onChangeTrackerValue(token.id, tracker.id, delta)

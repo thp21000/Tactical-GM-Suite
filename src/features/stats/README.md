@@ -187,3 +187,24 @@ Exemples futurs :
 * les conditions peuvent influencer des affichages tactiques.
 
 Il faut donc garder une structure de données claire, stable et exploitable.
+
+## Stats V2.3B — permissions joueur préparées
+
+Les règles de permissions joueur sont maintenant centralisées pour les trackers Stats.
+
+Règles de visibilité préparées :
+
+* `gm` = visible seulement par le MJ ;
+* `public` = visible par tout le monde ;
+* `private` = visible par le MJ et par le joueur assigné au token ;
+* si aucun joueur n’est assigné au token, `private` reste visible uniquement par le MJ.
+
+Règles d’édition joueur préparées :
+
+* un tracker `gm` n’est jamais éditable par un joueur ;
+* un tracker `public` ou `private` peut être édité par le joueur assigné si `canPlayerEdit` vaut `true` ;
+* un token sans joueur assigné n’est jamais éditable par un joueur ;
+* le MJ conserve tous les droits dans l’interface actuelle.
+
+Cette étape prépare seulement les fonctions de permissions et les badges courts dans l’UI MJ (`MJ`, `Public`, `Privé`, `Joueur mod.`, `Lecture seule`).
+La récupération automatique des joueurs Owlbear, le filtrage complet de l’interface et la vraie interface joueur restent reportés.
