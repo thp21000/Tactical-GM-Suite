@@ -51,6 +51,7 @@ Stats V2.2B — Gestion simple des presets par le MJ
 Stats V2.3A — Assignation joueur simple
 Stats V2.3B — Permissions joueur préparées
 Stats V2.3C — Mode joueur minimal / filtrage préparé
+Stats V2.4A — Conditions, catalogue de base et assignation simple
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -143,7 +144,7 @@ Restent volontairement reportés à des étapes ultérieures :
 
 * permissions joueur réelles ;
 * récupération des joueurs connectés Owlbear ;
-* conditions complètes ;
+* conditions avancées avec effets mécaniques ;
 * affichage direct sur token ;
 * automatisation complète PF2e ;
 * intégration Calendar ;
@@ -228,4 +229,20 @@ Comportement préparé :
 
 Le hook utilise l’API joueur Owlbear disponible (`OBR.player.getRole()`, `getId()`, `getName()` et `onChange()`) quand elle est prête. En dehors d’Owlbear ou en cas d’erreur API, l’interface reste volontairement en `Mode MJ` pour éviter de masquer des informations au MJ.
 
-L’interface joueur complète, l’édition joueur avancée, les conditions et l’affichage direct sur token restent reportés.
+L’interface joueur complète, l’édition joueur avancée et l’affichage direct sur token restent reportés.
+
+## Stats V2.4A — conditions, base et assignation simple
+
+Une première base de conditions est maintenant disponible dans Stats.
+
+Inclus dans cette étape :
+
+* un catalogue simple de conditions fantasy / PF2e-compatible ;
+* un stockage séparé des conditions dans `StatTrackedToken.conditions`, distinct des trackers ;
+* l’ajout d’une condition à un token suivi par le MJ ;
+* le retrait d’une condition active par le MJ ;
+* l’affichage des conditions actives sous forme de badges courts dans le bloc du token ;
+* une normalisation des anciens tokens sans `conditions` vers une liste vide ;
+* une migration prudente des anciennes conditions simples quand elles correspondent au catalogue.
+
+Cette étape n’applique aucun effet mécanique automatique. Les malus, durées avancées, sources, immunités, automatisation PF2e et affichage direct sur token Owlbear restent reportés.

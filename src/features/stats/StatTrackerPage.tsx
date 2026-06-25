@@ -109,9 +109,11 @@ export function StatTrackerPage({ obr }: Props) {
                 group={group}
                 isGm={isGm}
                 viewer={viewer}
+                onAddCondition={stats.addConditionToToken}
                 onAddTracker={stats.addTracker}
                 onApplyPreset={stats.applyPresetToToken}
                 onChangeTrackerValue={stats.changeTrackerValue}
+                onRemoveCondition={stats.removeConditionFromToken}
                 onRemoveToken={stats.removeToken}
                 onRemoveTracker={stats.removeTracker}
                 onToggleTracker={stats.toggleTracker}

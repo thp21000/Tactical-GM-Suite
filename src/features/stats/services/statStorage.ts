@@ -3,6 +3,7 @@ import { ROOM_METADATA_KEYS, STORAGE_KEYS } from "../../../core/constants/ids";
 import { isObrReady } from "../../../core/obr/obrReady";
 import { readJson, removeItem, writeJson } from "../../../core/storage/localStorage";
 import type { StatTrackerState } from "../statTypes";
+import { normalizeTokenConditions } from "./statConditions";
 import { normalizeStatTrackerPresets } from "./statPresets";
 import { createTracker } from "./statTrackers";
 import {
@@ -31,7 +32,16 @@ type LegacyEntity = {
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
-  conditions?: { name?: string }[];
+  conditions?: {
+    conditionId?: string;
+    id?: string;
+    label?: string;
+    name?: string;
+    value?: number;
+    note?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  }[];
   resources?: LegacyResource[];
   notes?: string;
   isHiddenFromPlayers?: boolean;
@@ -134,22 +144,10 @@ function migrateLegacyEntity(entity: LegacyEntity) {
     );
   }
 
-  for (const condition of entity.conditions ?? []) {
-    if (condition.name) {
-      trackers.push(
-        createTracker({
-          name: condition.name,
-          visualType: "icon",
-          iconId: "toggle",
-          visibility: "gm",
-        }),
-      );
-    }
-  }
-
   return {
     ...token,
     trackers,
+    conditions: normalizeTokenConditions(entity.conditions),
     createdAt: entity.createdAt ?? token.createdAt,
     updatedAt: entity.updatedAt ?? token.updatedAt,
   };
@@ -166,6 +164,9 @@ export function normalizeStatTrackerState(value: unknown): StatTrackerState {
         assignedPlayerId: cleanOptionalText(token.assignedPlayerId),
         assignedPlayerName: cleanOptionalText(token.assignedPlayerName),
         trackers: Array.isArray(token.trackers) ? token.trackers : [],
+        conditions: normalizeTokenConditions(
+          (token as { conditions?: unknown }).conditions,
+        ),
       })),
       groups: value.groups,
       presets: normalizeStatTrackerPresets(

@@ -9,6 +9,7 @@ import type {
   StatTokenInput,
   StatTrackerInput,
 } from "../statTypes";
+import { StatConditionList } from "./StatConditionList";
 import { StatTokenForm } from "./StatTokenForm";
 import { StatTrackerCard } from "./StatTrackerCard";
 import { StatTrackerForm } from "./StatTrackerForm";
@@ -17,9 +18,11 @@ type Props = {
   group: StatDisplayGroup;
   isGm: boolean;
   viewer: StatPermissionViewer;
+  onAddCondition: (tokenId: string, conditionId: string, value?: number) => void;
   onAddTracker: (tokenId: string, input: StatTrackerInput) => void;
   onApplyPreset: (tokenId: string) => void;
   onChangeTrackerValue: (tokenId: string, trackerId: string, delta: number) => void;
+  onRemoveCondition: (tokenId: string, tokenConditionId: string) => void;
   onRemoveToken: (tokenId: string) => void;
   onRemoveTracker: (tokenId: string, trackerId: string) => void;
   onToggleTracker: (tokenId: string, trackerId: string) => void;
@@ -54,9 +57,11 @@ export function StatTrackedTokenBlock({
   group,
   isGm,
   viewer,
+  onAddCondition,
   onAddTracker,
   onApplyPreset,
   onChangeTrackerValue,
+  onRemoveCondition,
   onRemoveToken,
   onRemoveTracker,
   onToggleTracker,
@@ -117,6 +122,17 @@ export function StatTrackedTokenBlock({
               </div>
 
               {token.notes ? <p className="stat-notes">{token.notes}</p> : null}
+
+              <StatConditionList
+                isGm={isGm}
+                token={token}
+                onAddCondition={(conditionId, value) =>
+                  onAddCondition(token.id, conditionId, value)
+                }
+                onRemoveCondition={(tokenConditionId) =>
+                  onRemoveCondition(token.id, tokenConditionId)
+                }
+              />
 
               {isEditing ? (
                 <StatTokenForm

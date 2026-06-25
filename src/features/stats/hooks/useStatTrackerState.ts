@@ -9,6 +9,10 @@ import type {
   StatTrackerState,
 } from "../statTypes";
 import {
+  addConditionToToken as appendConditionToToken,
+  removeConditionFromToken as deleteConditionFromToken,
+} from "../services/statConditions";
+import {
   addTrackerToPreset,
   createTrackersFromPreset,
   getMissingPresetTrackerInputs,
@@ -186,6 +190,22 @@ export function useStatTrackerState(isObrReady: boolean) {
     [mapToken],
   );
 
+  const addConditionToToken = useCallback(
+    (tokenId: string, conditionId: string, value?: number) => {
+      mapToken(tokenId, (token) => appendConditionToToken(token, conditionId, value));
+    },
+    [mapToken],
+  );
+
+  const removeConditionFromToken = useCallback(
+    (tokenId: string, tokenConditionId: string) => {
+      mapToken(tokenId, (token) =>
+        deleteConditionFromToken(token, tokenConditionId),
+      );
+    },
+    [mapToken],
+  );
+
   const applyPresetToToken = useCallback(
     (tokenId: string) => {
       setState((current) => {
@@ -342,6 +362,7 @@ export function useStatTrackerState(isObrReady: boolean) {
   }, [groups.length, tokens]);
 
   return {
+    addConditionToToken,
     addItems,
     addToken,
     addTracker,
@@ -351,6 +372,7 @@ export function useStatTrackerState(isObrReady: boolean) {
     displayGroups,
     groups,
     presets,
+    removeConditionFromToken,
     removeToken,
     removeTracker,
     removeTrackerFromPreset: removeTrackerFromPresetForType,

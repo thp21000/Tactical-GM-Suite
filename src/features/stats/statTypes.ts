@@ -30,6 +30,40 @@ export type StatTrackerIcon = {
   symbol: string;
 };
 
+
+export type StatConditionSeverity = "none" | "value" | "staged";
+
+export type StatConditionCategory =
+  | "physical"
+  | "mental"
+  | "sensory"
+  | "magical"
+  | "movement"
+  | "combat"
+  | "other";
+
+export type StatConditionDefinition = {
+  id: string;
+  label: string;
+  shortLabel: string;
+  description?: string;
+  severityType: StatConditionSeverity;
+  iconId: string;
+  category: StatConditionCategory;
+};
+
+export type StatTokenCondition = {
+  id: string;
+  conditionId: string;
+  label: string;
+  shortLabel: string;
+  iconId: string;
+  value?: number;
+  note?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type StatTracker = {
   id: string;
   name: string;
@@ -52,6 +86,7 @@ export type StatTrackedToken = {
   name: string;
   tokenType: StatTokenType;
   trackers: StatTracker[];
+  conditions: StatTokenCondition[];
   groupId?: string;
   assignedPlayerId?: string;
   assignedPlayerName?: string;

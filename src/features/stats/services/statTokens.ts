@@ -45,6 +45,7 @@ export function createTrackedToken(input: StatTokenInput): StatTrackedToken {
     name: input.name.trim() || "Token",
     tokenType: input.tokenType,
     trackers: [],
+    conditions: [],
     groupId: undefined,
     assignedPlayerId: cleanOptionalText(input.assignedPlayerId),
     assignedPlayerName: cleanOptionalText(input.assignedPlayerName),
