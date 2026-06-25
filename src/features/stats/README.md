@@ -52,6 +52,7 @@ Stats V2.3A — Assignation joueur simple
 Stats V2.3B — Permissions joueur préparées
 Stats V2.3C — Mode joueur minimal / filtrage préparé
 Stats V2.4A — Conditions, catalogue de base et assignation simple
+Stats V2.4B — Durée, source, note et édition simple des conditions
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -246,3 +247,19 @@ Inclus dans cette étape :
 * une migration prudente des anciennes conditions simples quand elles correspondent au catalogue.
 
 Cette étape n’applique aucun effet mécanique automatique. Les malus, durées avancées, sources, immunités, automatisation PF2e et affichage direct sur token Owlbear restent reportés.
+
+
+## Stats V2.4B — durée, source, note et édition simple des conditions
+
+Les conditions actives peuvent maintenant porter quelques informations de suivi supplémentaires tout en restant séparées des trackers.
+
+Inclus dans cette étape :
+
+* modification de la valeur d’une condition à valeur, par exemple `Effrayé 2` ;
+* source courte optionnelle ;
+* note courte optionnelle ;
+* durée simple : manuelle, rounds, rencontre ou repos ;
+* décrément manuel des rounds via `-1r` sans suppression automatique à 0 ;
+* normalisation des anciennes conditions qui ne possèdent pas encore ces champs.
+
+Cette étape n’applique toujours aucun effet mécanique automatique. L’automatisation PF2e, les interactions avec Initiative / Distance et l’affichage direct sur token Owlbear restent reportés.

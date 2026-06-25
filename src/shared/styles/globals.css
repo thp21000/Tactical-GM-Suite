@@ -848,3 +848,31 @@ pre {
   white-space: nowrap;
   border: 0;
 }
+
+.stat-condition-editor {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--tgm-border);
+  border-radius: var(--tgm-radius-md);
+  background: var(--tgm-bg-soft);
+}
+
+.stat-condition-editor__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.stat-condition-editor__grid label {
+  display: grid;
+  gap: 4px;
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+}
+
+.stat-condition-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

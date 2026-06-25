@@ -33,6 +33,12 @@ export type StatTrackerIcon = {
 
 export type StatConditionSeverity = "none" | "value" | "staged";
 
+export type StatConditionDurationType =
+  | "manual"
+  | "rounds"
+  | "encounter"
+  | "rest";
+
 export type StatConditionCategory =
   | "physical"
   | "mental"
@@ -59,6 +65,10 @@ export type StatTokenCondition = {
   shortLabel: string;
   iconId: string;
   value?: number;
+  durationType?: StatConditionDurationType;
+  durationValue?: number;
+  remainingRounds?: number;
+  source?: string;
   note?: string;
   createdAt: string;
   updatedAt: string;

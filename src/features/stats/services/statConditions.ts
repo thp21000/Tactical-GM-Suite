@@ -1,5 +1,6 @@
 import type {
   StatConditionDefinition,
+  StatConditionDurationType,
   StatTokenCondition,
   StatTrackedToken,
 } from "../statTypes";
@@ -236,21 +237,78 @@ export function getStatConditionDefinition(
   return CONDITION_BY_ID.get(conditionId);
 }
 
+export type StatTokenConditionInput = {
+  value?: number;
+  durationType?: StatConditionDurationType;
+  durationValue?: number;
+  remainingRounds?: number;
+  source?: string;
+  note?: string;
+};
+
+const DURATION_TYPES = new Set<StatConditionDurationType>([
+  "manual",
+  "rounds",
+  "encounter",
+  "rest",
+]);
+
+function cleanOptionalText(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function normalizeNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function normalizeNonNegativeInteger(value: unknown): number | undefined {
+  const number = normalizeNumber(value);
+  if (number === undefined) return undefined;
+  return Math.max(0, Math.floor(number));
+}
+
+function normalizeConditionInput(
+  definition: StatConditionDefinition,
+  input?: number | StatTokenConditionInput,
+): Omit<
+  StatTokenCondition,
+  "id" | "conditionId" | "label" | "shortLabel" | "iconId" | "createdAt" | "updatedAt"
+> {
+  const record: StatTokenConditionInput =
+    typeof input === "number" ? { value: input } : input ?? {};
+  const value =
+    definition.severityType === "none"
+      ? undefined
+      : normalizeNumber(record.value) ?? 1;
+  const durationType = DURATION_TYPES.has(record.durationType as StatConditionDurationType)
+    ? record.durationType
+    : undefined;
+  const durationValue = normalizeNonNegativeInteger(record.durationValue);
+  const requestedRounds = normalizeNonNegativeInteger(record.remainingRounds);
+  const remainingRounds =
+    durationType === "rounds" ? requestedRounds ?? durationValue ?? 1 : undefined;
+
+  return {
+    value,
+    durationType,
+    durationValue: durationType === "rounds" ? durationValue ?? remainingRounds : undefined,
+    remainingRounds,
+    source: cleanOptionalText(record.source),
+    note: cleanOptionalText(record.note),
+  };
+}
+
 export function createTokenCondition(
   conditionId: string,
-  value?: number,
+  input?: number | StatTokenConditionInput,
 ): StatTokenCondition | null {
   const definition = getStatConditionDefinition(conditionId);
   if (!definition) return null;
 
   const timestamp = now();
-  const shouldStoreValue = definition.severityType !== "none";
-  const normalizedValue =
-    shouldStoreValue && typeof value === "number" && Number.isFinite(value)
-      ? value
-      : shouldStoreValue
-        ? 1
-        : undefined;
 
   return {
     id: createId("stat-condition"),
@@ -258,7 +316,7 @@ export function createTokenCondition(
     label: definition.label,
     shortLabel: definition.shortLabel,
     iconId: definition.iconId,
-    value: normalizedValue,
+    ...normalizeConditionInput(definition, input),
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -274,16 +332,79 @@ export function hasCondition(
 export function addConditionToToken(
   token: StatTrackedToken,
   conditionId: string,
-  value?: number,
+  input?: number | StatTokenConditionInput,
 ): StatTrackedToken {
   if (hasCondition(token, conditionId)) return token;
 
-  const condition = createTokenCondition(conditionId, value);
+  const condition = createTokenCondition(conditionId, input);
   if (!condition) return token;
 
   return {
     ...token,
     conditions: [...token.conditions, condition],
+    updatedAt: now(),
+  };
+}
+
+export function updateTokenCondition(
+  token: StatTrackedToken,
+  tokenConditionId: string,
+  input: StatTokenConditionInput,
+): StatTrackedToken {
+  return {
+    ...token,
+    conditions: token.conditions.map((condition) => {
+      if (condition.id !== tokenConditionId) return condition;
+
+      const definition = getStatConditionDefinition(condition.conditionId);
+      if (!definition) return condition;
+
+      return {
+        ...condition,
+        ...normalizeConditionInput(definition, input),
+        updatedAt: now(),
+      };
+    }),
+    updatedAt: now(),
+  };
+}
+
+export function decrementTokenConditionDuration(
+  token: StatTrackedToken,
+  tokenConditionId: string,
+): StatTrackedToken {
+  return {
+    ...token,
+    conditions: token.conditions.map((condition) =>
+      condition.id === tokenConditionId && condition.durationType === "rounds"
+        ? {
+            ...condition,
+            remainingRounds: Math.max(0, (condition.remainingRounds ?? 0) - 1),
+            updatedAt: now(),
+          }
+        : condition,
+    ),
+    updatedAt: now(),
+  };
+}
+
+export function clearTokenConditionDuration(
+  token: StatTrackedToken,
+  tokenConditionId: string,
+): StatTrackedToken {
+  return {
+    ...token,
+    conditions: token.conditions.map((condition) =>
+      condition.id === tokenConditionId
+        ? {
+            ...condition,
+            durationType: undefined,
+            durationValue: undefined,
+            remainingRounds: undefined,
+            updatedAt: now(),
+          }
+        : condition,
+    ),
     updatedAt: now(),
   };
 }
@@ -333,17 +454,30 @@ export function normalizeTokenConditions(value: unknown): StatTokenCondition[] {
     if (!definition) return [];
 
     const timestamp = now();
-    const value = typeof record.value === "number" ? record.value : undefined;
+    const normalized = normalizeConditionInput(definition, {
+      value: normalizeNumber(record.value),
+      durationType:
+        typeof record.durationType === "string" &&
+        DURATION_TYPES.has(record.durationType as StatConditionDurationType)
+          ? (record.durationType as StatConditionDurationType)
+          : undefined,
+      durationValue: normalizeNonNegativeInteger(record.durationValue),
+      remainingRounds: normalizeNonNegativeInteger(record.remainingRounds),
+      source: cleanOptionalText(record.source),
+      note: cleanOptionalText(record.note),
+    });
 
     return [
       {
-        id: typeof record.id === "string" && record.conditionId ? record.id : createId("stat-condition"),
+        id:
+          typeof record.id === "string" && record.conditionId
+            ? record.id
+            : createId("stat-condition"),
         conditionId: definition.id,
         label: definition.label,
         shortLabel: definition.shortLabel,
         iconId: definition.iconId,
-        value: definition.severityType !== "none" ? value ?? 1 : undefined,
-        note: typeof record.note === "string" ? record.note : undefined,
+        ...normalized,
         createdAt: typeof record.createdAt === "string" ? record.createdAt : timestamp,
         updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : timestamp,
       },

@@ -110,13 +110,16 @@ export function StatTrackerPage({ obr }: Props) {
                 isGm={isGm}
                 viewer={viewer}
                 onAddCondition={stats.addConditionToToken}
+                onClearConditionDuration={stats.clearConditionDuration}
                 onAddTracker={stats.addTracker}
                 onApplyPreset={stats.applyPresetToToken}
                 onChangeTrackerValue={stats.changeTrackerValue}
+                onDecrementConditionDuration={stats.decrementConditionDuration}
                 onRemoveCondition={stats.removeConditionFromToken}
                 onRemoveToken={stats.removeToken}
                 onRemoveTracker={stats.removeTracker}
                 onToggleTracker={stats.toggleTracker}
+                onUpdateCondition={stats.updateConditionOnToken}
                 onUpdateToken={stats.updateToken}
                 onUpdateTracker={stats.updateTracker}
               />

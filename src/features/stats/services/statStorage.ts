@@ -38,6 +38,10 @@ type LegacyEntity = {
     label?: string;
     name?: string;
     value?: number;
+    durationType?: string;
+    durationValue?: number;
+    remainingRounds?: number;
+    source?: string;
     note?: string;
     createdAt?: string;
     updatedAt?: string;

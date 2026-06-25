@@ -10,7 +10,11 @@ import type {
 } from "../statTypes";
 import {
   addConditionToToken as appendConditionToToken,
+  clearTokenConditionDuration as clearConditionDurationFromToken,
+  decrementTokenConditionDuration as decrementDurationFromToken,
   removeConditionFromToken as deleteConditionFromToken,
+  type StatTokenConditionInput,
+  updateTokenCondition as patchConditionOnToken,
 } from "../services/statConditions";
 import {
   addTrackerToPreset,
@@ -206,6 +210,33 @@ export function useStatTrackerState(isObrReady: boolean) {
     [mapToken],
   );
 
+  const updateConditionOnToken = useCallback(
+    (tokenId: string, tokenConditionId: string, input: StatTokenConditionInput) => {
+      mapToken(tokenId, (token) =>
+        patchConditionOnToken(token, tokenConditionId, input),
+      );
+    },
+    [mapToken],
+  );
+
+  const decrementConditionDuration = useCallback(
+    (tokenId: string, tokenConditionId: string) => {
+      mapToken(tokenId, (token) =>
+        decrementDurationFromToken(token, tokenConditionId),
+      );
+    },
+    [mapToken],
+  );
+
+  const clearConditionDuration = useCallback(
+    (tokenId: string, tokenConditionId: string) => {
+      mapToken(tokenId, (token) =>
+        clearConditionDurationFromToken(token, tokenConditionId),
+      );
+    },
+    [mapToken],
+  );
+
   const applyPresetToToken = useCallback(
     (tokenId: string) => {
       setState((current) => {
@@ -369,6 +400,8 @@ export function useStatTrackerState(isObrReady: boolean) {
     addTrackerToPreset: addTrackerToPresetForType,
     applyPresetToToken,
     changeTrackerValue,
+    clearConditionDuration,
+    decrementConditionDuration,
     displayGroups,
     groups,
     presets,
@@ -384,6 +417,7 @@ export function useStatTrackerState(isObrReady: boolean) {
     summary,
     toggleTracker,
     tokens,
+    updateConditionOnToken,
     updateToken,
     updateTracker,
   };
