@@ -60,6 +60,7 @@ Stats V2.5B — Préparation synchronisation Owlbear en mode aperçu technique
 Stats V2.5C — Plan de rendu overlay Owlbear
 Stats V2.5D — Rendu SVG local des overlays
 Stats V2.5E — Adaptateur Owlbear préparé et garde-fous de synchronisation
+Stats V2.5F — Overlays Owlbear manuels par token
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -379,3 +380,11 @@ Inclus dans cette étape :
 * rapport pur `createObrOverlayPreparationReport` pour les futurs écrans ou synchronisations.
 
 Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata réelle et ne propose aucun bouton de synchronisation actif. La vraie synchronisation reste reportée à Stats V2.5F.
+
+## Stats V2.5F — overlays Owlbear manuels par token
+
+- Le MJ peut créer ou mettre à jour manuellement l’overlay Stats d’un token suivi depuis son diagnostic Owlbear.
+- Le MJ peut supprimer manuellement l’overlay Stats correspondant au token sans toucher au token source.
+- Les overlays utilisent les metadata Stats préparées (`tactical-gm-suite/stats-overlay`, kind `stats-token-overlay`) pour retrouver l’item existant et éviter les doublons.
+- La création reste volontairement token par token : aucun bouton global et aucune synchronisation automatique ne sont ajoutés.
+- Aucun suivi automatique des déplacements de token n’existe encore ; le positionnement avancé reste reporté à Stats V2.5G.

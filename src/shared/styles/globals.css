@@ -1065,3 +1065,18 @@ pre {
   color: var(--tgm-text-muted);
   font-size: var(--tgm-font-xs);
 }
+
+.stat-token-obr-prepare-preview__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stat-token-obr-prepare-preview__result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+}
