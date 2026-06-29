@@ -57,6 +57,7 @@ Stats V2.4C — Effets mécaniques préparés
 Stats V2.4D — Préparation affichage conditions sur token
 Stats V2.5A — Aperçu local et modèle unifié d’affichage token
 Stats V2.5B — Préparation synchronisation Owlbear en mode aperçu technique
+Stats V2.5C — Plan de rendu overlay Owlbear
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -328,3 +329,21 @@ Inclus dans cette étape :
 * rapport dry-run `createDryRunStatSyncReport` pour préparer une future synchronisation.
 
 Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata d’item et ne crée aucun overlay visible. La synchronisation réelle reste reportée aux prochaines étapes de Stats V2.5.
+
+## Stats V2.5C — plan de rendu overlay Owlbear
+
+Un plan de rendu overlay Owlbear est maintenant préparé à partir des payloads dry-run V2.5B, sans créer d’overlay réel.
+
+Inclus dans cette étape :
+
+* service `statTokenOverlayPlan.ts` qui transforme les payloads dry-run en plans d’overlay purs ;
+* `overlayId` stable basé sur le token Owlbear source ;
+* layout préparé avec ancre, limite d’items, espacement et dimensions ;
+* style préparé avec variante compacte, opacité et taille de police ;
+* positions relatives simples pour chaque item prévu ;
+* aperçu MJ compact du plan et détail repliable des positions ;
+* rapport pur `createOverlayPlanReport` pour les futurs écrans ou synchronisations.
+
+Choix de conception : les payloads `not-linked` ne produisent pas de plan, tandis que les payloads `empty` produisent un plan vide afin d’indiquer que le token Owlbear est lié mais sans élément affichable.
+
+Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item texte/image/shape, n’écrit aucune metadata d’item et ne crée aucun overlay visible. La création réelle d’items Owlbear reste reportée aux prochaines étapes de Stats V2.5.

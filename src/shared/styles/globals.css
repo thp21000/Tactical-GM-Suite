@@ -991,3 +991,35 @@ pre {
   padding: 2px 6px;
   background: color-mix(in srgb, var(--tgm-surface) 68%, transparent);
 }
+
+.stat-token-overlay-plan-preview {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 8px;
+}
+
+.stat-token-overlay-plan-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stat-token-overlay-plan-preview__badges,
+.stat-token-overlay-plan-preview__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.stat-token-overlay-plan-preview__details {
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+}
+
+.stat-token-overlay-plan-preview__details span {
+  border: 1px solid var(--tgm-border);
+  border-radius: 999px;
+  padding: 2px 6px;
+  background: color-mix(in srgb, var(--tgm-surface) 68%, transparent);
+}
