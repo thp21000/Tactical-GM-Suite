@@ -58,6 +58,7 @@ Stats V2.4D — Préparation affichage conditions sur token
 Stats V2.5A — Aperçu local et modèle unifié d’affichage token
 Stats V2.5B — Préparation synchronisation Owlbear en mode aperçu technique
 Stats V2.5C — Plan de rendu overlay Owlbear
+Stats V2.5D — Rendu SVG local des overlays
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -347,3 +348,18 @@ Inclus dans cette étape :
 Choix de conception : les payloads `not-linked` ne produisent pas de plan, tandis que les payloads `empty` produisent un plan vide afin d’indiquer que le token Owlbear est lié mais sans élément affichable.
 
 Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item texte/image/shape, n’écrit aucune metadata d’item et ne crée aucun overlay visible. La création réelle d’items Owlbear reste reportée aux prochaines étapes de Stats V2.5.
+
+## Stats V2.5D — rendu SVG local des overlays
+
+Un rendu SVG local est maintenant généré depuis les plans d’overlay V2.5C, sans créer d’overlay Owlbear réel.
+
+Inclus dans cette étape :
+
+* service `statTokenOverlaySvg.ts` qui produit une chaîne SVG pure depuis un plan d’overlay ;
+* génération d’une data URL SVG exploitable plus tard par une image Owlbear ;
+* échappement des labels, titres et symboles avant insertion dans le SVG ;
+* calcul de taille selon les items et le layout du plan ;
+* rendu simple des modes badge, icône, valeur et barre ;
+* aperçu MJ local via une balise `img` alimentée par la data URL.
+
+Cette étape n’utilise pas le DOM, n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata d’item et ne synchronise rien sur la scène. La création réelle d’items Owlbear reste reportée aux prochaines étapes de Stats V2.5.

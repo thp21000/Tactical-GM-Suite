@@ -15,6 +15,7 @@ import { StatTokenForm } from "./StatTokenForm";
 import { StatTokenDisplayPreview } from "./StatTokenDisplayPreview";
 import { StatTokenSyncPreview } from "./StatTokenSyncPreview";
 import { StatTokenOverlayPlanPreview } from "./StatTokenOverlayPlanPreview";
+import { StatTokenOverlaySvgPreview } from "./StatTokenOverlaySvgPreview";
 import { StatTrackerCard } from "./StatTrackerCard";
 import { StatTrackerForm } from "./StatTrackerForm";
 
@@ -160,6 +161,7 @@ export function StatTrackedTokenBlock({
               <StatTokenDisplayPreview isGm={isGm} token={token} />
               <StatTokenSyncPreview isGm={isGm} token={token} />
               <StatTokenOverlayPlanPreview isGm={isGm} token={token} />
+              <StatTokenOverlaySvgPreview isGm={isGm} token={token} />
 
               {isEditing ? (
                 <StatTokenForm
