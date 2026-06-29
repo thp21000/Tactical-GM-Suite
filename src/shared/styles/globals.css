@@ -1047,3 +1047,21 @@ pre {
   border-radius: var(--tgm-radius-sm);
   background: color-mix(in srgb, var(--tgm-bg) 70%, transparent);
 }
+
+.stat-token-obr-prepare-preview {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 8px;
+}
+
+.stat-token-obr-prepare-preview__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.stat-token-obr-prepare-preview__meta {
+  margin: 0;
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+}

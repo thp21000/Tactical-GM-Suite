@@ -59,6 +59,7 @@ Stats V2.5A — Aperçu local et modèle unifié d’affichage token
 Stats V2.5B — Préparation synchronisation Owlbear en mode aperçu technique
 Stats V2.5C — Plan de rendu overlay Owlbear
 Stats V2.5D — Rendu SVG local des overlays
+Stats V2.5E — Adaptateur Owlbear préparé et garde-fous de synchronisation
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -363,3 +364,18 @@ Inclus dans cette étape :
 * aperçu MJ local via une balise `img` alimentée par la data URL.
 
 Cette étape n’utilise pas le DOM, n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata d’item et ne synchronise rien sur la scène. La création réelle d’items Owlbear reste reportée aux prochaines étapes de Stats V2.5.
+
+## Stats V2.5E — adaptateur Owlbear préparé et garde-fous de synchronisation
+
+Un adaptateur pur prépare maintenant les images SVG pour une future création d’overlay Owlbear, sans écrire sur la scène.
+
+Inclus dans cette étape :
+
+* service `statTokenOverlayObrAdapter.ts` qui prépare les images SVG et les données futures d’overlay ;
+* statuts de préparation `ready`, `not-linked`, `empty` et `invalid` ;
+* constantes futures `STAT_OVERLAY_METADATA_KEY` et `STAT_OVERLAY_KIND` ;
+* metadata future préparée avec token, source Owlbear, overlay et date de mise à jour ;
+* diagnostic MJ compact indiquant si la synchronisation réelle serait possible ;
+* rapport pur `createObrOverlayPreparationReport` pour les futurs écrans ou synchronisations.
+
+Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata réelle et ne propose aucun bouton de synchronisation actif. La vraie synchronisation reste reportée à Stats V2.5F.
