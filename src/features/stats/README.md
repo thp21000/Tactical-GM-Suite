@@ -56,6 +56,7 @@ Stats V2.4B — Durée, source, note et édition simple des conditions
 Stats V2.4C — Effets mécaniques préparés
 Stats V2.4D — Préparation affichage conditions sur token
 Stats V2.5A — Aperçu local et modèle unifié d’affichage token
+Stats V2.5B — Préparation synchronisation Owlbear en mode aperçu technique
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -313,3 +314,17 @@ Inclus dans cette étape :
 * résumé local du nombre de trackers et conditions prévus pour affichage token.
 
 Cet aperçu est seulement affiché dans l’interface Stats. Aucune API Owlbear de modification de token n’est appelée, aucun item Owlbear n’est modifié, aucune metadata de token n’est écrite et aucun overlay réel n’est créé. La synchronisation avec les tokens Owlbear reste reportée aux prochaines étapes de Stats V2.5.
+
+## Stats V2.5B — préparation synchronisation Owlbear en mode aperçu technique
+
+Un payload technique de synchronisation Owlbear est maintenant préparé en mode aperçu, sans créer d’overlay réel.
+
+Inclus dans cette étape :
+
+* service `statTokenSync.ts` qui transforme chaque token suivi en payload technique pur ;
+* statuts de synchronisation `ready`, `not-linked` et `empty` ;
+* aperçu MJ compact indiquant si le token est prêt, non lié Owlbear ou sans item token ;
+* détail repliable listant les labels qui seraient synchronisés ;
+* rapport dry-run `createDryRunStatSyncReport` pour préparer une future synchronisation.
+
+Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata d’item et ne crée aucun overlay visible. La synchronisation réelle reste reportée aux prochaines étapes de Stats V2.5.
