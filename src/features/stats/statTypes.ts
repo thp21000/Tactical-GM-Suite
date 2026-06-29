@@ -39,6 +39,29 @@ export type StatConditionDurationType =
   | "encounter"
   | "rest";
 
+export type StatConditionEffectTarget =
+  | "armor-class"
+  | "attack-roll"
+  | "saving-throw"
+  | "skill-check"
+  | "perception"
+  | "speed"
+  | "actions"
+  | "reactions"
+  | "visibility"
+  | "flat-check"
+  | "initiative"
+  | "other";
+
+export type StatConditionEffectMode =
+  | "status-penalty"
+  | "circumstance-penalty"
+  | "status-bonus"
+  | "circumstance-bonus"
+  | "set"
+  | "disable"
+  | "informational";
+
 export type StatConditionCategory =
   | "physical"
   | "mental"
@@ -56,6 +79,18 @@ export type StatConditionDefinition = {
   severityType: StatConditionSeverity;
   iconId: string;
   category: StatConditionCategory;
+  effects?: StatConditionEffect[];
+};
+
+export type StatConditionEffect = {
+  id: string;
+  label: string;
+  shortLabel: string;
+  target: StatConditionEffectTarget;
+  mode: StatConditionEffectMode;
+  value?: number;
+  scalesWithConditionValue?: boolean;
+  description?: string;
 };
 
 export type StatTokenCondition = {

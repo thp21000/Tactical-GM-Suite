@@ -1,6 +1,7 @@
 import type {
   StatConditionDefinition,
   StatConditionDurationType,
+  StatConditionEffect,
   StatTokenCondition,
   StatTrackedToken,
 } from "../statTypes";
@@ -22,6 +23,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "trap",
     category: "movement",
+    effects: [
+      {
+        id: "posture-info",
+        label: "Posture vulnérable",
+        shortLabel: "Posture",
+        target: "other",
+        mode: "informational",
+        description: "Rappel tactique : posture au sol à prendre en compte manuellement.",
+      },
+    ],
   },
   {
     id: "agrippe",
@@ -31,6 +42,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "toggle",
     category: "physical",
+    effects: [
+      {
+        id: "movement-restricted",
+        label: "Mouvement restreint",
+        shortLabel: "Mvt rest.",
+        target: "speed",
+        mode: "informational",
+        description: "Rappel : le mouvement peut être limité selon la scène ou la règle utilisée.",
+      },
+    ],
   },
   {
     id: "assourdi",
@@ -40,6 +61,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "other",
     category: "sensory",
+    effects: [
+      {
+        id: "sensory-info",
+        label: "Perception sensorielle limitée",
+        shortLabel: "Sens",
+        target: "perception",
+        mode: "informational",
+        description: "Rappel descriptif : la perception liée au sens affecté doit être évaluée manuellement.",
+      },
+    ],
   },
   {
     id: "aveugle",
@@ -49,6 +80,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "other",
     category: "sensory",
+    effects: [
+      {
+        id: "visibility-limited",
+        label: "Visibilité limitée",
+        shortLabel: "Visibilité",
+        target: "visibility",
+        mode: "informational",
+        description: "Rappel descriptif : gérer les cibles et tests associés manuellement.",
+      },
+    ],
   },
   {
     id: "blesse",
@@ -67,6 +108,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "magic",
     category: "mental",
+    effects: [
+      {
+        id: "mental-info",
+        label: "Contrôle mental perturbé",
+        shortLabel: "Mental",
+        target: "other",
+        mode: "informational",
+        description: "Rappel descriptif : l’état mental influence les décisions et réactions manuellement.",
+      },
+    ],
   },
   {
     id: "controle",
@@ -76,6 +127,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "magic",
     category: "magical",
+    effects: [
+      {
+        id: "control-info",
+        label: "Contrôle externe",
+        shortLabel: "Contrôle",
+        target: "actions",
+        mode: "informational",
+        description: "Rappel descriptif : les actions peuvent dépendre d’un effet de contrôle.",
+      },
+    ],
   },
   {
     id: "ebloui",
@@ -94,6 +155,26 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "value",
     iconId: "toggle",
     category: "mental",
+    effects: [
+      {
+        id: "status-penalty-checks",
+        label: "Malus de statut aux tests",
+        shortLabel: "Statut",
+        target: "skill-check",
+        mode: "status-penalty",
+        scalesWithConditionValue: true,
+        description: "Malus descriptif basé sur la valeur de la condition. Non appliqué automatiquement.",
+      },
+      {
+        id: "status-penalty-dc",
+        label: "Malus de statut aux DD",
+        shortLabel: "DD",
+        target: "other",
+        mode: "status-penalty",
+        scalesWithConditionValue: true,
+        description: "Rappel descriptif pour les DD concernés. Non appliqué automatiquement.",
+      },
+    ],
   },
   {
     id: "empoisonne",
@@ -112,6 +193,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "trap",
     category: "movement",
+    effects: [
+      {
+        id: "speed-info",
+        label: "Déplacement gêné",
+        shortLabel: "Vitesse",
+        target: "speed",
+        mode: "informational",
+        description: "Rappel descriptif : vitesse ou déplacement à ajuster manuellement.",
+      },
+    ],
   },
   {
     id: "fascine",
@@ -130,6 +221,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "value",
     iconId: "toggle",
     category: "physical",
+    effects: [
+      {
+        id: "fatigue-info",
+        label: "Fatigue à gérer manuellement",
+        shortLabel: "Fatigue",
+        target: "other",
+        mode: "informational",
+        description: "Rappel descriptif : appliquer les conséquences selon le système utilisé.",
+      },
+    ],
   },
   {
     id: "fuite",
@@ -148,6 +249,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "trap",
     category: "movement",
+    effects: [
+      {
+        id: "speed-disabled",
+        label: "Déplacement bloqué",
+        shortLabel: "Vitesse off",
+        target: "speed",
+        mode: "disable",
+        description: "Rappel descriptif : déplacement à gérer manuellement.",
+      },
+    ],
   },
   {
     id: "inconscient",
@@ -166,6 +277,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "magic",
     category: "magical",
+    effects: [
+      {
+        id: "visibility-info",
+        label: "Visibilité altérée",
+        shortLabel: "Visibilité",
+        target: "visibility",
+        mode: "informational",
+        description: "Rappel descriptif : la visibilité doit être traitée manuellement.",
+      },
+    ],
   },
   {
     id: "malade",
@@ -175,6 +296,17 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "value",
     iconId: "toggle",
     category: "physical",
+    effects: [
+      {
+        id: "status-penalty-saves",
+        label: "Malus de statut aux jets",
+        shortLabel: "Statut",
+        target: "saving-throw",
+        mode: "status-penalty",
+        scalesWithConditionValue: true,
+        description: "Malus descriptif basé sur la valeur de la condition. Non appliqué automatiquement.",
+      },
+    ],
   },
   {
     id: "ralenti",
@@ -184,6 +316,17 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "value",
     iconId: "counter",
     category: "movement",
+    effects: [
+      {
+        id: "actions-reduced",
+        label: "Actions réduites",
+        shortLabel: "Actions",
+        target: "actions",
+        mode: "circumstance-penalty",
+        scalesWithConditionValue: true,
+        description: "Rappel descriptif : ajustement manuel des actions selon la valeur.",
+      },
+    ],
   },
   {
     id: "rapide",
@@ -193,6 +336,17 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "value",
     iconId: "counter",
     category: "movement",
+    effects: [
+      {
+        id: "actions-bonus",
+        label: "Actions supplémentaires",
+        shortLabel: "Actions",
+        target: "actions",
+        mode: "circumstance-bonus",
+        scalesWithConditionValue: true,
+        description: "Rappel descriptif : actions supplémentaires à gérer manuellement.",
+      },
+    ],
   },
   {
     id: "saisi",
@@ -202,6 +356,16 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "none",
     iconId: "toggle",
     category: "combat",
+    effects: [
+      {
+        id: "movement-restricted",
+        label: "Mouvement restreint",
+        shortLabel: "Mvt rest.",
+        target: "speed",
+        mode: "informational",
+        description: "Rappel descriptif : mouvement ou actions physiques à gérer manuellement.",
+      },
+    ],
   },
   {
     id: "stupefie",
@@ -211,6 +375,17 @@ export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
     severityType: "value",
     iconId: "magic",
     category: "mental",
+    effects: [
+      {
+        id: "mental-actions",
+        label: "Actions mentales perturbées",
+        shortLabel: "Mental",
+        target: "actions",
+        mode: "informational",
+        scalesWithConditionValue: true,
+        description: "Rappel descriptif : conséquences à gérer manuellement selon la valeur.",
+      },
+    ],
   },
 ];
 
@@ -235,6 +410,44 @@ export function getStatConditionDefinition(
   conditionId: string,
 ): StatConditionDefinition | undefined {
   return CONDITION_BY_ID.get(conditionId);
+}
+
+export function getConditionEffects(conditionId: string): StatConditionEffect[] {
+  return getStatConditionDefinition(conditionId)?.effects ?? [];
+}
+
+function getEffectValue(
+  effect: StatConditionEffect,
+  activeCondition?: StatTokenCondition,
+): number | undefined {
+  if (effect.scalesWithConditionValue) {
+    return activeCondition?.value ?? effect.value ?? 1;
+  }
+
+  return effect.value;
+}
+
+export function getConditionEffectBadgeLabel(
+  effect: StatConditionEffect,
+  activeCondition?: StatTokenCondition,
+): string {
+  const value = getEffectValue(effect, activeCondition);
+
+  if (effect.mode === "disable") return `${effect.shortLabel} off`;
+  if (effect.mode === "informational") return effect.shortLabel || "Info";
+  if (typeof value !== "number") return effect.shortLabel;
+
+  const sign = effect.mode.includes("penalty") ? "-" : "+";
+  return `${effect.shortLabel} ${sign}${Math.abs(value)}`;
+}
+
+export function getConditionEffectSummary(
+  definition: StatConditionDefinition,
+  activeCondition?: StatTokenCondition,
+): string {
+  return (definition.effects ?? [])
+    .map((effect) => getConditionEffectBadgeLabel(effect, activeCondition))
+    .join(" · ");
 }
 
 export type StatTokenConditionInput = {

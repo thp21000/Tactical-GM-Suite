@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "../../../shared/components/Button";
 import { getStatConditionDefinition, type StatTokenConditionInput } from "../services/statConditions";
 import type { StatConditionDurationType, StatTokenCondition } from "../statTypes";
+import { StatConditionEffects } from "./StatConditionEffects";
 
 type Props = {
   condition: StatTokenCondition;
@@ -60,6 +61,8 @@ export function StatConditionEditor({
         });
       }}
     >
+      <StatConditionEffects condition={condition} />
+
       <div className="stat-condition-editor__grid">
         {acceptsValue ? (
           <label>

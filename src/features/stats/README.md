@@ -53,6 +53,7 @@ Stats V2.3B — Permissions joueur préparées
 Stats V2.3C — Mode joueur minimal / filtrage préparé
 Stats V2.4A — Conditions, catalogue de base et assignation simple
 Stats V2.4B — Durée, source, note et édition simple des conditions
+Stats V2.4C — Effets mécaniques préparés
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -263,3 +264,18 @@ Inclus dans cette étape :
 * normalisation des anciennes conditions qui ne possèdent pas encore ces champs.
 
 Cette étape n’applique toujours aucun effet mécanique automatique. L’automatisation PF2e, les interactions avec Initiative / Distance et l’affichage direct sur token Owlbear restent reportés.
+
+
+## Stats V2.4C — effets mécaniques préparés
+
+Certaines conditions possèdent maintenant des effets descriptifs exploitables plus tard par les autres modules.
+
+Inclus dans cette étape :
+
+* effets descriptifs dans les définitions de conditions ;
+* cibles d’effet préparées comme CA, jets, perception, vitesse, actions, visibilité ou initiative ;
+* modes d’effet préparés comme malus de statut, bonus, désactivation ou information ;
+* badges compacts affichables au MJ dans l’éditeur de condition ;
+* effets pouvant indiquer qu’ils dépendent de la valeur de la condition.
+
+Ces effets sont purement informatifs pour le moment. Ils ne modifient automatiquement ni les trackers, ni la CA, ni les PV, ni la vitesse, ni l’initiative, ni les jets. L’automatisation PF2e, les interactions Initiative / Distance et l’affichage direct sur token Owlbear restent reportés.

@@ -876,3 +876,12 @@ pre {
   flex-wrap: wrap;
   gap: 6px;
 }
+
+.stat-condition-effects {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+}
