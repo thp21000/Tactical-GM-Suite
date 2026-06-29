@@ -54,6 +54,7 @@ Stats V2.3C — Mode joueur minimal / filtrage préparé
 Stats V2.4A — Conditions, catalogue de base et assignation simple
 Stats V2.4B — Durée, source, note et édition simple des conditions
 Stats V2.4C — Effets mécaniques préparés
+Stats V2.4D — Préparation affichage conditions sur token
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -279,3 +280,20 @@ Inclus dans cette étape :
 * effets pouvant indiquer qu’ils dépendent de la valeur de la condition.
 
 Ces effets sont purement informatifs pour le moment. Ils ne modifient automatiquement ni les trackers, ni la CA, ni les PV, ni la vitesse, ni l’initiative, ni les jets. L’automatisation PF2e, les interactions Initiative / Distance et l’affichage direct sur token Owlbear restent reportés.
+
+
+## Stats V2.4D — préparation affichage conditions sur token
+
+Les conditions actives peuvent maintenant porter une intention d’affichage futur sur token, sans créer d’overlay Owlbear réel.
+
+Choix de conception : comme les trackers existants, les nouvelles conditions ne sont pas affichées sur token par défaut. Le MJ active explicitement l’intention d’affichage depuis l’éditeur de condition.
+
+Inclus dans cette étape :
+
+* intention `showOnToken` sur chaque condition active ;
+* modes préparés : badge, icône ou masqué ;
+* priorité d’affichage bornée de 0 à 100 ;
+* indicateur compact `Token` dans la liste des conditions ;
+* helpers purs pour récupérer et trier les conditions prévues pour affichage futur.
+
+Aucun overlay Owlbear réel n’est créé, aucun item Owlbear n’est modifié et aucune synchronisation visuelle automatique n’est faite. L’affichage réel sur token reste prévu pour Stats V2.5.

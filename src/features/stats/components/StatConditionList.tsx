@@ -4,6 +4,7 @@ import { Button } from "../../../shared/components/Button";
 import {
   getStatConditionDefinition,
   getStatConditionDefinitions,
+  getTokenDisplayConditions,
   type StatTokenConditionInput,
 } from "../services/statConditions";
 import { getTrackerIcon } from "../services/statTrackerIcons";
@@ -67,6 +68,7 @@ export function StatConditionList({
   const [editingConditionId, setEditingConditionId] = useState<string | null>(null);
   const selectedDefinition = getStatConditionDefinition(selectedConditionId);
   const [value, setValue] = useState("1");
+  const tokenDisplayConditions = getTokenDisplayConditions(token);
 
   const canAddSelected = Boolean(
     selectedDefinition &&
@@ -98,6 +100,9 @@ export function StatConditionList({
               >
                 <span aria-hidden="true">{icon.symbol}</span>
                 {label}
+                {condition.showOnToken && condition.tokenDisplayMode !== "hidden" ? (
+                  <span className="stat-condition-token-indicator">Token</span>
+                ) : null}
                 <span aria-hidden="true">✎</span>
               </button>
             ) : (
@@ -108,6 +113,14 @@ export function StatConditionList({
           })
         )}
       </div>
+
+      {isGm && tokenDisplayConditions.length > 0 ? (
+        <p className="stat-condition-token-summary">
+          {tokenDisplayConditions.length} condition
+          {tokenDisplayConditions.length > 1 ? "s" : ""} prévue
+          {tokenDisplayConditions.length > 1 ? "s" : ""} token
+        </p>
+      ) : null}
 
       {isGm
         ? token.conditions.map((condition) =>

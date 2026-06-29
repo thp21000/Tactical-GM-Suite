@@ -39,6 +39,11 @@ export type StatConditionDurationType =
   | "encounter"
   | "rest";
 
+export type StatConditionTokenDisplayMode =
+  | "badge"
+  | "icon"
+  | "hidden";
+
 export type StatConditionEffectTarget =
   | "armor-class"
   | "attack-roll"
@@ -105,6 +110,9 @@ export type StatTokenCondition = {
   remainingRounds?: number;
   source?: string;
   note?: string;
+  showOnToken?: boolean;
+  tokenDisplayMode?: StatConditionTokenDisplayMode;
+  tokenDisplayPriority?: number;
   createdAt: string;
   updatedAt: string;
 };

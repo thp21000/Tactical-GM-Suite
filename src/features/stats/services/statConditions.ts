@@ -2,6 +2,7 @@ import type {
   StatConditionDefinition,
   StatConditionDurationType,
   StatConditionEffect,
+  StatConditionTokenDisplayMode,
   StatTokenCondition,
   StatTrackedToken,
 } from "../statTypes";
@@ -457,6 +458,9 @@ export type StatTokenConditionInput = {
   remainingRounds?: number;
   source?: string;
   note?: string;
+  showOnToken?: boolean;
+  tokenDisplayMode?: StatConditionTokenDisplayMode;
+  tokenDisplayPriority?: number;
 };
 
 const DURATION_TYPES = new Set<StatConditionDurationType>([
@@ -465,6 +469,27 @@ const DURATION_TYPES = new Set<StatConditionDurationType>([
   "encounter",
   "rest",
 ]);
+
+const TOKEN_DISPLAY_MODES = new Set<StatConditionTokenDisplayMode>([
+  "badge",
+  "icon",
+  "hidden",
+]);
+
+function normalizeTokenDisplayMode(
+  value: unknown,
+): StatConditionTokenDisplayMode {
+  return typeof value === "string" &&
+    TOKEN_DISPLAY_MODES.has(value as StatConditionTokenDisplayMode)
+    ? (value as StatConditionTokenDisplayMode)
+    : "badge";
+}
+
+function normalizeTokenDisplayPriority(value: unknown): number {
+  const number = normalizeNonNegativeInteger(value);
+  if (number === undefined) return 50;
+  return Math.min(100, Math.max(0, number));
+}
 
 function cleanOptionalText(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
@@ -503,6 +528,10 @@ function normalizeConditionInput(
   const requestedRounds = normalizeNonNegativeInteger(record.remainingRounds);
   const remainingRounds =
     durationType === "rounds" ? requestedRounds ?? durationValue ?? 1 : undefined;
+  const tokenDisplayMode = normalizeTokenDisplayMode(record.tokenDisplayMode);
+  const showOnToken = tokenDisplayMode === "hidden"
+    ? false
+    : record.showOnToken ?? false;
 
   return {
     value,
@@ -511,6 +540,9 @@ function normalizeConditionInput(
     remainingRounds,
     source: cleanOptionalText(record.source),
     note: cleanOptionalText(record.note),
+    showOnToken,
+    tokenDisplayMode,
+    tokenDisplayPriority: normalizeTokenDisplayPriority(record.tokenDisplayPriority),
   };
 }
 
@@ -633,6 +665,84 @@ export function removeConditionFromToken(
   };
 }
 
+
+export type StatConditionTokenDisplayItem = {
+  id: string;
+  conditionId: string;
+  label: string;
+  title: string;
+  iconId: string;
+  mode: StatConditionTokenDisplayMode;
+  priority: number;
+};
+
+function getConditionValueLabel(condition: StatTokenCondition): string {
+  return typeof condition.value === "number"
+    ? `${condition.shortLabel} ${condition.value}`
+    : condition.shortLabel;
+}
+
+function getConditionDurationLabel(condition: StatTokenCondition): string | undefined {
+  if (condition.durationType === "rounds") return `${condition.remainingRounds ?? 0}r`;
+  if (condition.durationType === "encounter") return "rencontre";
+  if (condition.durationType === "rest") return "repos";
+  return undefined;
+}
+
+export function getConditionTokenDisplayLabel(
+  condition: StatTokenCondition,
+): string {
+  return getConditionValueLabel(condition);
+}
+
+export function getConditionTokenDisplayTitle(
+  condition: StatTokenCondition,
+): string {
+  const definition = getStatConditionDefinition(condition.conditionId);
+  const effectSummary = definition
+    ? getConditionEffectSummary(definition, condition)
+    : undefined;
+
+  return [
+    condition.label,
+    getConditionDurationLabel(condition),
+    condition.source ? `Source: ${condition.source}` : undefined,
+    condition.note,
+    effectSummary ? `Effets: ${effectSummary}` : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+export function getTokenDisplayConditions(
+  token: Pick<StatTrackedToken, "conditions">,
+): StatTokenCondition[] {
+  return token.conditions
+    .filter(
+      (condition) =>
+        condition.showOnToken === true && condition.tokenDisplayMode !== "hidden",
+    )
+    .sort(
+      (a, b) =>
+        (a.tokenDisplayPriority ?? 50) - (b.tokenDisplayPriority ?? 50) ||
+        a.shortLabel.localeCompare(b.shortLabel, "fr"),
+    );
+}
+
+export function getTokenConditionDisplayItems(
+  token: Pick<StatTrackedToken, "conditions">,
+): StatConditionTokenDisplayItem[] {
+  return getTokenDisplayConditions(token).map((condition) => ({
+    id: condition.id,
+    conditionId: condition.conditionId,
+    label: getConditionTokenDisplayLabel(condition),
+    title: getConditionTokenDisplayTitle(condition),
+    iconId: condition.iconId,
+    mode: condition.tokenDisplayMode ?? "badge",
+    priority: condition.tokenDisplayPriority ?? 50,
+  }));
+}
+
 export function normalizeTokenConditions(value: unknown): StatTokenCondition[] {
   if (!Array.isArray(value)) return [];
 
@@ -678,6 +788,12 @@ export function normalizeTokenConditions(value: unknown): StatTokenCondition[] {
       remainingRounds: normalizeNonNegativeInteger(record.remainingRounds),
       source: cleanOptionalText(record.source),
       note: cleanOptionalText(record.note),
+      showOnToken: typeof record.showOnToken === "boolean" ? record.showOnToken : undefined,
+      tokenDisplayMode:
+        typeof record.tokenDisplayMode === "string"
+          ? (record.tokenDisplayMode as StatConditionTokenDisplayMode)
+          : undefined,
+      tokenDisplayPriority: normalizeTokenDisplayPriority(record.tokenDisplayPriority),
     });
 
     return [

@@ -885,3 +885,38 @@ pre {
   color: var(--tgm-text-muted);
   font-size: var(--tgm-font-xs);
 }
+
+.stat-condition-token-indicator {
+  border: 1px solid var(--tgm-border);
+  border-radius: 999px;
+  padding: 1px 5px;
+  background: color-mix(in srgb, var(--tgm-accent) 16%, transparent);
+  color: var(--tgm-text);
+  font-size: 10px;
+}
+
+.stat-condition-token-summary {
+  margin: 0;
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+}
+
+.stat-condition-editor__display {
+  display: grid;
+  grid-template-columns: minmax(72px, auto) repeat(2, minmax(92px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.stat-condition-editor__display label {
+  display: grid;
+  gap: 4px;
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+}
+
+.stat-condition-editor__token-toggle {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
