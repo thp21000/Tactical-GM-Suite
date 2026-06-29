@@ -40,6 +40,7 @@ import {
   updateTokenTracker,
   updateTrackedToken,
 } from "../services/statTokens";
+import { getTokenDisplayItems } from "../services/statTokenDisplay";
 import {
   readStatTrackerState,
   resetStatTrackerState,
@@ -378,9 +379,7 @@ export function useStatTrackerState(isObrReady: boolean) {
       0,
     );
     const visibleOnTokenCount = tokens.reduce(
-      (total, token) =>
-        total +
-        token.trackers.filter((tracker) => tracker.showOnToken).length,
+      (total, token) => total + getTokenDisplayItems(token).length,
       0,
     );
 

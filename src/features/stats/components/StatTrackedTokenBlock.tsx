@@ -12,6 +12,7 @@ import type {
 } from "../statTypes";
 import { StatConditionList } from "./StatConditionList";
 import { StatTokenForm } from "./StatTokenForm";
+import { StatTokenDisplayPreview } from "./StatTokenDisplayPreview";
 import { StatTrackerCard } from "./StatTrackerCard";
 import { StatTrackerForm } from "./StatTrackerForm";
 
@@ -153,6 +154,8 @@ export function StatTrackedTokenBlock({
                   onUpdateCondition(token.id, tokenConditionId, input)
                 }
               />
+
+              <StatTokenDisplayPreview isGm={isGm} token={token} />
 
               {isEditing ? (
                 <StatTokenForm

@@ -55,6 +55,7 @@ Stats V2.4A — Conditions, catalogue de base et assignation simple
 Stats V2.4B — Durée, source, note et édition simple des conditions
 Stats V2.4C — Effets mécaniques préparés
 Stats V2.4D — Préparation affichage conditions sur token
+Stats V2.5A — Aperçu local et modèle unifié d’affichage token
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -297,3 +298,18 @@ Inclus dans cette étape :
 * helpers purs pour récupérer et trier les conditions prévues pour affichage futur.
 
 Aucun overlay Owlbear réel n’est créé, aucun item Owlbear n’est modifié et aucune synchronisation visuelle automatique n’est faite. L’affichage réel sur token reste prévu pour Stats V2.5.
+
+## Stats V2.5A — aperçu local et modèle unifié d’affichage token
+
+Les trackers et conditions prévus pour affichage token sont maintenant réunis dans un modèle commun, sans modifier Owlbear.
+
+Inclus dans cette étape :
+
+* service `statTokenDisplay.ts` qui produit une liste unifiée d’items d’affichage issus des trackers et des conditions ;
+* modes d’aperçu préparés : badge, icône, barre ou valeur ;
+* tri commun par priorité puis par label ;
+* aperçu local compact `Aperçu token` dans chaque bloc de token ;
+* limitation visuelle à six items avec un badge `+X` si nécessaire ;
+* résumé local du nombre de trackers et conditions prévus pour affichage token.
+
+Cet aperçu est seulement affiché dans l’interface Stats. Aucune API Owlbear de modification de token n’est appelée, aucun item Owlbear n’est modifié, aucune metadata de token n’est écrite et aucun overlay réel n’est créé. La synchronisation avec les tokens Owlbear reste reportée aux prochaines étapes de Stats V2.5.

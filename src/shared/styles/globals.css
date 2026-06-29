@@ -920,3 +920,42 @@ pre {
   align-items: center;
   gap: 6px;
 }
+
+.stat-token-display-preview {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px dashed color-mix(in srgb, var(--tgm-accent) 34%, var(--tgm-border));
+  border-radius: var(--tgm-radius-md);
+  background: color-mix(in srgb, var(--tgm-accent) 7%, transparent);
+}
+
+.stat-token-display-preview--empty {
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+}
+
+.stat-token-display-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-token-display-preview__header small {
+  color: var(--tgm-text-muted);
+  font-size: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.stat-token-display-preview__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
