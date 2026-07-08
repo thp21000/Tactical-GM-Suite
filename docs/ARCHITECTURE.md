@@ -2,96 +2,134 @@
 
 ## But du projet
 
-Tactical GM Suite est une extension Owlbear Rodeo modulaire destinée aux MJ. Elle doit regrouper progressivement des outils tactiques imbriqués, sans mélanger leurs responsabilités.
+Tactical GM Suite est une extension Owlbear Rodeo modulaire destinee aux MJ. Elle regroupe progressivement des outils tactiques imbriques, sans melanger leurs responsabilites.
 
-## Ordre des blocs de développement
+## Ordre des blocs de developpement
 
 1. Core / Dashboard
-2. Initiative Tracker avancé
-3. Distance / Déplacement / Portée
-4. Stat Tracker graphique avancé
-5. Intégration Calendar
-6. Intégration Loot Table
+2. Initiative Tracker avance
+3. Distance / Deplacement / Portee
+4. Stat Tracker graphique avance
+5. Integration Calendar
+6. Integration Loot Table
 
-## Séparation des dossiers
+Calendar et Loot Table restent reportes tant qu'une demande explicite n'ouvre pas leur integration.
 
-- `src/core/` contient uniquement la logique commune et stable : constantes, registre des modules, préférences, stockage, wrappers Owlbear et types globaux.
-- `src/features/` contient les pages visibles de l'interface, regroupées par fonctionnalité.
-- `src/shared/` contient les composants, hooks et styles réutilisables.
+## Separation des dossiers
+
+- `src/core/` contient uniquement la logique commune et stable : constantes, registre des modules, preferences, stockage, wrappers Owlbear et types globaux.
+- `src/features/` contient les pages visibles de l'interface, regroupees par fonctionnalite.
+- `src/shared/` contient les composants, hooks et styles reutilisables.
 - `public/` contient le manifeste Owlbear et les assets publics.
-- `docs/` contient la documentation d'architecture.
+- `docs/` contient la documentation d'architecture, les specs fonctionnelles et le contexte agent.
 
 ## Ajouter un nouveau module
 
-1. Déclarer son identifiant dans `src/core/constants/ids.ts`.
+1. Declarer son identifiant dans `src/core/constants/ids.ts`.
 2. Ajouter sa fiche dans `src/core/modules/moduleRegistry.ts`.
-3. Créer un dossier dédié dans `src/features/` uniquement lorsque la fonctionnalité est réellement développée.
+3. Creer un dossier dedie dans `src/features/` uniquement lorsque la fonctionnalite est reellement developpee.
 4. Garder les types propres au module dans son dossier de feature, sauf s'ils deviennent globaux.
-5. Passer par le registre des modules pour toute donnée affichée dans le Core.
+5. Passer par le registre des modules pour toute donnee affichee dans le Core.
+6. Documenter clairement la frontiere du module.
 
-## Règles importantes
+## Regles importantes
 
-- Ne jamais mélanger les données Calendar, Loot Table, Initiative, Stats et Range dans un même fichier ou dossier.
-- Le Core ne doit contenir que les fondations communes : navigation, paramètres locaux, registre et intégration Owlbear minimale.
-- Les préférences V1 sont stockées en `localStorage`; les metadata Owlbear sont réservées à de futurs usages partagés en room.
-- `App.tsx` reste limité au shell, à la navigation et au routage interne simple.
+- Ne jamais melanger les donnees Calendar, Loot Table, Initiative, Stats et Range dans un meme fichier ou dossier.
+- Le Core ne doit contenir que les fondations communes : navigation, parametres locaux, registre, stockage commun, theme et integration Owlbear minimale.
+- Les preferences personnelles restent en `localStorage`.
+- Les etats actifs partages peuvent utiliser les metadata Owlbear si leur taille reste raisonnable.
+- `App.tsx` reste limite au shell, a la navigation et au routage interne simple.
+- Ne pas creer de dossier `utils` fourre-tout.
 
-## Bloc 2 — Initiative Tracker V1
+## Bloc 1 — Core / Dashboard
 
-Le code spécifique à l'initiative vit dans `src/features/initiative/` avec ses composants, hooks et services dédiés. Le stockage utilise les metadata Owlbear quand la room est prête, puis `localStorage` en fallback hors Owlbear. Les modules Distance, Stats, Calendar et Loot Table restent uniquement déclarés dans le registre tant que leurs blocs ne sont pas développés.
+Le Core fournit le shell, la navigation, les preferences locales, le registre de modules, les constantes communes et les wrappers Owlbear de base. Il ne doit pas contenir de logique metier propre a Initiative, Range, Stats, Calendar ou Loot Table.
 
+## Bloc 2 — Initiative Tracker
 
-## Bloc 3 — Distance / Déplacement / Portée V1
+Le code specifique a l'initiative vit dans `src/features/initiative/` avec ses composants, hooks et services dedies.
 
-Le code spécifique aux distances et portées vit dans `src/features/range/`. Il mesure et interprète des distances entre items Owlbear sans développer le Stat Tracker, Calendar, Loot Table, ni automatiser les attaques ou dégâts.
+Responsabilites actuelles :
 
+- suivi manuel des participants ;
+- rounds et tours ;
+- etats simples comme actif, vaincu ou cache ;
+- import contextuel depuis les items Owlbear ;
+- stockage via metadata Owlbear quand la room est prete, avec fallback `localStorage` hors Owlbear.
 
-## Bloc 4 — Stat Tracker graphique avancé V1
+Le module Initiative ne doit pas integrer de logique Stats, Distance, Calendar ou Loot Table sans demande explicite.
 
-Le code spécifique au suivi de statistiques vit dans `src/features/stats/`. Cette V1 reste un outil MJ visuel pour PV, CA, conditions, ressources et notes, sans automatiser les règles PF2e, les dégâts, Calendar ou Loot Table.
+## Bloc 3 — Distance / Deplacement / Portee
 
-## État V1 stabilisé
+Le code specifique aux distances et portees vit dans `src/features/range/`.
 
-### Modules intégrés
+Responsabilites actuelles :
 
-- Core / Dashboard : shell, navigation, paramètres locaux et registre de modules.
-- Initiative Tracker V1 : suivi manuel de participants, rounds, tours et import contextuel Owlbear.
-- Distance / Déplacement / Portée V1 : mesures entre items Owlbear, presets de portée et préférences locales.
-- Stat Tracker V1 : suivi visuel MJ des PV, CA, conditions, ressources simples et notes.
+- mesure tactique entre items Owlbear ;
+- origine et cibles ;
+- lecture prudente des items et de la grille Owlbear ;
+- presets de portee ;
+- preferences locales.
 
-### Modules reportés
+Le module Range ne doit pas automatiser les attaques, les degats, les conditions Stats, Calendar ou Loot Table sans demande explicite.
 
-Calendar et Loot Table sont reportés à plus tard car ils existent déjà en standalone et ne doivent pas être intégrés tant que les fondations tactiques ne sont pas stabilisées.
+## Bloc 4 — Stat Tracker
 
-### Règles d'architecture
+Le code specifique au suivi de statistiques vit dans `src/features/stats/`.
 
-- Garder la séparation stricte `src/core/`, `src/features/` et `src/shared/`.
-- Chaque feature conserve ses types, hooks, services et composants dans son propre dossier.
-- Ne pas créer de dossier `utils` fourre-tout.
-- `App.tsx` reste limité au routage interne et au shell.
-- Ne pas fusionner Initiative, Range et Stats.
+Le module Stats a depasse la V1 initiale et suit maintenant le decoupage Stats V2 documente dans `docs/features/STATS_V2_SPEC.md` et `src/features/stats/README.md`.
 
-### Règles de stockage
+Etat actuel observe :
 
-- Les préférences personnelles restent en `localStorage`.
-- Les états actifs partagés peuvent utiliser les metadata Owlbear si leur taille reste raisonnable.
-- Ne pas stocker d'historique lourd, de logs de dégâts ou de gros statblocks.
-- Toute lecture doit rester robuste si la donnée est absente ou invalide.
+- Stats V2.1 : trackers personnalisables ;
+- Stats V2.2 : presets internes et gestion simple par le MJ ;
+- Stats V2.3 : assignation joueur, permissions preparees et mode joueur minimal ;
+- Stats V2.4 : conditions, durees, sources, notes et effets mecaniques prepares ;
+- Stats V2.5A-F : apercu token, payloads dry-run, plan d'overlay, rendu SVG local, adaptateur Owlbear et overlays Owlbear manuels par token.
 
-### Règles Owlbear
+Limites actuelles importantes :
+
+- pas de synchronisation globale automatique ;
+- pas de synchronisation live ;
+- pas de suivi automatique des deplacements de tokens ;
+- pas d'automatisation PF2e complete ;
+- pas d'interaction non demandee avec Initiative ou Range.
+
+## Etat actuel du projet
+
+### Modules integres
+
+- Core / Dashboard : shell, navigation, parametres locaux et registre de modules.
+- Initiative Tracker : suivi manuel de participants, rounds, tours et import contextuel Owlbear.
+- Distance / Deplacement / Portee : mesures entre items Owlbear, presets de portee et preferences locales.
+- Stat Tracker : suivi de tokens, trackers personnalisables, presets, conditions, permissions preparees, apercus token et overlays Owlbear manuels par token.
+
+### Modules reportes
+
+Calendar et Loot Table sont reportes. Ils ne doivent pas etre integres tant que leur chantier n'est pas explicitement demande.
+
+### Regles de stockage
+
+- Les preferences personnelles restent en `localStorage`.
+- Les etats actifs partages peuvent utiliser les metadata Owlbear si leur taille reste raisonnable.
+- Ne pas stocker d'historique lourd, de logs de degats ou de gros statblocks.
+- Toute lecture doit rester robuste si la donnee est absente ou invalide.
+
+### Regles Owlbear
 
 - Les hooks Owlbear doivent no-op hors Owlbear et nettoyer leurs abonnements.
-- Les menus contextuels doivent être créés uniquement quand OBR est prêt.
-- Les erreurs de scène, grille, bounds ou item sans nom ne doivent pas faire crasher l'application.
+- Les menus contextuels doivent etre crees uniquement quand OBR est pret.
+- Les erreurs de scene, grille, bounds ou item sans nom ne doivent pas faire crasher l'application.
+- Les actions qui modifient la scene Owlbear doivent rester explicites et limitees au perimetre demande.
 
 ### Avant d'ajouter un nouveau module
 
-1. Vérifier que `npm run typecheck` et `npm run build` passent.
-2. Ajouter les IDs et clés nécessaires dans `src/core/constants/ids.ts`.
-3. Créer un dossier de feature dédié.
-4. Documenter la frontière du module dans ce fichier.
-5. Confirmer que Calendar et Loot Table restent reportés tant que leur intégration n'est pas explicitement demandée.
+1. Verifier que `npm run typecheck` et `npm run build` passent.
+2. Ajouter les IDs et cles necessaires dans `src/core/constants/ids.ts`.
+3. Creer un dossier de feature dedie.
+4. Documenter la frontiere du module dans ce fichier.
+5. Confirmer que Calendar et Loot Table restent reportes tant que leur integration n'est pas explicitement demandee.
 
-## Release V1 — 0.1.0
+## Historique de release
 
-La version V1 `0.1.0` est une release de stabilisation. Aucun nouveau module ne doit être ajouté avant les tests terrain ou un polish ciblé des modules déjà intégrés.
+La version package `0.1.0` correspond a la base V1 stabilisee. Depuis cette base, le module Stats a continue son evolution fonctionnelle jusqu'a Stats V2.5F. Le manifest Owlbear declare actuellement la version `0.2.1`.
