@@ -18,7 +18,8 @@ Objectifs :
 - conserver une interface simple pour le MJ ;
 - fiabiliser les interactions Owlbear ;
 - eviter les regressions entre modules ;
-- documenter les frontieres fonctionnelles.
+- documenter les frontieres fonctionnelles ;
+- consolider le retour terrain avant d'ajouter des automatismes.
 
 ## Stats V2
 
@@ -30,7 +31,7 @@ Etat observe :
 - V2.2 : presets internes et gestion simple par le MJ.
 - V2.3 : assignation joueur, permissions preparees, mode joueur minimal.
 - V2.4 : conditions, durees, sources, notes, effets mecaniques prepares.
-- V2.5 : affichage sur token, rendu SVG local, adaptateur Owlbear, overlays manuels par token.
+- V2.5A-F : affichage sur token, rendu SVG local, adaptateur Owlbear et overlays Owlbear manuels par token.
 
 Limites a conserver tant qu'elles ne sont pas explicitement levees :
 
@@ -46,9 +47,9 @@ Calendar et Loot Table restent reportes. Ils ne doivent etre integres que lorsqu
 
 ## Priorites recommandees
 
-1. Stabiliser les overlays Stats manuels avec retours terrain.
-2. Clarifier la documentation entre README racine, architecture et etat reel des modules.
-3. Ajouter des tests legers sur les services purs les plus critiques.
+1. Tester et stabiliser les overlays Stats manuels avec retours terrain.
+2. Auditer les comportements Owlbear hors scene, hors room ou en mode developpement local.
+3. Ajouter des tests legers sur les services purs les plus critiques si une infrastructure de test est introduite.
 4. Verrouiller les versions de dependances si la stabilite de build devient prioritaire.
 5. Preparer les prochaines etapes Stats une par une, sans synchronisation automatique prematuree.
 
@@ -59,3 +60,4 @@ Calendar et Loot Table restent reportes. Ils ne doivent etre integres que lorsqu
 - Ajout d'un backend.
 - Migration massive de stockage.
 - Integration Calendar ou Loot Table sans demande explicite.
+- Synchronisation automatique globale Stats sans etape dediee.
