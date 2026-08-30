@@ -3,6 +3,7 @@ import type {
   StatConditionDurationType,
   StatConditionEffect,
   StatConditionTokenDisplayMode,
+  StatTrackerVisibility,
   StatTokenCondition,
   StatTrackedToken,
 } from "../statTypes";
@@ -461,6 +462,7 @@ export type StatTokenConditionInput = {
   showOnToken?: boolean;
   tokenDisplayMode?: StatConditionTokenDisplayMode;
   tokenDisplayPriority?: number;
+  visibility?: StatTrackerVisibility;
 };
 
 const DURATION_TYPES = new Set<StatConditionDurationType>([
@@ -475,6 +477,19 @@ const TOKEN_DISPLAY_MODES = new Set<StatConditionTokenDisplayMode>([
   "icon",
   "hidden",
 ]);
+
+const TRACKER_VISIBILITIES = new Set<StatTrackerVisibility>([
+  "gm",
+  "private",
+  "public",
+]);
+
+function normalizeVisibility(value: unknown): StatTrackerVisibility {
+  return typeof value === "string" &&
+    TRACKER_VISIBILITIES.has(value as StatTrackerVisibility)
+    ? (value as StatTrackerVisibility)
+    : "gm";
+}
 
 function normalizeTokenDisplayMode(
   value: unknown,
@@ -543,6 +558,7 @@ function normalizeConditionInput(
     showOnToken,
     tokenDisplayMode,
     tokenDisplayPriority: normalizeTokenDisplayPriority(record.tokenDisplayPriority),
+    visibility: normalizeVisibility(record.visibility),
   };
 }
 
@@ -674,6 +690,7 @@ export type StatConditionTokenDisplayItem = {
   iconId: string;
   mode: StatConditionTokenDisplayMode;
   priority: number;
+  visibility: StatTrackerVisibility;
 };
 
 function getConditionValueLabel(condition: StatTokenCondition): string {
@@ -740,6 +757,7 @@ export function getTokenConditionDisplayItems(
     iconId: condition.iconId,
     mode: condition.tokenDisplayMode ?? "badge",
     priority: condition.tokenDisplayPriority ?? 50,
+    visibility: condition.visibility ?? "gm",
   }));
 }
 
@@ -794,6 +812,7 @@ export function normalizeTokenConditions(value: unknown): StatTokenCondition[] {
           ? (record.tokenDisplayMode as StatConditionTokenDisplayMode)
           : undefined,
       tokenDisplayPriority: normalizeTokenDisplayPriority(record.tokenDisplayPriority),
+      visibility: normalizeVisibility(record.visibility),
     });
 
     return [
