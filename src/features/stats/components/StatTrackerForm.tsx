@@ -140,14 +140,14 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
       ) : null}
 
       {visualType === "toggle" ? (
-        <label className="stat-toggle-line">
-          État activé
+        <div className="stat-toggle-line">
+          <span className="stat-form__label">État activé</span>
           <Toggle
             checked={enabled}
             label="État activé"
             onChange={setEnabled}
           />
-        </label>
+        </div>
       ) : null}
 
       <label>
@@ -166,23 +166,23 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
         </select>
       </label>
 
-      <label className="stat-toggle-line">
-        Modification joueur autorisée
+      <div className="stat-toggle-line">
+        <span className="stat-form__label">Modification joueur autorisée</span>
         <Toggle
           checked={canPlayerEdit}
           label="Modification joueur autorisée"
           onChange={setCanPlayerEdit}
         />
-      </label>
+      </div>
 
-      <label className="stat-toggle-line">
-        Afficher sur token
+      <div className="stat-toggle-line">
+        <span className="stat-form__label">Afficher sur token</span>
         <Toggle
           checked={showOnToken}
           label="Afficher sur token"
           onChange={setShowOnToken}
         />
-      </label>
+      </div>
 
       <div className="stat-form__actions">
         <Button type="submit">
