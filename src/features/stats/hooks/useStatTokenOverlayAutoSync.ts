@@ -12,8 +12,12 @@ type AutoSyncState = {
   lastError?: string;
 };
 
+function getTokenInstanceKey(token: StatTrackedToken): string {
+  return `${token.id}:${token.sourceItemId ?? "manual"}`;
+}
+
 function toTokenMap(tokens: StatTrackedToken[]): Map<string, StatTrackedToken> {
-  return new Map(tokens.map((token) => [token.id, token]));
+  return new Map(tokens.map((token) => [getTokenInstanceKey(token), token]));
 }
 
 export function useStatTokenOverlayAutoSync({
@@ -96,27 +100,17 @@ export function useStatTokenOverlayAutoSync({
     const next = toTokenMap(tokens);
 
     for (const token of tokens) {
-      const oldToken = previous.get(token.id);
+      const key = getTokenInstanceKey(token);
+      const oldToken = previous.get(key);
 
-      if (
-        oldToken?.sourceItemId &&
-        oldToken.sourceItemId !== token.sourceItemId
-      ) {
-        pendingDeletesRef.current.set(oldToken.id, oldToken);
-      }
-
-      if (
-        !oldToken ||
-        oldToken.updatedAt !== token.updatedAt ||
-        oldToken.sourceItemId !== token.sourceItemId
-      ) {
-        pendingUpdatesRef.current.set(token.id, token);
+      if (!oldToken || oldToken.updatedAt !== token.updatedAt) {
+        pendingUpdatesRef.current.set(key, token);
       }
     }
 
-    for (const oldToken of previous.values()) {
-      if (!next.has(oldToken.id) && oldToken.sourceItemId) {
-        pendingDeletesRef.current.set(oldToken.id, oldToken);
+    for (const [key, oldToken] of previous) {
+      if (!next.has(key) && oldToken.sourceItemId) {
+        pendingDeletesRef.current.set(key, oldToken);
       }
     }
 
