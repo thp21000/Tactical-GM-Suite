@@ -55,15 +55,13 @@ function getPlayerAssignmentLabel(token: {
   assignedPlayerId?: string;
   assignedPlayerName?: string;
 }): string | null {
-  if (token.assignedPlayerName) {
-    return token.assignedPlayerName;
-  }
-
-  if (token.assignedPlayerId) {
-    return token.assignedPlayerId;
-  }
-
+  if (token.assignedPlayerName) return token.assignedPlayerName;
+  if (token.assignedPlayerId) return token.assignedPlayerId;
   return null;
+}
+
+function getTokenInstanceKey(token: { id: string; sourceItemId?: string }): string {
+  return `${token.id}:${token.sourceItemId ?? "manual"}`;
 }
 
 export function StatTrackedTokenBlock({
@@ -85,9 +83,7 @@ export function StatTrackedTokenBlock({
   onUpdateTracker,
 }: Props) {
   const [editingTokenId, setEditingTokenId] = useState<string | null>(null);
-  const [addingTrackerTokenId, setAddingTrackerTokenId] = useState<string | null>(
-    null,
-  );
+  const [addingTrackerTokenId, setAddingTrackerTokenId] = useState<string | null>(null);
 
   const trackerCount = group.tokens.reduce(
     (total, token) => total + token.trackers.length,
@@ -109,14 +105,15 @@ export function StatTrackedTokenBlock({
         {group.isGroup ? <Badge>Groupe lié</Badge> : null}
 
         {group.tokens.map((token) => {
+          const instanceKey = getTokenInstanceKey(token);
           const tokenTypeLabel = STAT_TOKEN_TYPE_LABELS[token.tokenType];
           const sourceLabel = token.sourceItemId ? "Owlbear" : "Manuel";
           const playerAssignmentLabel = getPlayerAssignmentLabel(token);
-          const isEditing = editingTokenId === token.id;
-          const isAddingTracker = addingTrackerTokenId === token.id;
+          const isEditing = editingTokenId === instanceKey;
+          const isAddingTracker = addingTrackerTokenId === instanceKey;
 
           return (
-            <article className="stat-token-block" key={token.id}>
+            <article className="stat-token-block" key={instanceKey}>
               <div className="stat-token-block__header">
                 <div>
                   <h3>{token.name}</h3>
@@ -178,13 +175,13 @@ export function StatTrackedTokenBlock({
 
               {isGm ? (
                 <div className="stat-card__actions">
-                  <Button onClick={() => setEditingTokenId(token.id)}>
+                  <Button onClick={() => setEditingTokenId(instanceKey)}>
                     Modifier token
                   </Button>
 
                   <Button
                     onClick={() =>
-                      setAddingTrackerTokenId(isAddingTracker ? null : token.id)
+                      setAddingTrackerTokenId(isAddingTracker ? null : instanceKey)
                     }
                   >
                     Ajouter tracker
