@@ -58,13 +58,21 @@ type PreparedAudience = {
   payload: StatTokenSyncPayload;
   overlayId?: string;
   labelText: string;
+  lineCount: number;
+  visibleItemCount: number;
   metadata?: StatOverlayObrMetadata;
 };
 
-const OVERLAY_GAP = 12;
-const OVERLAY_STACK_STEP = 28;
+const OVERLAY_GAP = 10;
+const OVERLAY_FONT_SIZE = 11;
+const OVERLAY_PADDING = 4;
+const OVERLAY_LINE_HEIGHT = 17;
+const OVERLAY_BASE_HEIGHT = OVERLAY_FONT_SIZE + OVERLAY_PADDING * 2;
 const OVERLAY_BACKGROUND = "#202230";
 const OVERLAY_TEXT = "#f6f3ff";
+const OVERLAY_ITEMS_PER_LINE = 3;
+const OVERLAY_MAX_ITEMS = 6;
+const OVERLAY_MAX_ITEM_LENGTH = 24;
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 
 function createResult(
@@ -134,14 +142,46 @@ async function canCurrentPlayerManageOverlays(): Promise<boolean> {
   }
 }
 
+function truncateOverlayText(value: string): string {
+  const trimmed = value.trim();
+  if (trimmed.length <= OVERLAY_MAX_ITEM_LENGTH) return trimmed;
+  return `${trimmed.slice(0, OVERLAY_MAX_ITEM_LENGTH - 1)}…`;
+}
+
 function formatOverlayItem(item: StatTokenSyncItem): string {
   const icon = getTrackerIcon(item.iconId).symbol;
   if (item.mode === "icon") return icon;
-  return `${icon} ${item.label}`.trim();
+  return truncateOverlayText(`${icon} ${item.label}`.trim());
 }
 
-function getOverlayLabelText(payload: StatTokenSyncPayload): string {
-  return payload.items.map(formatOverlayItem).join(" · ");
+function getOverlayLabelLayout(payload: StatTokenSyncPayload): {
+  text: string;
+  lineCount: number;
+  visibleItemCount: number;
+} {
+  const visibleItems = payload.items.slice(0, OVERLAY_MAX_ITEMS);
+  const formatted = visibleItems.map(formatOverlayItem);
+  const hiddenCount = Math.max(0, payload.items.length - visibleItems.length);
+  const lines: string[] = [];
+
+  for (let index = 0; index < formatted.length; index += OVERLAY_ITEMS_PER_LINE) {
+    lines.push(formatted.slice(index, index + OVERLAY_ITEMS_PER_LINE).join("   ·   "));
+  }
+
+  if (hiddenCount > 0) {
+    const overflow = `+${hiddenCount}`;
+    if (lines.length === 0) {
+      lines.push(overflow);
+    } else {
+      lines[lines.length - 1] = `${lines[lines.length - 1]}   ${overflow}`;
+    }
+  }
+
+  return {
+    text: lines.join("\n"),
+    lineCount: Math.max(1, lines.length),
+    visibleItemCount: visibleItems.length,
+  };
 }
 
 function prepareAudience(
@@ -154,15 +194,20 @@ function prepareAudience(
       visibility,
       payload,
       labelText: "",
+      lineCount: 0,
+      visibleItemCount: 0,
     };
   }
 
   const overlayId = createOverlayId(payload.sourceItemId, visibility);
+  const layout = getOverlayLabelLayout(payload);
   return {
     visibility,
     payload,
     overlayId,
-    labelText: getOverlayLabelText(payload),
+    labelText: layout.text,
+    lineCount: layout.lineCount,
+    visibleItemCount: layout.visibleItemCount,
     metadata: {
       kind: STAT_OVERLAY_KIND,
       tokenId: token.id,
@@ -178,21 +223,27 @@ function getPreparedAudiences(token: StatTrackedToken): PreparedAudience[] {
   return AUDIENCES.map((visibility) => prepareAudience(token, visibility));
 }
 
+function getAudienceHeight(audience: PreparedAudience): number {
+  if (audience.lineCount <= 1) return OVERLAY_BASE_HEIGHT;
+  return OVERLAY_BASE_HEIGHT + (audience.lineCount - 1) * OVERLAY_LINE_HEIGHT;
+}
+
 function getAudiencePositions(
   bounds: BoundingBox,
   audiences: PreparedAudience[],
 ): Map<StatTrackerVisibility, Vector2> {
   const positions = new Map<StatTrackerVisibility, Vector2>();
-  let readyIndex = 0;
+  let stackedHeight = 0;
 
   for (const audience of audiences) {
     if (audience.payload.status !== "ready") continue;
 
+    const height = getAudienceHeight(audience);
     positions.set(audience.visibility, {
       x: bounds.center.x,
-      y: bounds.min.y - OVERLAY_GAP - readyIndex * OVERLAY_STACK_STEP,
+      y: bounds.min.y - OVERLAY_GAP - stackedHeight,
     });
-    readyIndex += 1;
+    stackedHeight += height + OVERLAY_GAP;
   }
 
   return positions;
@@ -211,13 +262,13 @@ function buildOverlayLabel(
     .id(audience.overlayId)
     .name(`Stats Overlay ${audience.visibility} — ${token.name}`)
     .plainText(audience.labelText)
-    .fontSize(13)
+    .fontSize(OVERLAY_FONT_SIZE)
     .fontWeight(600)
-    .padding(6)
+    .padding(OVERLAY_PADDING)
     .fillColor(OVERLAY_TEXT)
     .backgroundColor(OVERLAY_BACKGROUND)
-    .backgroundOpacity(0.92)
-    .cornerRadius(8)
+    .backgroundOpacity(0.86)
+    .cornerRadius(6)
     .position(position)
     .rotation(0)
     .scale({ x: 1, y: 1 })
