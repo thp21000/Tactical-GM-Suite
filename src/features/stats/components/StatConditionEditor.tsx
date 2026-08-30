@@ -4,6 +4,7 @@ import { getStatConditionDefinition, type StatTokenConditionInput } from "../ser
 import type {
   StatConditionDurationType,
   StatConditionTokenDisplayMode,
+  StatTrackerVisibility,
   StatTokenCondition,
 } from "../statTypes";
 import { StatConditionEffects } from "./StatConditionEffects";
@@ -62,6 +63,9 @@ export function StatConditionEditor({
   const [tokenDisplayPriority, setTokenDisplayPriority] = useState(
     String(condition.tokenDisplayPriority ?? 50),
   );
+  const [visibility, setVisibility] = useState<StatTrackerVisibility>(
+    condition.visibility ?? "gm",
+  );
 
   return (
     <form
@@ -78,6 +82,7 @@ export function StatConditionEditor({
           showOnToken: tokenDisplayMode === "hidden" ? false : showOnToken,
           tokenDisplayMode,
           tokenDisplayPriority: Number(tokenDisplayPriority) || 50,
+          visibility,
         });
       }}
     >
@@ -170,6 +175,20 @@ export function StatConditionEditor({
                 {label}
               </option>
             ))}
+          </select>
+        </label>
+
+        <label>
+          <span>Visibilité</span>
+          <select
+            value={visibility}
+            onChange={(event) =>
+              setVisibility(event.target.value as StatTrackerVisibility)
+            }
+          >
+            <option value="gm">MJ</option>
+            <option value="private">Privé</option>
+            <option value="public">Public</option>
           </select>
         </label>
 

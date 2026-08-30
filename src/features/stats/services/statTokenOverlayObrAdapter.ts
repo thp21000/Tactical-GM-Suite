@@ -1,7 +1,7 @@
-import type { StatTrackedToken } from "../statTypes";
+import type { StatTrackedToken, StatTrackerVisibility } from "../statTypes";
 import { createTokenOverlayPlan } from "./statTokenOverlayPlan";
 import { renderOverlayPlanToSvg } from "./statTokenOverlaySvg";
-import { createTokenSyncPayload } from "./statTokenSync";
+import { createTokenSyncPayloadForVisibility } from "./statTokenSync";
 
 export const STAT_OVERLAY_METADATA_KEY = "tactical-gm-suite/stats-overlay";
 export const STAT_OVERLAY_KIND = "stats-token-overlay";
@@ -12,6 +12,7 @@ export type StatOverlayObrMetadata = {
   sourceItemId: string;
   overlayId: string;
   updatedAt: string;
+  visibility: StatTrackerVisibility;
 };
 
 export type StatOverlayObrPreparedImage = {
@@ -24,6 +25,7 @@ export type StatOverlayObrPreparedImage = {
   height: number;
   itemCount: number;
   metadata: StatOverlayObrMetadata;
+  visibility: StatTrackerVisibility;
 };
 
 export type StatOverlayObrPrepareStatus =
@@ -52,6 +54,7 @@ function createMetadata(
   token: StatTrackedToken,
   sourceItemId: string,
   overlayId: string,
+  visibility: StatTrackerVisibility,
 ): StatOverlayObrMetadata {
   return {
     kind: STAT_OVERLAY_KIND,
@@ -59,13 +62,15 @@ function createMetadata(
     sourceItemId,
     overlayId,
     updatedAt: token.updatedAt,
+    visibility,
   };
 }
 
 export function prepareOverlayImageForObr(
   token: StatTrackedToken,
+  visibility: StatTrackerVisibility = "public",
 ): StatOverlayObrPrepareResult {
-  const payload = createTokenSyncPayload(token);
+  const payload = createTokenSyncPayloadForVisibility(token, visibility);
 
   if (payload.status === "not-linked") {
     return { status: "not-linked", reason: "Token non lié à un item Owlbear." };
@@ -96,7 +101,8 @@ export function prepareOverlayImageForObr(
       width: rendered.width,
       height: rendered.height,
       itemCount: rendered.itemCount,
-      metadata: createMetadata(token, plan.sourceItemId, plan.overlayId),
+      metadata: createMetadata(token, plan.sourceItemId, plan.overlayId, visibility),
+      visibility,
     },
   };
 }
@@ -104,7 +110,7 @@ export function prepareOverlayImageForObr(
 export function prepareOverlayImagesForObr(
   tokens: StatTrackedToken[],
 ): StatOverlayObrPrepareResult[] {
-  return tokens.map(prepareOverlayImageForObr);
+  return tokens.map((token) => prepareOverlayImageForObr(token, "public"));
 }
 
 export function getOverlayObrPrepareSummary(

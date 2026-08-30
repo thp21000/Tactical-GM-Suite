@@ -106,9 +106,9 @@ export function StatTrackerCard({
       <StatTrackerValueControls canEdit={canEdit} tracker={tracker} onChange={onChangeValue} />
 
       <div className="stat-tracker-card__actions">
-        {tracker.showOnToken ? (
-          <Badge tone="success">Affichage token prévu</Badge>
-        ) : null}
+        <Badge tone={tracker.showOnToken ? "success" : "default"}>
+          Token {tracker.showOnToken ? "ON" : "OFF"}
+        </Badge>
 
         {isGm ? <Button onClick={() => setEditing(true)}>Modifier</Button> : null}
         {isGm ? <Button onClick={onRemove}>Supprimer</Button> : null}

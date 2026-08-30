@@ -5,7 +5,7 @@ import {
   createTokenOverlayPlan,
   getOverlayPlanSummary,
 } from "../services/statTokenOverlayPlan";
-import { createTokenSyncPayload } from "../services/statTokenSync";
+import { createTokenSyncPayloadForVisibility } from "../services/statTokenSync";
 import type { StatTrackedToken } from "../statTypes";
 
 type Props = {
@@ -19,7 +19,7 @@ function shorten(value: string, max = 28): string {
 
 export function StatTokenOverlayPlanPreview({ token, isGm }: Props) {
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const payload = createTokenSyncPayload(token);
+  const payload = createTokenSyncPayloadForVisibility(token, "public");
   const plan = createTokenOverlayPlan(payload);
 
   if (!isGm) return null;

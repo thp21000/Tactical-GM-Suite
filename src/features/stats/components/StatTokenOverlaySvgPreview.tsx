@@ -1,7 +1,7 @@
 import { Badge } from "../../../shared/components/Badge";
 import { createTokenOverlayPlan } from "../services/statTokenOverlayPlan";
 import { renderOverlayPlanToSvg } from "../services/statTokenOverlaySvg";
-import { createTokenSyncPayload } from "../services/statTokenSync";
+import { createTokenSyncPayloadForVisibility } from "../services/statTokenSync";
 import type { StatTrackedToken } from "../statTypes";
 
 type Props = {
@@ -12,7 +12,7 @@ type Props = {
 export function StatTokenOverlaySvgPreview({ token, isGm }: Props) {
   if (!isGm) return null;
 
-  const payload = createTokenSyncPayload(token);
+  const payload = createTokenSyncPayloadForVisibility(token, "public");
   const plan = createTokenOverlayPlan(payload);
 
   if (!plan) {

@@ -3,6 +3,7 @@ import type {
   StatTokenSyncPayload,
   StatTokenSyncStatus,
 } from "./statTokenSync";
+import type { StatTrackerVisibility } from "../statTypes";
 
 export type StatTokenOverlayAnchor = "top" | "bottom" | "left" | "right";
 
@@ -101,8 +102,12 @@ function sanitizeOverlayIdPart(value: string): string {
   return value.trim().replace(/[^a-zA-Z0-9_-]+/g, "-") || "unknown";
 }
 
-export function createOverlayId(sourceItemId: string): string {
-  return `tactical-gm-stats-overlay-${sanitizeOverlayIdPart(sourceItemId)}`;
+export function createOverlayId(
+  sourceItemId: string,
+  visibility?: StatTrackerVisibility,
+): string {
+  const audience = visibility ? `${visibility}-` : "";
+  return `tactical-gm-stats-overlay-${audience}${sanitizeOverlayIdPart(sourceItemId)}`;
 }
 
 function createPlanItem(
@@ -138,7 +143,7 @@ export function createTokenOverlayPlan(
   return {
     tokenId: payload.tokenId,
     sourceItemId: payload.sourceItemId,
-    overlayId: createOverlayId(payload.sourceItemId),
+    overlayId: createOverlayId(payload.sourceItemId, payload.visibility),
     tokenName: payload.tokenName,
     status: payload.status === "ready" ? "ready" : "empty",
     layout,

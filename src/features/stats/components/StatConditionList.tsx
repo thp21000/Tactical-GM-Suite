@@ -46,6 +46,12 @@ function getConditionTitle(condition: StatTokenCondition): string {
     .join(" · ");
 }
 
+function getVisibilityLabel(condition: StatTokenCondition): string {
+  if (condition.visibility === "public") return "Public";
+  if (condition.visibility === "private") return "Privé";
+  return "MJ";
+}
+
 export function StatConditionList({
   token,
   isGm,
@@ -100,9 +106,14 @@ export function StatConditionList({
               >
                 <span aria-hidden="true">{icon.symbol}</span>
                 {label}
-                {condition.showOnToken && condition.tokenDisplayMode !== "hidden" ? (
-                  <span className="stat-condition-token-indicator">Token</span>
-                ) : null}
+                <span className="stat-condition-token-indicator">
+                  Token {condition.showOnToken && condition.tokenDisplayMode !== "hidden"
+                    ? "ON"
+                    : "OFF"}
+                </span>
+                <span className="stat-condition-token-indicator">
+                  {getVisibilityLabel(condition)}
+                </span>
                 <span aria-hidden="true">✎</span>
               </button>
             ) : (

@@ -1,4 +1,8 @@
-import type { StatTrackedToken, StatTracker } from "../statTypes";
+import type {
+  StatTokenCondition,
+  StatTrackedToken,
+  StatTracker,
+} from "../statTypes";
 
 export type StatPermissionViewer =
   | { role: "gm" }
@@ -44,6 +48,18 @@ export function canViewerSeeTracker(
   return isTokenAssignedToViewer(token, viewer);
 }
 
+export function canViewerSeeCondition(
+  token: StatTrackedToken,
+  condition: StatTokenCondition,
+  viewer: StatPermissionViewer,
+): boolean {
+  if (viewer.role === "gm") return true;
+  const visibility = condition.visibility ?? "gm";
+  if (visibility === "gm") return false;
+  if (visibility === "public") return true;
+  return isTokenAssignedToViewer(token, viewer);
+}
+
 export function canViewerEditTracker(
   token: StatTrackedToken,
   tracker: StatTracker,
@@ -71,8 +87,14 @@ export function filterTokensForViewer(
   if (viewer.role === "gm") return tokens;
 
   return tokens
-    .map((token) => ({ ...token, trackers: filterTrackersForViewer(token, viewer) }))
-    .filter((token) => token.trackers.length > 0);
+    .map((token) => ({
+      ...token,
+      trackers: filterTrackersForViewer(token, viewer),
+      conditions: token.conditions.filter((condition) =>
+        canViewerSeeCondition(token, condition, viewer),
+      ),
+    }))
+    .filter((token) => token.trackers.length > 0 || token.conditions.length > 0);
 }
 
 export function getTrackerVisibilityBadgeLabel(tracker: StatTracker): string {

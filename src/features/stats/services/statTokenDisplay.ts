@@ -2,6 +2,7 @@ import type {
   StatConditionTokenDisplayMode,
   StatTrackedToken,
   StatTracker,
+  StatTrackerVisibility,
 } from "../statTypes";
 import {
   getTokenConditionDisplayItems,
@@ -23,6 +24,7 @@ export type StatTokenDisplayItem = {
   iconId: string;
   mode: StatTokenDisplayItemMode;
   priority: number;
+  visibility: StatTrackerVisibility;
 };
 
 const DEFAULT_DISPLAY_PRIORITY = 50;
@@ -75,6 +77,7 @@ export function getTrackerTokenDisplayItem(
     iconId: tracker.iconId,
     mode: getTrackerDisplayMode(tracker),
     priority: DEFAULT_DISPLAY_PRIORITY,
+    visibility: tracker.visibility,
   };
 }
 
@@ -95,6 +98,7 @@ function getConditionTokenDisplayItem(
     iconId: condition.iconId,
     mode: mapConditionMode(condition.mode),
     priority: normalizePriority(condition.priority),
+    visibility: condition.visibility,
   };
 }
 
@@ -109,6 +113,42 @@ export function getTokenDisplayItems(token: StatTrackedToken): StatTokenDisplayI
   return [...trackerItems, ...conditionItems].sort(
     (a, b) => a.priority - b.priority || a.label.localeCompare(b.label, "fr"),
   );
+}
+
+export type StatTokenDisplayItemsByVisibility = Record<
+  StatTrackerVisibility,
+  StatTokenDisplayItem[]
+>;
+
+export function getTokenDisplayItemsByVisibility(
+  token: StatTrackedToken,
+): StatTokenDisplayItemsByVisibility {
+  const items = getTokenDisplayItems(token);
+
+  // Security boundary: private and GM items are never promoted into public output.
+  return {
+    public: items.filter((item) => item.visibility === "public"),
+    private: items.filter((item) => item.visibility === "private"),
+    gm: items.filter((item) => item.visibility === "gm"),
+  };
+}
+
+export function getPublicTokenDisplayItems(
+  token: StatTrackedToken,
+): StatTokenDisplayItem[] {
+  return getTokenDisplayItemsByVisibility(token).public;
+}
+
+export function getPrivateTokenDisplayItems(
+  token: StatTrackedToken,
+): StatTokenDisplayItem[] {
+  return getTokenDisplayItemsByVisibility(token).private;
+}
+
+export function getGmTokenDisplayItems(
+  token: StatTrackedToken,
+): StatTokenDisplayItem[] {
+  return getTokenDisplayItemsByVisibility(token).gm;
 }
 
 export function getTokenDisplayPreviewSummary(token: StatTrackedToken): string {

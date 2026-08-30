@@ -7,6 +7,7 @@ import {
   STAT_OVERLAY_METADATA_KEY,
 } from "../services/statTokenOverlayObrAdapter";
 import type { StatOverlayObrSyncStatus } from "../services/statTokenOverlayObrSync";
+import { getTokenDisplayItemsByVisibility } from "../services/statTokenDisplay";
 import type { StatTrackedToken } from "../statTypes";
 
 type Props = {
@@ -51,12 +52,20 @@ export function StatTokenObrOverlayPreparePreview({ token, isGm }: Props) {
 
   const result = prepareOverlayImageForObr(token);
   const preparedImage = result.preparedImage;
-  const canCreateOrUpdate = result.status === "ready" && !isLoading;
+  const items = getTokenDisplayItemsByVisibility(token);
+  const displayItemCount = items.public.length + items.private.length + items.gm.length;
+  const canCreateOrUpdate = Boolean(token.sourceItemId) && !isLoading;
   const canDelete = Boolean(token.sourceItemId) && !isLoading;
 
   return (
     <div className="stat-token-obr-prepare-preview" aria-label="Diagnostic préparation Owlbear">
       <div className="stat-token-obr-prepare-preview__badges">
+        <Badge tone={displayItemCount > 0 ? "success" : "default"}>
+          Afficher token : {displayItemCount > 0 ? "ON" : "OFF"}
+        </Badge>
+        <Badge>
+          Public {items.public.length} · Privé {items.private.length} · MJ {items.gm.length}
+        </Badge>
         <Badge
           tone={
             result.status === "ready"
@@ -68,7 +77,7 @@ export function StatTokenObrOverlayPreparePreview({ token, isGm }: Props) {
                   : "default"
           }
         >
-          {getOverlayObrPrepareSummary(result)}
+          Public : {getOverlayObrPrepareSummary(result)}
         </Badge>
 
         {preparedImage ? (
@@ -86,17 +95,25 @@ export function StatTokenObrOverlayPreparePreview({ token, isGm }: Props) {
 
       {preparedImage ? (
         <p className="stat-token-obr-prepare-preview__meta">
-          Metadata future : {STAT_OVERLAY_METADATA_KEY}
+          Metadata : {STAT_OVERLAY_METADATA_KEY}
         </p>
       ) : null}
 
+      <p className="stat-token-obr-prepare-preview__meta">
+        Overlay public : partagé · Overlay MJ : local · Overlay privé : local MJ seulement
+      </p>
+
       <div className="stat-token-obr-prepare-preview__actions">
         <Button onClick={() => void createOrUpdateOverlay(token)} disabled={!canCreateOrUpdate}>
-          {loadingAction === "create-or-update" ? "Création…" : "Créer / MAJ overlay"}
+          {loadingAction === "create-or-update"
+            ? "Création…"
+            : "Créer / MAJ affichage token"}
         </Button>
         {token.sourceItemId ? (
           <Button onClick={() => void deleteOverlay(token)} disabled={!canDelete}>
-            {loadingAction === "delete" ? "Suppression…" : "Supprimer overlay"}
+            {loadingAction === "delete"
+              ? "Suppression…"
+              : "Supprimer affichage token"}
           </Button>
         ) : null}
       </div>

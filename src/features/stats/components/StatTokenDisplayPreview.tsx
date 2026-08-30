@@ -1,5 +1,9 @@
 import { Badge } from "../../../shared/components/Badge";
-import { getTokenDisplayItems, getTokenDisplayPreviewSummary } from "../services/statTokenDisplay";
+import {
+  getPublicTokenDisplayItems,
+  getTokenDisplayItems,
+  getTokenDisplayPreviewSummary,
+} from "../services/statTokenDisplay";
 import { getTrackerIcon } from "../services/statTrackerIcons";
 import type { StatTrackedToken } from "../statTypes";
 
@@ -10,7 +14,10 @@ type Props = {
 };
 
 export function StatTokenDisplayPreview({ token, isGm, maxItems = 6 }: Props) {
-  const items = getTokenDisplayItems(token);
+  // The player fallback is public-only; private items are never inferred as public.
+  const items = isGm
+    ? getTokenDisplayItems(token)
+    : getPublicTokenDisplayItems(token);
 
   if (items.length === 0) {
     return isGm ? (
@@ -27,7 +34,11 @@ export function StatTokenDisplayPreview({ token, isGm, maxItems = 6 }: Props) {
     <div className="stat-token-display-preview" aria-label="Aperçu token local">
       <div className="stat-token-display-preview__header">
         <span>Aperçu token</span>
-        <small>{getTokenDisplayPreviewSummary(token)}</small>
+        <small>
+          {isGm
+            ? getTokenDisplayPreviewSummary(token)
+            : `${items.length} élément${items.length > 1 ? "s" : ""} public${items.length > 1 ? "s" : ""}`}
+        </small>
       </div>
 
       <div className="stat-token-display-preview__items">

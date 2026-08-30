@@ -1,6 +1,8 @@
-import type { StatTrackedToken } from "../statTypes";
+import type { StatTrackedToken, StatTrackerVisibility } from "../statTypes";
 import {
   getTokenDisplayItems,
+  getTokenDisplayItemsByVisibility,
+  type StatTokenDisplayItem,
   type StatTokenDisplayItemMode,
   type StatTokenDisplayItemSource,
 } from "./statTokenDisplay";
@@ -16,6 +18,7 @@ export type StatTokenSyncItem = {
   iconId: string;
   mode: StatTokenDisplayItemMode;
   priority: number;
+  visibility: StatTrackerVisibility;
 };
 
 export type StatTokenSyncPayload = {
@@ -26,6 +29,7 @@ export type StatTokenSyncPayload = {
   itemCount: number;
   items: StatTokenSyncItem[];
   updatedAt: string;
+  visibility?: StatTrackerVisibility;
 };
 
 export type StatDryRunSyncReport = {
@@ -37,7 +41,7 @@ export type StatDryRunSyncReport = {
   summary: string;
 };
 
-function toSyncItem(item: ReturnType<typeof getTokenDisplayItems>[number]): StatTokenSyncItem {
+function toSyncItem(item: StatTokenDisplayItem): StatTokenSyncItem {
   return {
     id: item.id,
     source: item.source,
@@ -47,6 +51,7 @@ function toSyncItem(item: ReturnType<typeof getTokenDisplayItems>[number]): Stat
     iconId: item.iconId,
     mode: item.mode,
     priority: item.priority,
+    visibility: item.visibility,
   };
 }
 
@@ -67,6 +72,29 @@ export function createTokenSyncPayload(token: StatTrackedToken): StatTokenSyncPa
     itemCount: items.length,
     items,
     updatedAt: token.updatedAt,
+  };
+}
+
+export function createTokenSyncPayloadForVisibility(
+  token: StatTrackedToken,
+  visibility: StatTrackerVisibility,
+): StatTokenSyncPayload {
+  const items = getTokenDisplayItemsByVisibility(token)[visibility].map(toSyncItem);
+  const status: StatTokenSyncStatus = !token.sourceItemId
+    ? "not-linked"
+    : items.length > 0
+      ? "ready"
+      : "empty";
+
+  return {
+    tokenId: token.id,
+    sourceItemId: token.sourceItemId,
+    tokenName: token.name,
+    status,
+    itemCount: items.length,
+    items,
+    updatedAt: token.updatedAt,
+    visibility,
   };
 }
 
