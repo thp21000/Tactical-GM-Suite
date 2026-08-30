@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { Button } from "../../../shared/components/Button";
 import { Toggle } from "../../../shared/components/Toggle";
 import {
@@ -40,19 +40,6 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
     tracker?.canPlayerEdit ?? false,
   );
   const [showOnToken, setShowOnToken] = useState(tracker?.showOnToken ?? false);
-
-  useEffect(() => {
-    setName(tracker?.name ?? "");
-    setVisualType(tracker?.visualType ?? "counter");
-    setIconId(tracker?.iconId ?? "counter");
-    setCurrent(String(tracker?.current ?? 0));
-    setMax(String(tracker?.max ?? 1));
-    setValue(String(tracker?.value ?? 0));
-    setEnabled(tracker?.enabled ?? false);
-    setVisibility(tracker?.visibility ?? "gm");
-    setCanPlayerEdit(tracker?.canPlayerEdit ?? false);
-    setShowOnToken(tracker?.showOnToken ?? false);
-  }, [tracker]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
