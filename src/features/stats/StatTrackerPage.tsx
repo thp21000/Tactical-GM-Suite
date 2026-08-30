@@ -9,6 +9,7 @@ import { StatTrackedTokenBlock } from "./components/StatTrackedTokenBlock";
 import { StatTrackerEmptyState } from "./components/StatTrackerEmptyState";
 import { StatTrackerToolbar } from "./components/StatTrackerToolbar";
 import { useStatPermissionViewer } from "./hooks/useStatPermissionViewer";
+import { useStatTokenOverlayAutoSync } from "./hooks/useStatTokenOverlayAutoSync";
 import { useStatTrackerContextMenu } from "./hooks/useStatTrackerContextMenu";
 import { useStatTrackerState } from "./hooks/useStatTrackerState";
 import { filterTokensForViewer } from "./services/statPermissions";
@@ -22,6 +23,10 @@ export function StatTrackerPage({ obr }: Props) {
   const [presetPanelOpen, setPresetPanelOpen] = useState(false);
   const stats = useStatTrackerState(obr.isReady);
   const { isGm, viewer, viewerLabel } = useStatPermissionViewer(obr.isReady);
+  const overlayAutoSync = useStatTokenOverlayAutoSync({
+    enabled: obr.isReady && isGm,
+    tokens: stats.tokens,
+  });
   const visibleDisplayGroups = useMemo(() => stats.displayGroups
     .map((group) => ({ ...group, tokens: filterTokensForViewer(group.tokens, viewer) }))
     .filter((group) => group.tokens.length > 0), [stats.displayGroups, viewer]);
@@ -49,6 +54,23 @@ export function StatTrackerPage({ obr }: Props) {
               {obr.modeLabel}
             </Badge>
             <Badge>{viewerLabel}</Badge>
+            {isGm && obr.isReady ? (
+              <Badge
+                tone={
+                  overlayAutoSync.lastError
+                    ? "warning"
+                    : overlayAutoSync.isSyncing
+                      ? "warning"
+                      : "success"
+                }
+              >
+                {overlayAutoSync.lastError
+                  ? "Affichage auto : erreur"
+                  : overlayAutoSync.isSyncing
+                    ? "Affichage auto : MAJ…"
+                    : "Affichage token : auto"}
+              </Badge>
+            ) : null}
           </div>
         </div>
       </Panel>
