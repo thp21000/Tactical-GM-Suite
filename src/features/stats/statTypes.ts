@@ -113,6 +113,7 @@ export type StatTokenCondition = {
   showOnToken?: boolean;
   tokenDisplayMode?: StatConditionTokenDisplayMode;
   tokenDisplayPriority?: number;
+  visibility?: StatTrackerVisibility;
   createdAt: string;
   updatedAt: string;
 };
