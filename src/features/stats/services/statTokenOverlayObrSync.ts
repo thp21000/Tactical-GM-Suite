@@ -1,9 +1,9 @@
 import OBR, {
-  buildImage,
-  isImage,
+  buildLabel,
+  isLabel,
   type BoundingBox,
-  type Image,
   type Item,
+  type Label,
   type Vector2,
 } from "@owlbear-rodeo/sdk";
 import { isObrReady } from "../../../core/obr/obrReady";
@@ -12,13 +12,17 @@ import type {
   StatTrackerVisibility,
 } from "../statTypes";
 import {
-  prepareOverlayImageForObr,
   STAT_OVERLAY_KIND,
   STAT_OVERLAY_METADATA_KEY,
   type StatOverlayObrMetadata,
-  type StatOverlayObrPreparedImage,
-  type StatOverlayObrPrepareResult,
 } from "./statTokenOverlayObrAdapter";
+import { createOverlayId } from "./statTokenOverlayPlan";
+import {
+  createTokenSyncPayloadForVisibility,
+  type StatTokenSyncItem,
+  type StatTokenSyncPayload,
+} from "./statTokenSync";
+import { getTrackerIcon } from "./statTrackerIcons";
 
 export type StatOverlayObrManualAction = "create-or-update" | "delete";
 
@@ -51,11 +55,16 @@ type OverlayItemsApi = Pick<
 
 type PreparedAudience = {
   visibility: StatTrackerVisibility;
-  result: StatOverlayObrPrepareResult;
+  payload: StatTokenSyncPayload;
+  overlayId?: string;
+  labelText: string;
+  metadata?: StatOverlayObrMetadata;
 };
 
-const DEFAULT_OVERLAY_DPI = 96;
 const OVERLAY_GAP = 12;
+const OVERLAY_STACK_STEP = 28;
+const OVERLAY_BACKGROUND = "#202230";
+const OVERLAY_TEXT = "#f6f3ff";
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 
 function createResult(
@@ -92,8 +101,8 @@ function readOverlayMetadata(item: Item): StatOverlayObrMetadata | undefined {
     sourceItemId: metadata.sourceItemId,
     overlayId: metadata.overlayId,
     updatedAt: metadata.updatedAt,
-    // V2.5F legacy overlays had no audience and are treated as public so that
-    // the next manual update replaces their potentially mixed SVG safely.
+    // Legacy V2.5F overlays had no audience and are treated as public so the
+    // next manual update can replace them safely.
     visibility: isVisibility(metadata.visibility) ? metadata.visibility : "public",
   };
 }
@@ -113,22 +122,6 @@ function matchesTokenOverlay(
   );
 }
 
-function getOverlayImageContent(preparedImage: StatOverlayObrPreparedImage) {
-  return {
-    width: preparedImage.width,
-    height: preparedImage.height,
-    mime: "image/svg+xml",
-    url: preparedImage.svgDataUrl,
-  };
-}
-
-function getOverlayImageGrid() {
-  return {
-    dpi: DEFAULT_OVERLAY_DPI,
-    offset: { x: 0, y: 0 },
-  };
-}
-
 function getAudienceApi(visibility: StatTrackerVisibility): OverlayItemsApi {
   return visibility === "public" ? OBR.scene.items : OBR.scene.local;
 }
@@ -141,11 +134,48 @@ async function canCurrentPlayerManageOverlays(): Promise<boolean> {
   }
 }
 
-function getPreparedAudiences(token: StatTrackedToken): PreparedAudience[] {
-  return AUDIENCES.map((visibility) => ({
+function formatOverlayItem(item: StatTokenSyncItem): string {
+  const icon = getTrackerIcon(item.iconId).symbol;
+  if (item.mode === "icon") return icon;
+  return `${icon} ${item.label}`.trim();
+}
+
+function getOverlayLabelText(payload: StatTokenSyncPayload): string {
+  return payload.items.map(formatOverlayItem).join(" · ");
+}
+
+function prepareAudience(
+  token: StatTrackedToken,
+  visibility: StatTrackerVisibility,
+): PreparedAudience {
+  const payload = createTokenSyncPayloadForVisibility(token, visibility);
+  if (!payload.sourceItemId || payload.status !== "ready") {
+    return {
+      visibility,
+      payload,
+      labelText: "",
+    };
+  }
+
+  const overlayId = createOverlayId(payload.sourceItemId, visibility);
+  return {
     visibility,
-    result: prepareOverlayImageForObr(token, visibility),
-  }));
+    payload,
+    overlayId,
+    labelText: getOverlayLabelText(payload),
+    metadata: {
+      kind: STAT_OVERLAY_KIND,
+      tokenId: token.id,
+      sourceItemId: payload.sourceItemId,
+      overlayId,
+      updatedAt: token.updatedAt,
+      visibility,
+    },
+  };
+}
+
+function getPreparedAudiences(token: StatTrackedToken): PreparedAudience[] {
+  return AUDIENCES.map((visibility) => prepareAudience(token, visibility));
 }
 
 function getAudiencePositions(
@@ -153,38 +183,52 @@ function getAudiencePositions(
   audiences: PreparedAudience[],
 ): Map<StatTrackerVisibility, Vector2> {
   const positions = new Map<StatTrackerVisibility, Vector2>();
-  let stackedHeight = 0;
+  let readyIndex = 0;
 
   for (const audience of audiences) {
-    const image = audience.result.preparedImage;
-    if (!image) continue;
+    if (audience.payload.status !== "ready") continue;
 
     positions.set(audience.visibility, {
       x: bounds.center.x,
-      y: bounds.min.y - OVERLAY_GAP - stackedHeight - image.height / 2,
+      y: bounds.min.y - OVERLAY_GAP - readyIndex * OVERLAY_STACK_STEP,
     });
-    stackedHeight += image.height + OVERLAY_GAP;
+    readyIndex += 1;
   }
 
   return positions;
 }
 
-function buildOverlayImage(
-  preparedImage: StatOverlayObrPreparedImage,
+function buildOverlayLabel(
+  token: StatTrackedToken,
+  audience: PreparedAudience,
   position: Vector2,
-): Image {
-  return buildImage(getOverlayImageContent(preparedImage), getOverlayImageGrid())
-    .id(preparedImage.overlayId)
-    .name(`Stats Overlay ${preparedImage.visibility} — ${preparedImage.tokenName}`)
+): Label {
+  if (!token.sourceItemId || !audience.overlayId || !audience.metadata) {
+    throw new Error("Overlay Stats incomplet.");
+  }
+
+  return buildLabel()
+    .id(audience.overlayId)
+    .name(`Stats Overlay ${audience.visibility} — ${token.name}`)
+    .plainText(audience.labelText)
+    .fontSize(13)
+    .fontWeight(600)
+    .padding(6)
+    .fillColor(OVERLAY_TEXT)
+    .backgroundColor(OVERLAY_BACKGROUND)
+    .backgroundOpacity(0.92)
+    .cornerRadius(8)
     .position(position)
+    .rotation(0)
+    .scale({ x: 1, y: 1 })
     .layer("ATTACHMENT")
-    .attachedTo(preparedImage.sourceItemId)
+    .attachedTo(token.sourceItemId)
     .locked(true)
     .disableHit(true)
     .disableAutoZIndex(true)
-    .disableAttachmentBehavior(["COPY"])
+    .disableAttachmentBehavior(["COPY", "SCALE", "ROTATION"])
     .metadata({
-      [STAT_OVERLAY_METADATA_KEY]: preparedImage.metadata,
+      [STAT_OVERLAY_METADATA_KEY]: audience.metadata,
     })
     .build();
 }
@@ -239,40 +283,45 @@ async function deleteAudienceOverlays(
 
 async function upsertAudienceOverlay(
   token: StatTrackedToken,
-  preparedImage: StatOverlayObrPreparedImage,
+  audience: PreparedAudience,
   position: Vector2,
 ): Promise<"created" | "updated"> {
-  const api = getAudienceApi(preparedImage.visibility);
-  const overlays = await findOverlays(token, preparedImage.visibility);
+  const api = getAudienceApi(audience.visibility);
+  const overlays = await findOverlays(token, audience.visibility);
   const [existing, ...duplicates] = overlays;
+  const nextLabel = buildOverlayLabel(token, audience, position);
 
   if (duplicates.length > 0) {
     await api.deleteItems(duplicates.map(({ item }) => item.id));
   }
 
-  if (!existing || !isImage(existing.item)) {
+  // Old V2.5F image overlays are replaced automatically on the next manual
+  // update. Native labels avoid data-URL image loading failures in Owlbear.
+  if (!existing || !isLabel(existing.item)) {
     if (existing) await api.deleteItems([existing.item.id]);
-    await api.addItems([buildOverlayImage(preparedImage, position)]);
+    await api.addItems([nextLabel]);
     return "created";
   }
 
   await api.updateItems([existing.item], (items) => {
     const [draft] = items;
-    if (!draft || !isImage(draft)) return;
+    if (!draft || !isLabel(draft)) return;
 
-    draft.name = `Stats Overlay ${preparedImage.visibility} — ${preparedImage.tokenName}`;
-    draft.position = position;
-    draft.attachedTo = preparedImage.sourceItemId;
+    draft.name = nextLabel.name;
+    draft.position = nextLabel.position;
+    draft.rotation = 0;
+    draft.scale = { x: 1, y: 1 };
+    draft.attachedTo = token.sourceItemId;
     draft.layer = "ATTACHMENT";
     draft.locked = true;
     draft.disableHit = true;
     draft.disableAutoZIndex = true;
-    draft.disableAttachmentBehavior = ["COPY"];
-    draft.image = getOverlayImageContent(preparedImage);
-    draft.grid = getOverlayImageGrid();
+    draft.disableAttachmentBehavior = ["COPY", "SCALE", "ROTATION"];
+    draft.text = nextLabel.text;
+    draft.style = nextLabel.style;
     draft.metadata = {
       ...draft.metadata,
-      [STAT_OVERLAY_METADATA_KEY]: preparedImage.metadata,
+      [STAT_OVERLAY_METADATA_KEY]: audience.metadata,
     };
   });
 
@@ -301,11 +350,6 @@ export async function createOrUpdateTokenOverlay(
   }
 
   const audiences = getPreparedAudiences(token);
-  if (audiences.some(({ result }) => result.status === "invalid")) {
-    return createResult(action, "not-ready", "Un rendu d'audience est invalide.", {
-      sourceItemId: token.sourceItemId,
-    });
-  }
 
   try {
     const bounds = await OBR.scene.items.getItemBounds([token.sourceItemId]);
@@ -315,24 +359,25 @@ export async function createOrUpdateTokenOverlay(
     let removedCount = 0;
 
     for (const audience of audiences) {
-      const image = audience.result.preparedImage;
       const position = positions.get(audience.visibility);
 
-      if (!image || !position) {
+      if (
+        audience.payload.status !== "ready" ||
+        !audience.overlayId ||
+        !audience.metadata ||
+        !position
+      ) {
         removedCount += await deleteAudienceOverlays(token, audience.visibility);
         continue;
       }
 
-      const outcome = await upsertAudienceOverlay(token, image, position);
+      const outcome = await upsertAudienceOverlay(token, audience, position);
       if (outcome === "created") createdCount += 1;
       else updatedCount += 1;
     }
 
     const counts = Object.fromEntries(
-      audiences.map(({ visibility, result }) => [
-        visibility,
-        result.preparedImage?.itemCount ?? 0,
-      ]),
+      audiences.map(({ visibility, payload }) => [visibility, payload.itemCount]),
     ) as Record<StatTrackerVisibility, number>;
     const message = `Public ${counts.public} · Privé ${counts.private} · MJ ${counts.gm}`;
 
