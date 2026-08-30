@@ -60,7 +60,7 @@ Stats V2.5B — Préparation synchronisation Owlbear en mode aperçu technique
 Stats V2.5C — Plan de rendu overlay Owlbear
 Stats V2.5D — Rendu SVG local des overlays
 Stats V2.5E — Adaptateur Owlbear préparé et garde-fous de synchronisation
-Stats V2.5F — Overlays Owlbear manuels par token
+Stats V2.5F — Affichage réel au-dessus du token et visibilité
 ```
 
 ## V2.1 implémentée — trackers personnalisables
@@ -381,10 +381,13 @@ Inclus dans cette étape :
 
 Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata réelle et ne propose aucun bouton de synchronisation actif. La vraie synchronisation reste reportée à Stats V2.5F.
 
-## Stats V2.5F — overlays Owlbear manuels par token
+## Stats V2.5F — affichage réel au-dessus du token et visibilité
 
-- Le MJ peut créer ou mettre à jour manuellement l’overlay Stats d’un token suivi depuis son diagnostic Owlbear.
-- Le MJ peut supprimer manuellement l’overlay Stats correspondant au token sans toucher au token source.
-- Les overlays utilisent les metadata Stats préparées (`tactical-gm-suite/stats-overlay`, kind `stats-token-overlay`) pour retrouver l’item existant et éviter les doublons.
-- La création reste volontairement token par token : aucun bouton global et aucune synchronisation automatique ne sont ajoutés.
-- Aucun suivi automatique des déplacements de token n’existe encore ; le positionnement avancé reste reporté à Stats V2.5G.
+- Le premier rendu réel Owlbear est créé manuellement, token par token, depuis le diagnostic Stats du MJ.
+- `showOnToken` est appliqué de bout en bout : un tracker ou une condition désactivé n’entre dans aucun SVG et disparaît lors de la prochaine mise à jour manuelle.
+- Les SVG sont strictement séparés par visibilité. L’overlay `public` est un item de scène partagé ; les overlays `gm` et `private` sont des items `OBR.scene.local` visibles uniquement par le MJ courant.
+- La visibilité `private` n’est pas encore envoyée au joueur assigné : elle reste locale au MJ sur la scène et visible selon les permissions dans le panneau Stats. Elle n’est jamais convertie en contenu public.
+- Chaque overlay utilise la metadata `tactical-gm-suite/stats-overlay`, le kind `stats-token-overlay`, l’audience et un identifiant stable afin d’éviter les doublons.
+- Les bounds réels du token source servent à centrer les lignes au-dessus de celui-ci. La ligne publique est la plus proche du token, puis les lignes privée et MJ sont empilées au-dessus.
+- Les items sont verrouillés, non interactifs, placés sur la couche `ATTACHMENT` et attachés au token source afin de suivre ses déplacements sans gêner sa sélection.
+- La création, la mise à jour et la suppression restent manuelles. Il n’existe encore ni synchronisation globale, ni mise à jour automatique après modification d’un tracker ou d’une condition.
