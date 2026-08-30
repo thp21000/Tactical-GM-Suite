@@ -41,6 +41,7 @@ import {
   updateTrackedToken,
 } from "../services/statTokens";
 import { getTokenDisplayItems } from "../services/statTokenDisplay";
+import { getLinkedStatTokenId } from "../services/statTokenSceneLinks";
 import {
   readStatTrackerState,
   resetStatTrackerState,
@@ -133,12 +134,17 @@ export function useStatTrackerState(isObrReady: boolean) {
 
   const addItems = useCallback((items: Item[]) => {
     setState((current) => {
-      const existing = new Set(
+      const existingSourceIds = new Set(
         current.tokens.map((token) => token.sourceItemId).filter(Boolean),
       );
+      const existingTokenIds = new Set(current.tokens.map((token) => token.id));
 
       const additions = items
-        .filter((item) => !existing.has(item.id))
+        .filter((item) => {
+          if (existingSourceIds.has(item.id)) return false;
+          const linkedTokenId = getLinkedStatTokenId(item);
+          return !linkedTokenId || !existingTokenIds.has(linkedTokenId);
+        })
         .map((item) => createTokenFromObrItemWithPreset(item, current));
 
       return additions.length
@@ -241,10 +247,8 @@ export function useStatTrackerState(isObrReady: boolean) {
   const applyPresetToToken = useCallback(
     (tokenId: string) => {
       setState((current) => {
-        const tokens = current.tokens.map((token) => {
-          if (token.id !== tokenId) {
-            return token;
-          }
+        const nextTokens = current.tokens.map((token) => {
+          if (token.id !== tokenId) return token;
 
           const missingTrackers = getMissingPresetTrackerInputs(
             token.tokenType,
@@ -252,9 +256,7 @@ export function useStatTrackerState(isObrReady: boolean) {
             current.presets,
           ).map(createTracker);
 
-          if (missingTrackers.length === 0) {
-            return token;
-          }
+          if (missingTrackers.length === 0) return token;
 
           return missingTrackers.reduce(
             (nextToken, tracker) => addTrackerToToken(nextToken, tracker),
@@ -262,7 +264,7 @@ export function useStatTrackerState(isObrReady: boolean) {
           );
         });
 
-        return touch({ ...current, tokens });
+        return touch({ ...current, tokens: nextTokens });
       });
     },
     [],
