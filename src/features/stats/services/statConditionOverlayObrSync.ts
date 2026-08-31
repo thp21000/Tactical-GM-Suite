@@ -21,6 +21,8 @@ export const STAT_CONDITION_OVERLAY_KIND = "stats-condition-overlay";
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
 const CONDITION_SIZE_RATIO = 1;
+const CONDITION_CENTER_OFFSET_X_RATIO = -0.12;
+const CONDITION_CENTER_OFFSET_Y_RATIO = -0.1;
 const VISIBLE_ALPHA_THRESHOLD = 8;
 const VISIBLE_ANALYSIS_MAX_SIZE = 384;
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
@@ -235,8 +237,8 @@ function rotateVector(vector: Vector2, degrees: number): Vector2 {
  *
  * For image tokens the centre is calculated from the visible alpha bounds when
  * possible, then transformed from source-image pixels into scene coordinates.
- * This aligns the condition ring with the visible token artwork instead of the
- * potentially asymmetric transparent image canvas.
+ * A small template calibration is applied last because the condition artwork's
+ * visual opening is not perfectly aligned with Owlbear's image anchor.
  */
 async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeometry> {
   const [sourceItem] = await OBR.scene.items.getItems([sourceItemId]);
@@ -271,10 +273,19 @@ async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeomet
       sourceItem.rotation,
     );
 
+    const renderedDiameter =
+      logicalDiameterInCells * sceneDpi * CONDITION_SIZE_RATIO;
+
     return {
       position: {
-        x: sourceItem.position.x + localOffset.x,
-        y: sourceItem.position.y + localOffset.y,
+        x:
+          sourceItem.position.x +
+          localOffset.x +
+          renderedDiameter * CONDITION_CENTER_OFFSET_X_RATIO,
+        y:
+          sourceItem.position.y +
+          localOffset.y +
+          renderedDiameter * CONDITION_CENTER_OFFSET_Y_RATIO,
       },
       scale: logicalDiameterInCells * CONDITION_SIZE_RATIO,
     };
@@ -283,7 +294,10 @@ async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeomet
   const bounds = await OBR.scene.items.getItemBounds([sourceItemId]);
   const targetSize = Math.min(bounds.width, bounds.height);
   return {
-    position: bounds.center,
+    position: {
+      x: bounds.center.x + targetSize * CONDITION_CENTER_OFFSET_X_RATIO,
+      y: bounds.center.y + targetSize * CONDITION_CENTER_OFFSET_Y_RATIO,
+    },
     scale: Math.max(0.01, (targetSize * CONDITION_SIZE_RATIO) / sceneDpi),
   };
 }
