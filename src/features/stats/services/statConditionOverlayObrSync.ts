@@ -20,7 +20,7 @@ export const STAT_CONDITION_OVERLAY_METADATA_KEY = `${EXTENSION_ID}/stats-condit
 export const STAT_CONDITION_OVERLAY_KIND = "stats-condition-overlay";
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-const CONDITION_SIZE_RATIO = 3.65;
+const CONDITION_SIZE_RATIO = 4.99;
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 
 type ConditionOverlayMetadata = {
