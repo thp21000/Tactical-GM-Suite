@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { StatTrackedToken } from "../statTypes";
 import {
+  createOrUpdateTokenConditionOverlay,
+  deleteTokenConditionOverlay,
+} from "../services/statConditionOverlayObrSync";
+import {
   createOrUpdateTokenOverlay,
   deleteTokenOverlay,
 } from "../services/statTokenOverlayObrSync";
@@ -60,17 +64,27 @@ export function useStatTokenOverlayAutoSync({
 
         for (const token of deletes) {
           if (!enabledRef.current) break;
-          const result = await deleteTokenOverlay(token);
-          if (result.status === "error") {
-            setState({ isSyncing: true, lastError: result.message });
+
+          const trackerResult = await deleteTokenOverlay(token);
+          const conditionResult = await deleteTokenConditionOverlay(token);
+          const errorResult = [trackerResult, conditionResult].find(
+            (result) => result.status === "error",
+          );
+          if (errorResult) {
+            setState({ isSyncing: true, lastError: errorResult.message });
           }
         }
 
         for (const token of updates) {
           if (!enabledRef.current || !token.sourceItemId) continue;
-          const result = await createOrUpdateTokenOverlay(token);
-          if (result.status === "error") {
-            setState({ isSyncing: true, lastError: result.message });
+
+          const trackerResult = await createOrUpdateTokenOverlay(token);
+          const conditionResult = await createOrUpdateTokenConditionOverlay(token);
+          const errorResult = [trackerResult, conditionResult].find(
+            (result) => result.status === "error",
+          );
+          if (errorResult) {
+            setState({ isSyncing: true, lastError: errorResult.message });
           }
         }
 
