@@ -20,7 +20,7 @@ export const STAT_CONDITION_OVERLAY_METADATA_KEY = `${EXTENSION_ID}/stats-condit
 export const STAT_CONDITION_OVERLAY_KIND = "stats-condition-overlay";
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-const CONDITION_SIZE_RATIO = 4.99;
+const CONDITION_SIZE_RATIO = 1;
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 
 type ConditionOverlayMetadata = {
@@ -128,28 +128,35 @@ function canUseConditionOverlaySync(): boolean {
 }
 
 /**
- * Character tokens are positioned by their logical Owlbear anchor. Their source
- * image can contain transparent margins or decorative artwork, so image bounds
- * are not a reliable representation of the token footprint.
+ * The condition image itself is defined as exactly one grid cell
+ * (1024 px image with a grid DPI of 1024). Its scale must therefore be the
+ * source token's complete logical size in grid cells, not just item.scale.
  *
- * A condition ring therefore uses the source item's logical position as its
- * centre and one scene grid cell multiplied by the token's smallest scale as
- * its diameter. This makes a 1x1 token use a 1-cell ring and a resized 2x2
- * token use a 2-cell ring, independently of the source image canvas.
+ * Example: a token image that is 2048 px wide with a grid DPI of 256 already
+ * spans 8 cells before item.scale is applied. Using item.scale alone made the
+ * condition ring dramatically too small, even with very large magic ratios.
+ *
+ * We keep sourceItem.position because it matches the logical centre used by
+ * the tokens tested in Owlbear. The native image/grid ratio is used only for
+ * size. Non-image items fall back to their rendered bounds.
  */
 async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeometry> {
   const [sourceItem] = await OBR.scene.items.getItems([sourceItemId]);
   const sceneDpi = await OBR.scene.grid.getDpi();
 
-  if (sourceItem) {
-    const logicalScale = Math.max(
+  if (sourceItem && isImage(sourceItem)) {
+    const widthInCells = sourceItem.image.width / sourceItem.grid.dpi;
+    const heightInCells = sourceItem.image.height / sourceItem.grid.dpi;
+    const widthScale = Math.abs(sourceItem.scale.x);
+    const heightScale = Math.abs(sourceItem.scale.y);
+    const logicalDiameterInCells = Math.max(
       0.01,
-      Math.min(Math.abs(sourceItem.scale.x), Math.abs(sourceItem.scale.y)),
+      Math.min(widthInCells * widthScale, heightInCells * heightScale),
     );
 
     return {
       position: sourceItem.position,
-      scale: logicalScale * CONDITION_SIZE_RATIO,
+      scale: logicalDiameterInCells * CONDITION_SIZE_RATIO,
     };
   }
 
@@ -241,7 +248,7 @@ function buildConditionImage(
     .disableHit(true)
     .disableAutoZIndex(true)
     // POSITION remains inherited so the ring follows movement instantly.
-    // SCALE is recalculated explicitly from the logical token footprint.
+    // SCALE is recalculated explicitly from the source image/grid footprint.
     .disableAttachmentBehavior(["COPY", "ROTATION", "SCALE"])
     .metadata({
       [STAT_CONDITION_OVERLAY_METADATA_KEY]: metadata,
