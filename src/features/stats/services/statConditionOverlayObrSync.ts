@@ -20,7 +20,11 @@ export const STAT_CONDITION_OVERLAY_METADATA_KEY = `${EXTENSION_ID}/stats-condit
 export const STAT_CONDITION_OVERLAY_KIND = "stats-condition-overlay";
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-const CONDITION_SIZE_RATIO = 9.00;
+const CONDITION_SIZE_RATIO = 1.12;
+const CONDITION_CENTER_OFFSET_X_RATIO = -0.12;
+const CONDITION_CENTER_OFFSET_Y_RATIO = -0.1;
+const VISIBLE_ALPHA_THRESHOLD = 8;
+const VISIBLE_ANALYSIS_MAX_SIZE = 384;
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 
 type ConditionOverlayMetadata = {
@@ -41,6 +45,16 @@ type ConditionOverlayGeometry = {
   position: Vector2;
   scale: number;
 };
+
+type VisibleImageCenter = {
+  x: number;
+  y: number;
+};
+
+const visibleImageCenterCache = new Map<
+  string,
+  Promise<VisibleImageCenter | undefined>
+>();
 
 function createResult(
   action: "create-or-update" | "delete",
@@ -128,35 +142,162 @@ function canUseConditionOverlaySync(): boolean {
 }
 
 /**
- * Character tokens are positioned by their logical Owlbear anchor. Their source
- * image can contain transparent margins or decorative artwork, so image bounds
- * are not a reliable representation of the token footprint.
+ * Measure the centre of the non-transparent artwork inside a token image.
+ * Owlbear's grid offset only describes the image canvas anchor; many token PNGs
+ * include asymmetric transparent margins, so their visible circle can still be
+ * offset after the canvas itself is centred correctly.
  *
- * A condition ring therefore uses the source item's logical position as its
- * centre and one scene grid cell multiplied by the token's smallest scale as
- * its diameter. This makes a 1x1 token use a 1-cell ring and a resized 2x2
- * token use a 2-cell ring, independently of the source image canvas.
+ * Results are cached by image URL. If CORS or canvas access is unavailable we
+ * simply return undefined and the geometry calculation falls back to the image
+ * canvas centre.
+ */
+function getVisibleImageCenter(assetUrl: string): Promise<VisibleImageCenter | undefined> {
+  const cached = visibleImageCenterCache.get(assetUrl);
+  if (cached) return cached;
+
+  const pending = (async () => {
+    try {
+      const response = await fetch(assetUrl, {
+        mode: "cors",
+        credentials: "omit",
+      });
+      if (!response.ok) return undefined;
+
+      const blob = await response.blob();
+      const bitmap = await createImageBitmap(blob);
+
+      try {
+        if (bitmap.width <= 0 || bitmap.height <= 0) return undefined;
+
+        const analysisScale = Math.min(
+          1,
+          VISIBLE_ANALYSIS_MAX_SIZE / Math.max(bitmap.width, bitmap.height),
+        );
+        const width = Math.max(1, Math.round(bitmap.width * analysisScale));
+        const height = Math.max(1, Math.round(bitmap.height * analysisScale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context) return undefined;
+
+        context.clearRect(0, 0, width, height);
+        context.drawImage(bitmap, 0, 0, width, height);
+        const pixels = context.getImageData(0, 0, width, height).data;
+
+        let minX = width;
+        let minY = height;
+        let maxX = -1;
+        let maxY = -1;
+
+        for (let y = 0; y < height; y += 1) {
+          for (let x = 0; x < width; x += 1) {
+            const alpha = pixels[(y * width + x) * 4 + 3];
+            if (alpha <= VISIBLE_ALPHA_THRESHOLD) continue;
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+
+        if (maxX < minX || maxY < minY) return undefined;
+
+        return {
+          x: (minX + maxX + 1) / (2 * width),
+          y: (minY + maxY + 1) / (2 * height),
+        };
+      } finally {
+        bitmap.close();
+      }
+    } catch {
+      return undefined;
+    }
+  })();
+
+  visibleImageCenterCache.set(assetUrl, pending);
+  return pending;
+}
+
+function rotateVector(vector: Vector2, degrees: number): Vector2 {
+  if (!degrees) return vector;
+  const radians = (degrees * Math.PI) / 180;
+  const cosine = Math.cos(radians);
+  const sine = Math.sin(radians);
+  return {
+    x: vector.x * cosine - vector.y * sine,
+    y: vector.x * sine + vector.y * cosine,
+  };
+}
+
+/**
+ * The condition image itself is defined as exactly one grid cell
+ * (1024 px image with a grid DPI of 1024). Its scale is therefore the source
+ * token's complete logical size in grid cells.
+ *
+ * For image tokens the centre is calculated from the visible alpha bounds when
+ * possible, then transformed from source-image pixels into scene coordinates.
+ * A small template calibration is applied last because the condition artwork's
+ * visual opening is not perfectly aligned with Owlbear's image anchor.
  */
 async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeometry> {
   const [sourceItem] = await OBR.scene.items.getItems([sourceItemId]);
   const sceneDpi = await OBR.scene.grid.getDpi();
 
-  if (sourceItem) {
-    const logicalScale = Math.max(
+  if (sourceItem && isImage(sourceItem)) {
+    const widthInCells = sourceItem.image.width / sourceItem.grid.dpi;
+    const heightInCells = sourceItem.image.height / sourceItem.grid.dpi;
+    const widthScale = Math.abs(sourceItem.scale.x);
+    const heightScale = Math.abs(sourceItem.scale.y);
+    const logicalDiameterInCells = Math.max(
       0.01,
-      Math.min(Math.abs(sourceItem.scale.x), Math.abs(sourceItem.scale.y)),
+      Math.min(widthInCells * widthScale, heightInCells * heightScale),
     );
 
+    const visibleCenter = await getVisibleImageCenter(sourceItem.image.url);
+    const centerX = (visibleCenter?.x ?? 0.5) * sourceItem.image.width;
+    const centerY = (visibleCenter?.y ?? 0.5) * sourceItem.image.height;
+    const dpiScale = sceneDpi / sourceItem.grid.dpi;
+
+    const localOffset = rotateVector(
+      {
+        x:
+          (centerX - sourceItem.grid.offset.x) *
+          dpiScale *
+          sourceItem.scale.x,
+        y:
+          (centerY - sourceItem.grid.offset.y) *
+          dpiScale *
+          sourceItem.scale.y,
+      },
+      sourceItem.rotation,
+    );
+
+    const renderedDiameter =
+      logicalDiameterInCells * sceneDpi * CONDITION_SIZE_RATIO;
+
     return {
-      position: sourceItem.position,
-      scale: logicalScale * CONDITION_SIZE_RATIO,
+      position: {
+        x:
+          sourceItem.position.x +
+          localOffset.x +
+          renderedDiameter * CONDITION_CENTER_OFFSET_X_RATIO,
+        y:
+          sourceItem.position.y +
+          localOffset.y +
+          renderedDiameter * CONDITION_CENTER_OFFSET_Y_RATIO,
+      },
+      scale: logicalDiameterInCells * CONDITION_SIZE_RATIO,
     };
   }
 
   const bounds = await OBR.scene.items.getItemBounds([sourceItemId]);
   const targetSize = Math.min(bounds.width, bounds.height);
   return {
-    position: bounds.center,
+    position: {
+      x: bounds.center.x + targetSize * CONDITION_CENTER_OFFSET_X_RATIO,
+      y: bounds.center.y + targetSize * CONDITION_CENTER_OFFSET_Y_RATIO,
+    },
     scale: Math.max(0.01, (targetSize * CONDITION_SIZE_RATIO) / sceneDpi),
   };
 }
@@ -240,8 +381,6 @@ function buildConditionImage(
     .locked(true)
     .disableHit(true)
     .disableAutoZIndex(true)
-    // POSITION remains inherited so the ring follows movement instantly.
-    // SCALE is recalculated explicitly from the logical token footprint.
     .disableAttachmentBehavior(["COPY", "ROTATION", "SCALE"])
     .metadata({
       [STAT_CONDITION_OVERLAY_METADATA_KEY]: metadata,
