@@ -114,8 +114,7 @@ function canUseConditionOverlaySync(): boolean {
   return Boolean(
     OBR.isAvailable &&
       isObrReady() &&
-      typeof OBR.scene?.items?.getItems === "function" &&
-      typeof OBR.scene.items.getItemBounds === "function" &&
+      typeof OBR.scene?.items?.getItemBounds === "function" &&
       typeof OBR.scene.items.addItems === "function" &&
       typeof OBR.scene.items.updateItems === "function" &&
       typeof OBR.scene.items.deleteItems === "function" &&
@@ -127,34 +126,16 @@ function canUseConditionOverlaySync(): boolean {
   );
 }
 
+/**
+ * The condition PNG is centred on the real Owlbear bounds of the source item.
+ * Its diameter is exactly the smallest side of those bounds. SCALE attachment
+ * inheritance is disabled below, so this value is never applied twice.
+ */
 async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeometry> {
-  const [sourceItem] = await OBR.scene.items.getItems([sourceItemId]);
-  const sceneDpi = await OBR.scene.grid.getDpi();
-
-  if (sourceItem && isImage(sourceItem)) {
-    const dpiScale = sceneDpi / sourceItem.grid.dpi;
-    const width = sourceItem.image.width * dpiScale;
-    const height = sourceItem.image.height * dpiScale;
-    const offsetX = (sourceItem.grid.offset.x / sourceItem.image.width) * width;
-    const offsetY = (sourceItem.grid.offset.y / sourceItem.image.height) * height;
-    const scaleX = Math.abs(sourceItem.scale.x);
-    const scaleY = Math.abs(sourceItem.scale.y);
-    const targetSize = Math.min(width * scaleX, height * scaleY);
-
-    // Match Owlbear's image/grid geometry instead of generic item bounds.
-    // This mirrors the positioning used by the official Colored Rings example
-    // and correctly handles tokens with a custom grid offset.
-    return {
-      position: {
-        x: sourceItem.position.x - offsetX + width / 2,
-        y: sourceItem.position.y - offsetY + height / 2,
-      },
-      scale: Math.max(0.01, (targetSize * CONDITION_SIZE_RATIO) / sceneDpi),
-    };
-  }
-
   const bounds = await OBR.scene.items.getItemBounds([sourceItemId]);
+  const sceneDpi = await OBR.scene.grid.getDpi();
   const targetSize = Math.min(bounds.width, bounds.height);
+
   return {
     position: bounds.center,
     scale: Math.max(0.01, (targetSize * CONDITION_SIZE_RATIO) / sceneDpi),
@@ -240,9 +221,9 @@ function buildConditionImage(
     .locked(true)
     .disableHit(true)
     .disableAutoZIndex(true)
-    // The condition follows position and scale in real time, but it should stay
-    // upright and must not be duplicated automatically when the source is copied.
-    .disableAttachmentBehavior(["COPY", "ROTATION"])
+    // POSITION remains inherited so the ring follows movement instantly.
+    // SCALE is recalculated explicitly from source bounds to avoid double scaling.
+    .disableAttachmentBehavior(["COPY", "ROTATION", "SCALE"])
     .metadata({
       [STAT_CONDITION_OVERLAY_METADATA_KEY]: metadata,
     })
@@ -286,7 +267,7 @@ async function upsertConditionOverlay(
     draft.locked = true;
     draft.disableHit = true;
     draft.disableAutoZIndex = true;
-    draft.disableAttachmentBehavior = ["COPY", "ROTATION"];
+    draft.disableAttachmentBehavior = ["COPY", "ROTATION", "SCALE"];
     draft.metadata = {
       ...draft.metadata,
       [STAT_CONDITION_OVERLAY_METADATA_KEY]: nextImage.metadata[
