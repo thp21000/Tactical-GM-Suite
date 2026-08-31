@@ -318,7 +318,26 @@ export function addConditionToToken(
 ): StatTrackedToken {
   if (hasCondition(token, conditionId)) return token;
 
-  const newCondition = createTokenCondition(conditionId, input);
+  const hasDisplayedCondition = token.conditions.some(
+    (activeCondition) =>
+      activeCondition.showOnToken === true && activeCondition.tokenDisplayMode !== "hidden",
+  );
+  const normalizedInput: StatTokenConditionInput =
+    typeof input === "number"
+      ? {
+          value: input,
+          showOnToken: !hasDisplayedCondition,
+          tokenDisplayMode: "icon",
+          visibility: "public",
+        }
+      : {
+          ...(input ?? {}),
+          showOnToken: input?.showOnToken ?? !hasDisplayedCondition,
+          tokenDisplayMode: input?.tokenDisplayMode ?? "icon",
+          visibility: input?.visibility ?? "public",
+        };
+
+  const newCondition = createTokenCondition(conditionId, normalizedInput);
   if (!newCondition) return token;
 
   const timestamp = now();
