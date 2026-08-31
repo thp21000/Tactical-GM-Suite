@@ -129,16 +129,13 @@ function canUseConditionOverlaySync(): boolean {
 
 /**
  * The condition image itself is defined as exactly one grid cell
- * (1024 px image with a grid DPI of 1024). Its scale must therefore be the
- * source token's complete logical size in grid cells, not just item.scale.
+ * (1024 px image with a grid DPI of 1024). Its scale is therefore the source
+ * token's complete logical size in grid cells.
  *
- * Example: a token image that is 2048 px wide with a grid DPI of 256 already
- * spans 8 cells before item.scale is applied. Using item.scale alone made the
- * condition ring dramatically too small, even with very large magic ratios.
- *
- * We keep sourceItem.position because it matches the logical centre used by
- * the tokens tested in Owlbear. The native image/grid ratio is used only for
- * size. Non-image items fall back to their rendered bounds.
+ * Owlbear image.position is anchored at grid.offset, which is not necessarily
+ * the centre of the source image. The same grid-offset conversion used by the
+ * official Colored Rings example is applied here so the condition artwork is
+ * centred on the token image instead of on its anchor point.
  */
 async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeometry> {
   const [sourceItem] = await OBR.scene.items.getItems([sourceItemId]);
@@ -154,8 +151,19 @@ async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeomet
       Math.min(widthInCells * widthScale, heightInCells * heightScale),
     );
 
+    const dpiScale = sceneDpi / sourceItem.grid.dpi;
+    const renderedWidth = sourceItem.image.width * dpiScale;
+    const renderedHeight = sourceItem.image.height * dpiScale;
+    const offsetX =
+      (sourceItem.grid.offset.x / sourceItem.image.width) * renderedWidth;
+    const offsetY =
+      (sourceItem.grid.offset.y / sourceItem.image.height) * renderedHeight;
+
     return {
-      position: sourceItem.position,
+      position: {
+        x: sourceItem.position.x - offsetX + renderedWidth / 2,
+        y: sourceItem.position.y - offsetY + renderedHeight / 2,
+      },
       scale: logicalDiameterInCells * CONDITION_SIZE_RATIO,
     };
   }
