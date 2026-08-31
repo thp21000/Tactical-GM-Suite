@@ -1,9 +1,7 @@
 import { useMemo, useState } from "react";
 import type { ObrReadyState } from "../../core/obr/obrReady";
-import { Badge } from "../../shared/components/Badge";
 import { Panel } from "../../shared/components/Panel";
 import { StatPresetManager } from "./components/StatPresetManager";
-import { StatSummaryPanel } from "./components/StatSummaryPanel";
 import { StatTokenForm } from "./components/StatTokenForm";
 import { StatTrackedTokenBlock } from "./components/StatTrackedTokenBlock";
 import { StatTrackerEmptyState } from "./components/StatTrackerEmptyState";
@@ -14,7 +12,6 @@ import { useStatTokenOverlayAutoSync } from "./hooks/useStatTokenOverlayAutoSync
 import { useStatTrackerContextMenu } from "./hooks/useStatTrackerContextMenu";
 import { useStatTrackerState } from "./hooks/useStatTrackerState";
 import { filterTokensForViewer } from "./services/statPermissions";
-import { getTokenDisplayItems } from "./services/statTokenDisplay";
 import type { StatTrackedToken } from "./statTypes";
 
 type Props = {
@@ -25,7 +22,7 @@ export function StatTrackerPage({ obr }: Props) {
   const [formOpen, setFormOpen] = useState(false);
   const [presetPanelOpen, setPresetPanelOpen] = useState(false);
   const stats = useStatTrackerState(obr.isReady);
-  const { isGm, viewer, viewerLabel } = useStatPermissionViewer(obr.isReady);
+  const { isGm, viewer } = useStatPermissionViewer(obr.isReady);
 
   const sceneBindings = useStatSceneTokenBindings({
     enabled: obr.isReady,
@@ -59,23 +56,7 @@ export function StatTrackerPage({ obr }: Props) {
     [sceneTokensByCanonicalId, stats.displayGroups, viewer],
   );
 
-  const sceneSummary = useMemo(() => {
-    const tokens = visibleDisplayGroups.flatMap((group) => group.tokens);
-    return {
-      tokenCount: tokens.length,
-      trackerCount: tokens.reduce(
-        (total, token) => total + token.trackers.length,
-        0,
-      ),
-      groupCount: visibleDisplayGroups.filter((group) => group.isGroup).length,
-      visibleOnTokenCount: tokens.reduce(
-        (total, token) => total + getTokenDisplayItems(token).length,
-        0,
-      ),
-    };
-  }, [visibleDisplayGroups]);
-
-  const overlayAutoSync = useStatTokenOverlayAutoSync({
+  useStatTokenOverlayAutoSync({
     enabled: obr.isReady && sceneBindings.sceneReady && isGm,
     tokens: sceneBindings.sceneTokens,
   });
@@ -87,54 +68,6 @@ export function StatTrackerPage({ obr }: Props) {
 
   return (
     <div className="stack stat-page">
-      <Panel>
-        <div className="stat-header">
-          <div>
-            <p className="eyebrow">Tokens suivis</p>
-            <h1>Stat Tracker</h1>
-            <p>
-              Trackers personnalisables attachés aux tokens Owlbear ou ajoutés
-              manuellement.
-            </p>
-          </div>
-
-          <div className="stat-header__badges">
-            <Badge tone={obr.isReady ? "success" : "warning"}>
-              {obr.modeLabel}
-            </Badge>
-            <Badge>{viewerLabel}</Badge>
-            {obr.isReady ? (
-              <Badge tone={sceneBindings.sceneReady ? "success" : "warning"}>
-                {sceneBindings.sceneReady
-                  ? `Scène : ${sceneBindings.sceneTokens.length} token${sceneBindings.sceneTokens.length > 1 ? "s" : ""}`
-                  : "Scène en chargement…"}
-              </Badge>
-            ) : null}
-            {isGm && obr.isReady && sceneBindings.sceneReady ? (
-              <Badge
-                tone={
-                  overlayAutoSync.lastError
-                    ? "warning"
-                    : overlayAutoSync.isSyncing
-                      ? "warning"
-                      : "success"
-                }
-              >
-                {overlayAutoSync.lastError
-                  ? "Affichage auto : erreur"
-                  : overlayAutoSync.isSyncing
-                    ? "Affichage auto : MAJ…"
-                    : "Affichage token : auto"}
-              </Badge>
-            ) : null}
-          </div>
-        </div>
-      </Panel>
-
-      <Panel>
-        <StatSummaryPanel {...sceneSummary} />
-      </Panel>
-
       {isGm ? (
         <Panel>
           <StatTrackerToolbar
