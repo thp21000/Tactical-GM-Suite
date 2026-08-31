@@ -20,7 +20,7 @@ export const STAT_CONDITION_OVERLAY_METADATA_KEY = `${EXTENSION_ID}/stats-condit
 export const STAT_CONDITION_OVERLAY_KIND = "stats-condition-overlay";
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-const CONDITION_SIZE_RATIO = 1.04;
+const CONDITION_SIZE_RATIO = 1;
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 
 type ConditionOverlayMetadata = {
@@ -129,18 +129,32 @@ function canUseConditionOverlaySync(): boolean {
 
 async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeometry> {
   const [sourceItem] = await OBR.scene.items.getItems([sourceItemId]);
-  const bounds = await OBR.scene.items.getItemBounds([sourceItemId]);
   const sceneDpi = await OBR.scene.grid.getDpi();
-
-  let targetSize = Math.min(bounds.width, bounds.height);
 
   if (sourceItem && isImage(sourceItem)) {
     const dpiScale = sceneDpi / sourceItem.grid.dpi;
-    const width = sourceItem.image.width * dpiScale * Math.abs(sourceItem.scale.x);
-    const height = sourceItem.image.height * dpiScale * Math.abs(sourceItem.scale.y);
-    targetSize = Math.min(width, height);
+    const width = sourceItem.image.width * dpiScale;
+    const height = sourceItem.image.height * dpiScale;
+    const offsetX = (sourceItem.grid.offset.x / sourceItem.image.width) * width;
+    const offsetY = (sourceItem.grid.offset.y / sourceItem.image.height) * height;
+    const scaleX = Math.abs(sourceItem.scale.x);
+    const scaleY = Math.abs(sourceItem.scale.y);
+    const targetSize = Math.min(width * scaleX, height * scaleY);
+
+    // Match Owlbear's image/grid geometry instead of generic item bounds.
+    // This mirrors the positioning used by the official Colored Rings example
+    // and correctly handles tokens with a custom grid offset.
+    return {
+      position: {
+        x: sourceItem.position.x - offsetX + width / 2,
+        y: sourceItem.position.y - offsetY + height / 2,
+      },
+      scale: Math.max(0.01, (targetSize * CONDITION_SIZE_RATIO) / sceneDpi),
+    };
   }
 
+  const bounds = await OBR.scene.items.getItemBounds([sourceItemId]);
+  const targetSize = Math.min(bounds.width, bounds.height);
   return {
     position: bounds.center,
     scale: Math.max(0.01, (targetSize * CONDITION_SIZE_RATIO) / sceneDpi),
