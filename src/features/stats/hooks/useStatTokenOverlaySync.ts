@@ -1,6 +1,10 @@
 import { useCallback, useState } from "react";
 import type { StatTrackedToken } from "../statTypes";
 import {
+  createOrUpdateTokenConditionOverlay,
+  deleteTokenConditionOverlay,
+} from "../services/statConditionOverlayObrSync";
+import {
   createOrUpdateTokenOverlay,
   deleteTokenOverlay,
   type StatOverlayObrManualAction,
@@ -11,6 +15,65 @@ type UseStatTokenOverlaySyncState = {
   loadingAction?: StatOverlayObrManualAction;
   lastResult?: StatOverlayObrSyncResult;
 };
+
+function mergeResults(
+  action: StatOverlayObrManualAction,
+  trackerResult: StatOverlayObrSyncResult,
+  conditionResult: StatOverlayObrSyncResult,
+): StatOverlayObrSyncResult {
+  const results = [trackerResult, conditionResult];
+  const error = results.find((result) => result.status === "error");
+  if (error) return error;
+
+  const created = results.find((result) => result.status === "created");
+  if (created) {
+    return {
+      ...created,
+      action,
+      message: `${trackerResult.message} · ${conditionResult.message}`,
+    };
+  }
+
+  const updated = results.find((result) => result.status === "updated");
+  if (updated) {
+    return {
+      ...updated,
+      action,
+      message: `${trackerResult.message} · ${conditionResult.message}`,
+    };
+  }
+
+  const deleted = results.find((result) => result.status === "deleted");
+  if (deleted) {
+    return {
+      ...deleted,
+      action,
+      message: `${trackerResult.message} · ${conditionResult.message}`,
+    };
+  }
+
+  const unavailable = results.find((result) => result.status === "unavailable");
+  if (unavailable) return unavailable;
+
+  const notReady = results.find((result) => result.status === "not-ready");
+  return notReady ?? trackerResult;
+}
+
+async function createOrUpdateAllTokenVisuals(
+  token: StatTrackedToken,
+): Promise<StatOverlayObrSyncResult> {
+  const trackerResult = await createOrUpdateTokenOverlay(token);
+  const conditionResult = await createOrUpdateTokenConditionOverlay(token);
+  return mergeResults("create-or-update", trackerResult, conditionResult);
+}
+
+async function deleteAllTokenVisuals(
+  token: StatTrackedToken,
+): Promise<StatOverlayObrSyncResult> {
+  const trackerResult = await deleteTokenOverlay(token);
+  const conditionResult = await deleteTokenConditionOverlay(token);
+  return mergeResults("delete", trackerResult, conditionResult);
+}
 
 export function useStatTokenOverlaySync() {
   const [state, setState] = useState<UseStatTokenOverlaySyncState>({});
@@ -33,12 +96,12 @@ export function useStatTokenOverlaySync() {
 
   const createOrUpdateOverlay = useCallback(
     (token: StatTrackedToken) =>
-      runAction("create-or-update", token, createOrUpdateTokenOverlay),
+      runAction("create-or-update", token, createOrUpdateAllTokenVisuals),
     [runAction],
   );
 
   const deleteOverlay = useCallback(
-    (token: StatTrackedToken) => runAction("delete", token, deleteTokenOverlay),
+    (token: StatTrackedToken) => runAction("delete", token, deleteAllTokenVisuals),
     [runAction],
   );
 
