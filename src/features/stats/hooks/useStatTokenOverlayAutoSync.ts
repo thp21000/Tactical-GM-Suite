@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import OBR, { type Item } from "@owlbear-rodeo/sdk";
 import type { StatTrackedToken } from "../statTypes";
 import {
   createOrUpdateTokenConditionOverlay,
@@ -10,6 +11,7 @@ import {
 } from "../services/statTokenOverlayObrSync";
 
 const AUTO_SYNC_DEBOUNCE_MS = 300;
+const GEOMETRY_SYNC_DEBOUNCE_MS = 80;
 
 type AutoSyncState = {
   isSyncing: boolean;
@@ -24,6 +26,17 @@ function toTokenMap(tokens: StatTrackedToken[]): Map<string, StatTrackedToken> {
   return new Map(tokens.map((token) => [getTokenInstanceKey(token), token]));
 }
 
+function getItemGeometrySignature(item: Item): string {
+  return [
+    item.position.x,
+    item.position.y,
+    item.scale.x,
+    item.scale.y,
+    item.rotation,
+    item.visible ? 1 : 0,
+  ].join(":");
+}
+
 export function useStatTokenOverlayAutoSync({
   enabled,
   tokens,
@@ -32,6 +45,7 @@ export function useStatTokenOverlayAutoSync({
   tokens: StatTrackedToken[];
 }) {
   const previousTokensRef = useRef<Map<string, StatTrackedToken>>(new Map());
+  const sourceGeometryRef = useRef<Map<string, string>>(new Map());
   const pendingUpdatesRef = useRef<Map<string, StatTrackedToken>>(new Map());
   const pendingDeletesRef = useRef<Map<string, StatTrackedToken>>(new Map());
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,6 +55,15 @@ export function useStatTokenOverlayAutoSync({
   const [state, setState] = useState<AutoSyncState>({ isSyncing: false });
 
   enabledRef.current = enabled;
+
+  function scheduleFlush(delay: number) {
+    if (!enabledRef.current) return;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = null;
+      void flushPending();
+    }, delay);
+  }
 
   async function flushPending() {
     if (!enabledRef.current) return;
@@ -101,6 +124,7 @@ export function useStatTokenOverlayAutoSync({
     }
   }
 
+  // Stats data changes: conditions, trackers, values, visibility, showOnToken, etc.
   useEffect(() => {
     if (!enabled) {
       if (timeoutRef.current) {
@@ -131,23 +155,65 @@ export function useStatTokenOverlayAutoSync({
     previousTokensRef.current = next;
 
     if (
-      pendingUpdatesRef.current.size === 0 &&
-      pendingDeletesRef.current.size === 0
+      pendingUpdatesRef.current.size > 0 ||
+      pendingDeletesRef.current.size > 0
     ) {
-      return;
+      scheduleFlush(AUTO_SYNC_DEBOUNCE_MS);
     }
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      timeoutRef.current = null;
-      void flushPending();
-    }, AUTO_SYNC_DEBOUNCE_MS);
 
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
+    };
+  }, [enabled, tokens]);
+
+  // Owlbear geometry changes: keep the condition ring aligned when a token is
+  // moved or resized. POSITION attachment remains instant; this explicit sync
+  // recalculates the ring diameter after SCALE changes without double-scaling.
+  useEffect(() => {
+    if (!enabled || !OBR.isAvailable) return;
+
+    let disposed = false;
+    const tokenBySourceId = new Map<string, StatTrackedToken>();
+    for (const token of tokens) {
+      if (token.sourceItemId) tokenBySourceId.set(token.sourceItemId, token);
+    }
+    if (tokenBySourceId.size === 0) return;
+
+    const inspectItems = (items: Item[]) => {
+      if (disposed) return;
+
+      let needsSync = false;
+      const itemById = new Map(items.map((item) => [item.id, item]));
+
+      for (const [sourceItemId, token] of tokenBySourceId) {
+        const item = itemById.get(sourceItemId);
+        if (!item) continue;
+
+        const signature = getItemGeometrySignature(item);
+        const previous = sourceGeometryRef.current.get(sourceItemId);
+        sourceGeometryRef.current.set(sourceItemId, signature);
+
+        if (previous !== undefined && previous !== signature) {
+          pendingUpdatesRef.current.set(getTokenInstanceKey(token), token);
+          needsSync = true;
+        }
+      }
+
+      if (needsSync) scheduleFlush(GEOMETRY_SYNC_DEBOUNCE_MS);
+    };
+
+    void OBR.scene.items
+      .getItems([...tokenBySourceId.keys()])
+      .then(inspectItems)
+      .catch(() => undefined);
+
+    const unsubscribe = OBR.scene.items.onChange(inspectItems);
+    return () => {
+      disposed = true;
+      unsubscribe();
     };
   }, [enabled, tokens]);
 
