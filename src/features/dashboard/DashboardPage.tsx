@@ -1,3 +1,4 @@
+import { MODULE_IDS } from "../../core/constants/ids";
 import { moduleRegistry } from "../../core/modules/moduleRegistry";
 import {
   countEnabledModules,
@@ -6,6 +7,7 @@ import {
 import type { ObrReadyState } from "../../core/obr/obrReady";
 import { Badge } from "../../shared/components/Badge";
 import { Panel } from "../../shared/components/Panel";
+import { StatDashboardOverview } from "../stats/StatDashboardOverview";
 
 type DashboardPageProps = {
   obr: ObrReadyState;
@@ -42,6 +44,8 @@ export function DashboardPage({ obr, moduleStates }: DashboardPageProps) {
           <span>Modules activés</span>
         </Panel>
       </div>
+
+      {moduleStates[MODULE_IDS.STATS] ? <StatDashboardOverview obr={obr} /> : null}
 
       <Panel title="Modules principaux">
         <div className="compact-cards">
