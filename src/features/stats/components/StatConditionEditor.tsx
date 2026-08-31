@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Button } from "../../../shared/components/Button";
-import { getStatConditionDefinition, type StatTokenConditionInput } from "../services/statConditions";
+import {
+  getStatConditionDefinition,
+  type StatTokenConditionInput,
+} from "../services/statConditions";
 import type {
   StatConditionDurationType,
-  StatConditionTokenDisplayMode,
   StatTrackerVisibility,
   StatTokenCondition,
 } from "../statTypes";
@@ -25,12 +27,6 @@ const DURATION_LABELS: Record<StatConditionDurationType, string> = {
   rest: "Repos",
 };
 
-const TOKEN_DISPLAY_LABELS: Record<StatConditionTokenDisplayMode, string> = {
-  badge: "Badge",
-  icon: "Icône",
-  hidden: "Masqué",
-};
-
 function getInitialDurationType(
   condition: StatTokenCondition,
 ): StatConditionDurationType {
@@ -46,7 +42,7 @@ export function StatConditionEditor({
   onSubmit,
 }: Props) {
   const definition = getStatConditionDefinition(condition.conditionId);
-  const acceptsValue = definition?.severityType !== "none";
+  const acceptsValue = definition ? definition.severityType !== "none" : false;
   const [value, setValue] = useState(String(condition.value ?? 1));
   const [durationType, setDurationType] = useState<StatConditionDurationType>(
     getInitialDurationType(condition),
@@ -57,14 +53,8 @@ export function StatConditionEditor({
   const [source, setSource] = useState(condition.source ?? "");
   const [note, setNote] = useState(condition.note ?? "");
   const [showOnToken, setShowOnToken] = useState(condition.showOnToken ?? false);
-  const [tokenDisplayMode, setTokenDisplayMode] = useState<StatConditionTokenDisplayMode>(
-    condition.tokenDisplayMode ?? "badge",
-  );
-  const [tokenDisplayPriority, setTokenDisplayPriority] = useState(
-    String(condition.tokenDisplayPriority ?? 50),
-  );
   const [visibility, setVisibility] = useState<StatTrackerVisibility>(
-    condition.visibility ?? "gm",
+    condition.visibility ?? "public",
   );
 
   return (
@@ -79,9 +69,9 @@ export function StatConditionEditor({
           remainingRounds: durationType === "rounds" ? Number(rounds) || 1 : undefined,
           source,
           note,
-          showOnToken: tokenDisplayMode === "hidden" ? false : showOnToken,
-          tokenDisplayMode,
-          tokenDisplayPriority: Number(tokenDisplayPriority) || 50,
+          showOnToken,
+          tokenDisplayMode: showOnToken ? "icon" : "hidden",
+          tokenDisplayPriority: 50,
           visibility,
         });
       }}
@@ -159,23 +149,7 @@ export function StatConditionEditor({
             type="checkbox"
             onChange={(event) => setShowOnToken(event.target.checked)}
           />
-          <span>Token</span>
-        </label>
-
-        <label>
-          <span>Mode</span>
-          <select
-            value={tokenDisplayMode}
-            onChange={(event) =>
-              setTokenDisplayMode(event.target.value as StatConditionTokenDisplayMode)
-            }
-          >
-            {Object.entries(TOKEN_DISPLAY_LABELS).map(([id, label]) => (
-              <option key={id} value={id}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <span>Afficher l’anneau sur le token</span>
         </label>
 
         <label>
@@ -186,23 +160,19 @@ export function StatConditionEditor({
               setVisibility(event.target.value as StatTrackerVisibility)
             }
           >
-            <option value="gm">MJ</option>
-            <option value="private">Privé</option>
             <option value="public">Public</option>
+            <option value="private">Privé</option>
+            <option value="gm">MJ</option>
           </select>
         </label>
-
-        <label>
-          <span>Priorité</span>
-          <input
-            max="100"
-            min="0"
-            type="number"
-            value={tokenDisplayPriority}
-            onChange={(event) => setTokenDisplayPriority(event.target.value)}
-          />
-        </label>
       </div>
+
+      {showOnToken ? (
+        <p className="muted">
+          Une seule condition peut entourer le token. En enregistrant, celle-ci
+          remplacera automatiquement l’anneau actuellement affiché.
+        </p>
+      ) : null}
 
       <div className="stat-condition-editor__actions">
         <Button type="submit">Enregistrer</Button>
