@@ -16,383 +16,81 @@ function now(): string {
   return new Date().toISOString();
 }
 
+function condition(
+  id: string,
+  label: string,
+  severityType: StatConditionDefinition["severityType"],
+  iconId: string,
+  category: StatConditionDefinition["category"],
+  description?: string,
+  effects?: StatConditionEffect[],
+): StatConditionDefinition {
+  return {
+    id,
+    label,
+    shortLabel: label,
+    description,
+    severityType,
+    iconId,
+    category,
+    effects,
+  };
+}
+
+/**
+ * Public catalogue shown in the condition picker.
+ * Keep labels aligned with src/features/stats/assets/condition/FR/*.png.
+ */
 export const STAT_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
-  {
-    id: "a-terre",
-    label: "À terre",
-    shortLabel: "À terre",
-    description: "Le token est au sol ou renversé.",
-    severityType: "none",
-    iconId: "trap",
-    category: "movement",
-    effects: [
-      {
-        id: "posture-info",
-        label: "Posture vulnérable",
-        shortLabel: "Posture",
-        target: "other",
-        mode: "informational",
-        description: "Rappel tactique : posture au sol à prendre en compte manuellement.",
-      },
-    ],
-  },
-  {
-    id: "agrippe",
-    label: "Agrippé",
-    shortLabel: "Agrippé",
-    description: "Le token est maintenu par une créature ou un effet.",
-    severityType: "none",
-    iconId: "toggle",
-    category: "physical",
-    effects: [
-      {
-        id: "movement-restricted",
-        label: "Mouvement restreint",
-        shortLabel: "Mvt rest.",
-        target: "speed",
-        mode: "informational",
-        description: "Rappel : le mouvement peut être limité selon la scène ou la règle utilisée.",
-      },
-    ],
-  },
-  {
-    id: "assourdi",
-    label: "Assourdi",
-    shortLabel: "Assourdi",
-    description: "Le token entend difficilement ou plus du tout.",
-    severityType: "none",
-    iconId: "other",
-    category: "sensory",
-    effects: [
-      {
-        id: "sensory-info",
-        label: "Perception sensorielle limitée",
-        shortLabel: "Sens",
-        target: "perception",
-        mode: "informational",
-        description: "Rappel descriptif : la perception liée au sens affecté doit être évaluée manuellement.",
-      },
-    ],
-  },
-  {
-    id: "aveugle",
-    label: "Aveuglé",
-    shortLabel: "Aveuglé",
-    description: "Le token ne voit pas correctement.",
-    severityType: "none",
-    iconId: "other",
-    category: "sensory",
-    effects: [
-      {
-        id: "visibility-limited",
-        label: "Visibilité limitée",
-        shortLabel: "Visibilité",
-        target: "visibility",
-        mode: "informational",
-        description: "Rappel descriptif : gérer les cibles et tests associés manuellement.",
-      },
-    ],
-  },
-  {
-    id: "blesse",
-    label: "Blessé",
-    shortLabel: "Blessé",
-    description: "Le token porte une blessure persistante ou notable.",
-    severityType: "value",
-    iconId: "heart",
-    category: "physical",
-  },
-  {
-    id: "confus",
-    label: "Confus",
-    shortLabel: "Confus",
-    description: "Le token agit de façon désorientée.",
-    severityType: "none",
-    iconId: "magic",
-    category: "mental",
-    effects: [
-      {
-        id: "mental-info",
-        label: "Contrôle mental perturbé",
-        shortLabel: "Mental",
-        target: "other",
-        mode: "informational",
-        description: "Rappel descriptif : l’état mental influence les décisions et réactions manuellement.",
-      },
-    ],
-  },
-  {
-    id: "controle",
-    label: "Contrôlé",
-    shortLabel: "Contrôlé",
-    description: "Le token est sous le contrôle d'un effet extérieur.",
-    severityType: "none",
-    iconId: "magic",
-    category: "magical",
-    effects: [
-      {
-        id: "control-info",
-        label: "Contrôle externe",
-        shortLabel: "Contrôle",
-        target: "actions",
-        mode: "informational",
-        description: "Rappel descriptif : les actions peuvent dépendre d’un effet de contrôle.",
-      },
-    ],
-  },
-  {
-    id: "ebloui",
-    label: "Ébloui",
-    shortLabel: "Ébloui",
-    description: "Le token est gêné par une lumière ou un éclat.",
-    severityType: "none",
-    iconId: "magic",
-    category: "sensory",
-  },
-  {
-    id: "effraye",
-    label: "Effrayé",
-    shortLabel: "Effrayé",
-    description: "Le token subit une peur graduée.",
-    severityType: "value",
-    iconId: "toggle",
-    category: "mental",
-    effects: [
-      {
-        id: "status-penalty-checks",
-        label: "Malus de statut aux tests",
-        shortLabel: "Statut",
-        target: "skill-check",
-        mode: "status-penalty",
-        scalesWithConditionValue: true,
-        description: "Malus descriptif basé sur la valeur de la condition. Non appliqué automatiquement.",
-      },
-      {
-        id: "status-penalty-dc",
-        label: "Malus de statut aux DD",
-        shortLabel: "DD",
-        target: "other",
-        mode: "status-penalty",
-        scalesWithConditionValue: true,
-        description: "Rappel descriptif pour les DD concernés. Non appliqué automatiquement.",
-      },
-    ],
-  },
-  {
-    id: "empoisonne",
-    label: "Empoisonné",
-    shortLabel: "Empoisonné",
-    description: "Le token subit un poison ou une toxine.",
-    severityType: "value",
-    iconId: "toggle",
-    category: "physical",
-  },
-  {
-    id: "enchevetre",
-    label: "Enchevêtré",
-    shortLabel: "Enchevêtré",
-    description: "Les mouvements du token sont gênés.",
-    severityType: "none",
-    iconId: "trap",
-    category: "movement",
-    effects: [
-      {
-        id: "speed-info",
-        label: "Déplacement gêné",
-        shortLabel: "Vitesse",
-        target: "speed",
-        mode: "informational",
-        description: "Rappel descriptif : vitesse ou déplacement à ajuster manuellement.",
-      },
-    ],
-  },
-  {
-    id: "fascine",
-    label: "Fasciné",
-    shortLabel: "Fasciné",
-    description: "L'attention du token est captée par une cible.",
-    severityType: "none",
-    iconId: "magic",
-    category: "mental",
-  },
-  {
-    id: "fatigue",
-    label: "Fatigué",
-    shortLabel: "Fatigué",
-    description: "Le token souffre d'épuisement ou de fatigue.",
-    severityType: "value",
-    iconId: "toggle",
-    category: "physical",
-    effects: [
-      {
-        id: "fatigue-info",
-        label: "Fatigue à gérer manuellement",
-        shortLabel: "Fatigue",
-        target: "other",
-        mode: "informational",
-        description: "Rappel descriptif : appliquer les conséquences selon le système utilisé.",
-      },
-    ],
-  },
-  {
-    id: "fuite",
-    label: "Fuite",
-    shortLabel: "Fuite",
-    description: "Le token cherche à fuir la menace.",
-    severityType: "none",
-    iconId: "toggle",
-    category: "mental",
-  },
-  {
-    id: "immobilise",
-    label: "Immobilisé",
-    shortLabel: "Immobilisé",
-    description: "Le token ne peut pas se déplacer librement.",
-    severityType: "none",
-    iconId: "trap",
-    category: "movement",
-    effects: [
-      {
-        id: "speed-disabled",
-        label: "Déplacement bloqué",
-        shortLabel: "Vitesse off",
-        target: "speed",
-        mode: "disable",
-        description: "Rappel descriptif : déplacement à gérer manuellement.",
-      },
-    ],
-  },
-  {
-    id: "inconscient",
-    label: "Inconscient",
-    shortLabel: "Inconscient",
-    description: "Le token est inconscient ou hors d'état d'agir.",
-    severityType: "none",
-    iconId: "heart",
-    category: "physical",
-  },
-  {
-    id: "invisible",
-    label: "Invisible",
-    shortLabel: "Invisible",
-    description: "Le token est difficile ou impossible à voir.",
-    severityType: "none",
-    iconId: "magic",
-    category: "magical",
-    effects: [
-      {
-        id: "visibility-info",
-        label: "Visibilité altérée",
-        shortLabel: "Visibilité",
-        target: "visibility",
-        mode: "informational",
-        description: "Rappel descriptif : la visibilité doit être traitée manuellement.",
-      },
-    ],
-  },
-  {
-    id: "malade",
-    label: "Malade",
-    shortLabel: "Malade",
-    description: "Le token subit une maladie ou un malaise gradué.",
-    severityType: "value",
-    iconId: "toggle",
-    category: "physical",
-    effects: [
-      {
-        id: "status-penalty-saves",
-        label: "Malus de statut aux jets",
-        shortLabel: "Statut",
-        target: "saving-throw",
-        mode: "status-penalty",
-        scalesWithConditionValue: true,
-        description: "Malus descriptif basé sur la valeur de la condition. Non appliqué automatiquement.",
-      },
-    ],
-  },
-  {
-    id: "ralenti",
-    label: "Ralenti",
-    shortLabel: "Ralenti",
-    description: "Le token dispose de moins d'actions ou agit plus lentement.",
-    severityType: "value",
-    iconId: "counter",
-    category: "movement",
-    effects: [
-      {
-        id: "actions-reduced",
-        label: "Actions réduites",
-        shortLabel: "Actions",
-        target: "actions",
-        mode: "circumstance-penalty",
-        scalesWithConditionValue: true,
-        description: "Rappel descriptif : ajustement manuel des actions selon la valeur.",
-      },
-    ],
-  },
-  {
-    id: "rapide",
-    label: "Rapide",
-    shortLabel: "Rapide",
-    description: "Le token gagne une action ou agit plus vite.",
-    severityType: "value",
-    iconId: "counter",
-    category: "movement",
-    effects: [
-      {
-        id: "actions-bonus",
-        label: "Actions supplémentaires",
-        shortLabel: "Actions",
-        target: "actions",
-        mode: "circumstance-bonus",
-        scalesWithConditionValue: true,
-        description: "Rappel descriptif : actions supplémentaires à gérer manuellement.",
-      },
-    ],
-  },
-  {
-    id: "saisi",
-    label: "Saisi",
-    shortLabel: "Saisi",
-    description: "Le token est tenu ou retenu brièvement.",
-    severityType: "none",
-    iconId: "toggle",
-    category: "combat",
-    effects: [
-      {
-        id: "movement-restricted",
-        label: "Mouvement restreint",
-        shortLabel: "Mvt rest.",
-        target: "speed",
-        mode: "informational",
-        description: "Rappel descriptif : mouvement ou actions physiques à gérer manuellement.",
-      },
-    ],
-  },
-  {
-    id: "stupefie",
-    label: "Stupéfié",
-    shortLabel: "Stupéfié",
-    description: "Le token subit une stupeur graduée.",
-    severityType: "value",
-    iconId: "magic",
-    category: "mental",
-    effects: [
-      {
-        id: "mental-actions",
-        label: "Actions mentales perturbées",
-        shortLabel: "Mental",
-        target: "actions",
-        mode: "informational",
-        scalesWithConditionValue: true,
-        description: "Rappel descriptif : conséquences à gérer manuellement selon la valeur.",
-      },
-    ],
-  },
+  condition("accelere", "Accéléré", "none", "counter", "movement", "Le token agit plus rapidement."),
+  condition("amical", "Amical", "none", "toggle", "mental", "Le token est actuellement amical."),
+  condition("aveugle", "Aveuglé", "none", "other", "sensory", "Le token ne voit pas correctement."),
+  condition("blesse", "Blessé", "value", "heart", "physical", "Le token porte une blessure persistante."),
+  condition("controle", "Contrôlé", "none", "magic", "magical", "Le token est sous le contrôle d'un effet extérieur."),
+  condition("draine", "Drainé", "value", "heart", "physical", "Le token est affaibli par un effet de drainage."),
+  condition("effraye", "Effrayé", "value", "toggle", "mental", "Le token subit une peur graduée."),
+  condition("empoigne", "Empoigné", "none", "toggle", "combat", "Le token est maintenu ou agrippé."),
+  condition("ensorcele", "Ensorcelé", "none", "magic", "magical", "Le token est affecté par un enchantement."),
+  condition("fatigue", "Fatigué", "none", "toggle", "physical", "Le token souffre de fatigue."),
+  condition("immobilise", "Immobilisé", "none", "trap", "movement", "Le token ne peut pas se déplacer librement."),
+  condition("inconscient", "Inconscient", "none", "heart", "physical", "Le token est inconscient ou hors d'état d'agir."),
+  condition("invisible", "Invisible", "none", "magic", "magical", "Le token est difficile ou impossible à voir."),
+  condition("malade", "Malade", "value", "toggle", "physical", "Le token subit une maladie ou un malaise gradué."),
+  condition("marque-du-chasseur", "Marque du chasseur", "none", "trap", "combat", "Le token est désigné comme cible par une marque de chasseur."),
+  condition("mort", "Mort", "none", "heart", "physical", "Le token est mort."),
+  condition("paralyse", "Paralysé", "none", "toggle", "physical", "Le token est paralysé."),
+  condition("petrifie", "Pétrifié", "none", "armor", "magical", "Le token est pétrifié."),
+  condition("sourd", "Sourd", "none", "other", "sensory", "Le token n'entend pas correctement."),
+  condition("etourdi", "Étourdi", "value", "magic", "mental", "Le token est étourdi pour une durée ou une valeur donnée."),
+];
+
+/**
+ * Definitions retained only so old room metadata remains readable.
+ * They are deliberately absent from getStatConditionDefinitions().
+ */
+const LEGACY_CONDITION_DEFINITIONS: StatConditionDefinition[] = [
+  condition("a-terre", "À terre", "none", "trap", "movement"),
+  condition("agrippe", "Agrippé", "none", "toggle", "physical"),
+  condition("assourdi", "Assourdi", "none", "other", "sensory"),
+  condition("confus", "Confus", "none", "magic", "mental"),
+  condition("ebloui", "Ébloui", "none", "magic", "sensory"),
+  condition("empoisonne", "Empoisonné", "value", "toggle", "physical"),
+  condition("enchevetre", "Enchevêtré", "none", "trap", "movement"),
+  condition("fascine", "Fasciné", "none", "magic", "mental"),
+  condition("fuite", "Fuite", "none", "toggle", "mental"),
+  condition("ralenti", "Ralenti", "value", "counter", "movement"),
+  condition("rapide", "Rapide", "value", "counter", "movement"),
+  condition("saisi", "Saisi", "none", "toggle", "combat"),
+  condition("stupefie", "Stupéfié", "value", "magic", "mental"),
+];
+
+const ALL_CONDITION_DEFINITIONS = [
+  ...STAT_CONDITION_DEFINITIONS,
+  ...LEGACY_CONDITION_DEFINITIONS,
 ];
 
 const CONDITION_BY_ID = new Map(
-  STAT_CONDITION_DEFINITIONS.map((condition) => [condition.id, condition]),
+  ALL_CONDITION_DEFINITIONS.map((definition) => [definition.id, definition]),
 );
 
 function normalizeLabel(value: string): string {
@@ -404,6 +102,13 @@ function normalizeLabel(value: string): string {
     .replace(/^-|-$/g, "");
 }
 
+const CONDITION_BY_LABEL = new Map(
+  ALL_CONDITION_DEFINITIONS.map((definition) => [
+    normalizeLabel(definition.label),
+    definition,
+  ]),
+);
+
 export function getStatConditionDefinitions(): StatConditionDefinition[] {
   return STAT_CONDITION_DEFINITIONS;
 }
@@ -411,7 +116,7 @@ export function getStatConditionDefinitions(): StatConditionDefinition[] {
 export function getStatConditionDefinition(
   conditionId: string,
 ): StatConditionDefinition | undefined {
-  return CONDITION_BY_ID.get(conditionId);
+  return CONDITION_BY_ID.get(conditionId) ?? CONDITION_BY_LABEL.get(normalizeLabel(conditionId));
 }
 
 export function getConditionEffects(conditionId: string): StatConditionEffect[] {
@@ -488,7 +193,7 @@ function normalizeVisibility(value: unknown): StatTrackerVisibility {
   return typeof value === "string" &&
     TRACKER_VISIBILITIES.has(value as StatTrackerVisibility)
     ? (value as StatTrackerVisibility)
-    : "gm";
+    : "public";
 }
 
 function normalizeTokenDisplayMode(
@@ -497,7 +202,7 @@ function normalizeTokenDisplayMode(
   return typeof value === "string" &&
     TOKEN_DISPLAY_MODES.has(value as StatConditionTokenDisplayMode)
     ? (value as StatConditionTokenDisplayMode)
-    : "badge";
+    : "icon";
 }
 
 function normalizeTokenDisplayPriority(value: unknown): number {
@@ -556,7 +261,7 @@ function normalizeConditionInput(
     source: cleanOptionalText(record.source),
     note: cleanOptionalText(record.note),
     showOnToken,
-    tokenDisplayMode,
+    tokenDisplayMode: showOnToken ? "icon" : tokenDisplayMode,
     tokenDisplayPriority: normalizeTokenDisplayPriority(record.tokenDisplayPriority),
     visibility: normalizeVisibility(record.visibility),
   };
@@ -587,7 +292,23 @@ export function hasCondition(
   token: Pick<StatTrackedToken, "conditions">,
   conditionId: string,
 ): boolean {
-  return token.conditions.some((condition) => condition.conditionId === conditionId);
+  return token.conditions.some((activeCondition) => activeCondition.conditionId === conditionId);
+}
+
+function disableOtherTokenConditions(
+  conditions: StatTokenCondition[],
+  keepId: string,
+  timestamp: string,
+): StatTokenCondition[] {
+  return conditions.map((activeCondition) =>
+    activeCondition.id !== keepId && activeCondition.showOnToken
+      ? {
+          ...activeCondition,
+          showOnToken: false,
+          updatedAt: timestamp,
+        }
+      : activeCondition,
+  );
 }
 
 export function addConditionToToken(
@@ -597,13 +318,18 @@ export function addConditionToToken(
 ): StatTrackedToken {
   if (hasCondition(token, conditionId)) return token;
 
-  const condition = createTokenCondition(conditionId, input);
-  if (!condition) return token;
+  const newCondition = createTokenCondition(conditionId, input);
+  if (!newCondition) return token;
+
+  const timestamp = now();
+  const existingConditions = newCondition.showOnToken
+    ? disableOtherTokenConditions(token.conditions, newCondition.id, timestamp)
+    : token.conditions;
 
   return {
     ...token,
-    conditions: [...token.conditions, condition],
-    updatedAt: now(),
+    conditions: [...existingConditions, newCondition],
+    updatedAt: timestamp,
   };
 }
 
@@ -612,21 +338,31 @@ export function updateTokenCondition(
   tokenConditionId: string,
   input: StatTokenConditionInput,
 ): StatTrackedToken {
+  const timestamp = now();
+  let selectedForToken = false;
+
+  const conditions = token.conditions.map((activeCondition) => {
+    if (activeCondition.id !== tokenConditionId) return activeCondition;
+
+    const definition = getStatConditionDefinition(activeCondition.conditionId);
+    if (!definition) return activeCondition;
+
+    const normalized = normalizeConditionInput(definition, input);
+    selectedForToken = normalized.showOnToken === true;
+
+    return {
+      ...activeCondition,
+      ...normalized,
+      updatedAt: timestamp,
+    };
+  });
+
   return {
     ...token,
-    conditions: token.conditions.map((condition) => {
-      if (condition.id !== tokenConditionId) return condition;
-
-      const definition = getStatConditionDefinition(condition.conditionId);
-      if (!definition) return condition;
-
-      return {
-        ...condition,
-        ...normalizeConditionInput(definition, input),
-        updatedAt: now(),
-      };
-    }),
-    updatedAt: now(),
+    conditions: selectedForToken
+      ? disableOtherTokenConditions(conditions, tokenConditionId, timestamp)
+      : conditions,
+    updatedAt: timestamp,
   };
 }
 
@@ -634,18 +370,19 @@ export function decrementTokenConditionDuration(
   token: StatTrackedToken,
   tokenConditionId: string,
 ): StatTrackedToken {
+  const timestamp = now();
   return {
     ...token,
-    conditions: token.conditions.map((condition) =>
-      condition.id === tokenConditionId && condition.durationType === "rounds"
+    conditions: token.conditions.map((activeCondition) =>
+      activeCondition.id === tokenConditionId && activeCondition.durationType === "rounds"
         ? {
-            ...condition,
-            remainingRounds: Math.max(0, (condition.remainingRounds ?? 0) - 1),
-            updatedAt: now(),
+            ...activeCondition,
+            remainingRounds: Math.max(0, (activeCondition.remainingRounds ?? 0) - 1),
+            updatedAt: timestamp,
           }
-        : condition,
+        : activeCondition,
     ),
-    updatedAt: now(),
+    updatedAt: timestamp,
   };
 }
 
@@ -653,20 +390,21 @@ export function clearTokenConditionDuration(
   token: StatTrackedToken,
   tokenConditionId: string,
 ): StatTrackedToken {
+  const timestamp = now();
   return {
     ...token,
-    conditions: token.conditions.map((condition) =>
-      condition.id === tokenConditionId
+    conditions: token.conditions.map((activeCondition) =>
+      activeCondition.id === tokenConditionId
         ? {
-            ...condition,
+            ...activeCondition,
             durationType: undefined,
             durationValue: undefined,
             remainingRounds: undefined,
-            updatedAt: now(),
+            updatedAt: timestamp,
           }
-        : condition,
+        : activeCondition,
     ),
-    updatedAt: now(),
+    updatedAt: timestamp,
   };
 }
 
@@ -676,11 +414,10 @@ export function removeConditionFromToken(
 ): StatTrackedToken {
   return {
     ...token,
-    conditions: token.conditions.filter((condition) => condition.id !== tokenConditionId),
+    conditions: token.conditions.filter((activeCondition) => activeCondition.id !== tokenConditionId),
     updatedAt: now(),
   };
 }
-
 
 export type StatConditionTokenDisplayItem = {
   id: string;
@@ -693,82 +430,104 @@ export type StatConditionTokenDisplayItem = {
   visibility: StatTrackerVisibility;
 };
 
-function getConditionValueLabel(condition: StatTokenCondition): string {
-  return typeof condition.value === "number"
-    ? `${condition.shortLabel} ${condition.value}`
-    : condition.shortLabel;
+function getConditionValueLabel(activeCondition: StatTokenCondition): string {
+  return typeof activeCondition.value === "number"
+    ? `${activeCondition.shortLabel} ${activeCondition.value}`
+    : activeCondition.shortLabel;
 }
 
-function getConditionDurationLabel(condition: StatTokenCondition): string | undefined {
-  if (condition.durationType === "rounds") return `${condition.remainingRounds ?? 0}r`;
-  if (condition.durationType === "encounter") return "rencontre";
-  if (condition.durationType === "rest") return "repos";
+function getConditionDurationLabel(activeCondition: StatTokenCondition): string | undefined {
+  if (activeCondition.durationType === "rounds") return `${activeCondition.remainingRounds ?? 0}r`;
+  if (activeCondition.durationType === "encounter") return "rencontre";
+  if (activeCondition.durationType === "rest") return "repos";
   return undefined;
 }
 
 export function getConditionTokenDisplayLabel(
-  condition: StatTokenCondition,
+  activeCondition: StatTokenCondition,
 ): string {
-  return getConditionValueLabel(condition);
+  return getConditionValueLabel(activeCondition);
 }
 
 export function getConditionTokenDisplayTitle(
-  condition: StatTokenCondition,
+  activeCondition: StatTokenCondition,
 ): string {
-  const definition = getStatConditionDefinition(condition.conditionId);
+  const definition = getStatConditionDefinition(activeCondition.conditionId);
   const effectSummary = definition
-    ? getConditionEffectSummary(definition, condition)
+    ? getConditionEffectSummary(definition, activeCondition)
     : undefined;
 
   return [
-    condition.label,
-    getConditionDurationLabel(condition),
-    condition.source ? `Source: ${condition.source}` : undefined,
-    condition.note,
+    activeCondition.label,
+    getConditionDurationLabel(activeCondition),
+    activeCondition.source ? `Source: ${activeCondition.source}` : undefined,
+    activeCondition.note,
     effectSummary ? `Effets: ${effectSummary}` : undefined,
   ]
     .filter(Boolean)
     .join(" · ");
 }
 
+/** At most one condition may own the image ring around a token. */
 export function getTokenDisplayConditions(
   token: Pick<StatTrackedToken, "conditions">,
 ): StatTokenCondition[] {
   return token.conditions
     .filter(
-      (condition) =>
-        condition.showOnToken === true && condition.tokenDisplayMode !== "hidden",
+      (activeCondition) =>
+        activeCondition.showOnToken === true && activeCondition.tokenDisplayMode !== "hidden",
     )
     .sort(
       (a, b) =>
         (a.tokenDisplayPriority ?? 50) - (b.tokenDisplayPriority ?? 50) ||
         a.shortLabel.localeCompare(b.shortLabel, "fr"),
-    );
+    )
+    .slice(0, 1);
 }
 
 export function getTokenConditionDisplayItems(
   token: Pick<StatTrackedToken, "conditions">,
 ): StatConditionTokenDisplayItem[] {
-  return getTokenDisplayConditions(token).map((condition) => ({
-    id: condition.id,
-    conditionId: condition.conditionId,
-    label: getConditionTokenDisplayLabel(condition),
-    title: getConditionTokenDisplayTitle(condition),
-    iconId: condition.iconId,
-    mode: condition.tokenDisplayMode ?? "badge",
-    priority: condition.tokenDisplayPriority ?? 50,
-    visibility: condition.visibility ?? "gm",
+  return getTokenDisplayConditions(token).map((activeCondition) => ({
+    id: activeCondition.id,
+    conditionId: activeCondition.conditionId,
+    label: getConditionTokenDisplayLabel(activeCondition),
+    title: getConditionTokenDisplayTitle(activeCondition),
+    iconId: activeCondition.iconId,
+    mode: "icon",
+    priority: activeCondition.tokenDisplayPriority ?? 50,
+    visibility: activeCondition.visibility ?? "public",
   }));
+}
+
+function enforceSingleDisplayOnNormalizedConditions(
+  conditions: StatTokenCondition[],
+): StatTokenCondition[] {
+  const displayed = conditions
+    .filter((activeCondition) => activeCondition.showOnToken)
+    .sort(
+      (a, b) =>
+        (a.tokenDisplayPriority ?? 50) - (b.tokenDisplayPriority ?? 50) ||
+        a.createdAt.localeCompare(b.createdAt),
+    );
+  const keepId = displayed[0]?.id;
+  if (!keepId || displayed.length <= 1) return conditions;
+
+  return conditions.map((activeCondition) =>
+    activeCondition.showOnToken && activeCondition.id !== keepId
+      ? { ...activeCondition, showOnToken: false }
+      : activeCondition,
+  );
 }
 
 export function normalizeTokenConditions(value: unknown): StatTokenCondition[] {
   if (!Array.isArray(value)) return [];
 
-  return value.flatMap((entry) => {
+  const normalized = value.flatMap((entry) => {
     if (typeof entry === "string") {
-      const definition = CONDITION_BY_ID.get(normalizeLabel(entry));
-      const condition = definition ? createTokenCondition(definition.id) : null;
-      return condition ? [condition] : [];
+      const definition = getStatConditionDefinition(entry);
+      const activeCondition = definition ? createTokenCondition(definition.id) : null;
+      return activeCondition ? [activeCondition] : [];
     }
 
     if (typeof entry !== "object" || entry === null) return [];
@@ -789,13 +548,13 @@ export function normalizeTokenConditions(value: unknown): StatTokenCondition[] {
     const definition = rawConditionId
       ? getStatConditionDefinition(rawConditionId)
       : rawLabel
-        ? getStatConditionDefinition(normalizeLabel(rawLabel))
+        ? getStatConditionDefinition(rawLabel)
         : undefined;
 
     if (!definition) return [];
 
     const timestamp = now();
-    const normalized = normalizeConditionInput(definition, {
+    const normalizedInput = normalizeConditionInput(definition, {
       value: normalizeNumber(record.value),
       durationType:
         typeof record.durationType === "string" &&
@@ -825,12 +584,17 @@ export function normalizeTokenConditions(value: unknown): StatTokenCondition[] {
         label: definition.label,
         shortLabel: definition.shortLabel,
         iconId: definition.iconId,
-        ...normalized,
+        ...normalizedInput,
         createdAt: typeof record.createdAt === "string" ? record.createdAt : timestamp,
         updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : timestamp,
       },
     ];
-  }).filter((condition, index, conditions) =>
-    conditions.findIndex((item) => item.conditionId === condition.conditionId) === index,
+  }).filter(
+    (activeCondition, index, conditions) =>
+      conditions.findIndex(
+        (candidate) => candidate.conditionId === activeCondition.conditionId,
+      ) === index,
   );
+
+  return enforceSingleDisplayOnNormalizedConditions(normalized);
 }
