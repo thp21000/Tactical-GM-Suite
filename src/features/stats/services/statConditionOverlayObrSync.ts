@@ -20,7 +20,7 @@ export const STAT_CONDITION_OVERLAY_METADATA_KEY = `${EXTENSION_ID}/stats-condit
 export const STAT_CONDITION_OVERLAY_KIND = "stats-condition-overlay";
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-const CONDITION_SIZE_RATIO = 1;
+const CONDITION_SIZE_RATIO = 1.12;
 const CONDITION_CENTER_OFFSET_X_RATIO = -0.12;
 const CONDITION_CENTER_OFFSET_Y_RATIO = -0.1;
 const VISIBLE_ALPHA_THRESHOLD = 8;
@@ -381,8 +381,6 @@ function buildConditionImage(
     .locked(true)
     .disableHit(true)
     .disableAutoZIndex(true)
-    // POSITION remains inherited so the ring follows movement instantly.
-    // SCALE is recalculated explicitly from the source image/grid footprint.
     .disableAttachmentBehavior(["COPY", "ROTATION", "SCALE"])
     .metadata({
       [STAT_CONDITION_OVERLAY_METADATA_KEY]: metadata,
