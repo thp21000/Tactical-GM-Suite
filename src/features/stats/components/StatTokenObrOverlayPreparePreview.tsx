@@ -1,6 +1,7 @@
 import { Badge } from "../../../shared/components/Badge";
 import { Button } from "../../../shared/components/Button";
 import { useStatTokenOverlaySync } from "../hooks/useStatTokenOverlaySync";
+import { getTokenDisplayConditions } from "../services/statConditions";
 import {
   getOverlayObrPrepareSummary,
   prepareOverlayImageForObr,
@@ -53,7 +54,9 @@ export function StatTokenObrOverlayPreparePreview({ token, isGm }: Props) {
   const result = prepareOverlayImageForObr(token);
   const preparedImage = result.preparedImage;
   const items = getTokenDisplayItemsByVisibility(token);
-  const displayItemCount = items.public.length + items.private.length + items.gm.length;
+  const displayedCondition = getTokenDisplayConditions(token)[0];
+  const trackerDisplayCount = items.public.length + items.private.length + items.gm.length;
+  const displayItemCount = trackerDisplayCount + (displayedCondition ? 1 : 0);
   const canCreateOrUpdate = Boolean(token.sourceItemId) && !isLoading;
   const canDelete = Boolean(token.sourceItemId) && !isLoading;
 
@@ -64,8 +67,15 @@ export function StatTokenObrOverlayPreparePreview({ token, isGm }: Props) {
           Afficher token : {displayItemCount > 0 ? "ON" : "OFF"}
         </Badge>
         <Badge>
-          Public {items.public.length} · Privé {items.private.length} · MJ {items.gm.length}
+          Trackers · Public {items.public.length} · Privé {items.private.length} · MJ {items.gm.length}
         </Badge>
+        {displayedCondition ? (
+          <Badge tone="success">
+            Anneau : {displayedCondition.label} · {displayedCondition.visibility === "gm" ? "MJ" : displayedCondition.visibility === "private" ? "Privé" : "Public"}
+          </Badge>
+        ) : (
+          <Badge>Anneau : aucun</Badge>
+        )}
         <Badge
           tone={
             result.status === "ready"
@@ -77,7 +87,7 @@ export function StatTokenObrOverlayPreparePreview({ token, isGm }: Props) {
                   : "default"
           }
         >
-          Public : {getOverlayObrPrepareSummary(result)}
+          Trackers : {getOverlayObrPrepareSummary(result)}
         </Badge>
 
         {preparedImage ? (
@@ -100,7 +110,7 @@ export function StatTokenObrOverlayPreparePreview({ token, isGm }: Props) {
       ) : null}
 
       <p className="stat-token-obr-prepare-preview__meta">
-        Overlay public : partagé · Overlay MJ : local · Overlay privé : local MJ seulement
+        Trackers : labels au-dessus · Condition : image centrée attachée au token
       </p>
 
       <div className="stat-token-obr-prepare-preview__actions">
