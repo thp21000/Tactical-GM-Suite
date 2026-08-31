@@ -114,7 +114,8 @@ function canUseConditionOverlaySync(): boolean {
   return Boolean(
     OBR.isAvailable &&
       isObrReady() &&
-      typeof OBR.scene?.items?.getItemBounds === "function" &&
+      typeof OBR.scene?.items?.getItems === "function" &&
+      typeof OBR.scene.items.getItemBounds === "function" &&
       typeof OBR.scene.items.addItems === "function" &&
       typeof OBR.scene.items.updateItems === "function" &&
       typeof OBR.scene.items.deleteItems === "function" &&
@@ -127,15 +128,33 @@ function canUseConditionOverlaySync(): boolean {
 }
 
 /**
- * The condition PNG is centred on the real Owlbear bounds of the source item.
- * Its diameter is exactly the smallest side of those bounds. SCALE attachment
- * inheritance is disabled below, so this value is never applied twice.
+ * Character tokens are positioned by their logical Owlbear anchor. Their source
+ * image can contain transparent margins or decorative artwork, so image bounds
+ * are not a reliable representation of the token footprint.
+ *
+ * A condition ring therefore uses the source item's logical position as its
+ * centre and one scene grid cell multiplied by the token's smallest scale as
+ * its diameter. This makes a 1x1 token use a 1-cell ring and a resized 2x2
+ * token use a 2-cell ring, independently of the source image canvas.
  */
 async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeometry> {
-  const bounds = await OBR.scene.items.getItemBounds([sourceItemId]);
+  const [sourceItem] = await OBR.scene.items.getItems([sourceItemId]);
   const sceneDpi = await OBR.scene.grid.getDpi();
-  const targetSize = Math.min(bounds.width, bounds.height);
 
+  if (sourceItem) {
+    const logicalScale = Math.max(
+      0.01,
+      Math.min(Math.abs(sourceItem.scale.x), Math.abs(sourceItem.scale.y)),
+    );
+
+    return {
+      position: sourceItem.position,
+      scale: logicalScale * CONDITION_SIZE_RATIO,
+    };
+  }
+
+  const bounds = await OBR.scene.items.getItemBounds([sourceItemId]);
+  const targetSize = Math.min(bounds.width, bounds.height);
   return {
     position: bounds.center,
     scale: Math.max(0.01, (targetSize * CONDITION_SIZE_RATIO) / sceneDpi),
@@ -222,7 +241,7 @@ function buildConditionImage(
     .disableHit(true)
     .disableAutoZIndex(true)
     // POSITION remains inherited so the ring follows movement instantly.
-    // SCALE is recalculated explicitly from source bounds to avoid double scaling.
+    // SCALE is recalculated explicitly from the logical token footprint.
     .disableAttachmentBehavior(["COPY", "ROTATION", "SCALE"])
     .metadata({
       [STAT_CONDITION_OVERLAY_METADATA_KEY]: metadata,
