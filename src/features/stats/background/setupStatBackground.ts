@@ -43,6 +43,14 @@ export function setupStatBackground(): () => void {
   OBR.onReady(() => {
     const iconUrl = `${import.meta.env.BASE_URL}icon.svg`;
     const conditionIconUrl = `${import.meta.env.BASE_URL}condition.svg`;
+    // Les versions récentes d'Owlbear acceptent une largeur de panneau embed.
+    // Si une version l'ignore, le CSS du panneau repasse automatiquement en
+    // une colonne pour ne jamais rogner les libellés.
+    const conditionEmbed = {
+      url: getExtensionUrl("stats-conditions"),
+      height: 500,
+      width: 360,
+    };
 
     void OBR.contextMenu.create({
       id: STAT_TRACKER_CONTEXT_MENU_ID,
@@ -103,10 +111,7 @@ export function setupStatBackground(): () => void {
           },
         },
       ],
-      embed: {
-        url: getExtensionUrl("stats-conditions"),
-        height: 430,
-      },
+      embed: conditionEmbed,
       onClick: () => undefined,
     });
 

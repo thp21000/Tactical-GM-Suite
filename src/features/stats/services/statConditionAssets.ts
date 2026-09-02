@@ -1,17 +1,52 @@
 import type { StatTokenCondition } from "../statTypes";
+import { getTrackerIcon } from "./statTrackerIcons";
 
-const CONDITION_ASSET_MODULES = import.meta.glob<string>(
-  "../assets/condition/FR/*.png",
-  {
-    eager: true,
-    query: "?url",
-    import: "default",
-  },
-) as Record<string, string>;
+/**
+ * Les anciennes images de conditions étaient de grands anneaux prévus pour
+ * entourer un token. Les conditions utilisent maintenant de petits badges :
+ * on leur associe donc une icône compacte et sémantiquement lisible issue de
+ * la bibliothèque Stats.
+ */
+const CONDITION_ICON_BY_ID: Record<string, string> = {
+  accelere: "arcane_lightning",
+  amical: "body_heart",
+  aveugle: "arcane_eye",
+  blesse: "body_broken_heart",
+  controle: "arcane_rune",
+  draine: "body_drop",
+  effraye: "body_skull",
+  empoigne: "body_lock",
+  ensorcele: "arcane_star",
+  fatigue: "object_hourglass",
+  immobilise: "body_lock",
+  inconscient: "body_broken_heart",
+  invisible: "arcane_eye",
+  malade: "resource_vial",
+  "marque-du-chasseur": "arcane_target",
+  mort: "body_skull",
+  paralyse: "body_lock",
+  petrifie: "object_stones",
+  sourd: "body_helmet",
+  etourdi: "arcane_star",
 
-function normalizeAssetName(value: string): string {
+  // Compatibilité des anciennes sauvegardes.
+  "a-terre": "object_arrow_down",
+  agrippe: "body_lock",
+  assourdi: "body_helmet",
+  confus: "arcane_rune",
+  ebloui: "arcane_star",
+  empoisonne: "resource_vial",
+  enchevetre: "body_lock",
+  fascine: "arcane_eye",
+  fuite: "object_arrow_up",
+  ralenti: "object_hourglass",
+  rapide: "arcane_lightning",
+  saisi: "body_lock",
+  stupefie: "arcane_star",
+};
+
+function normalizeConditionId(value: string): string {
   return value
-    .replace(/\.png$/i, "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -35,25 +70,24 @@ function toAbsoluteAssetUrl(url: string): string {
   }
 }
 
-const CONDITION_ASSET_BY_NAME = new Map<string, string>();
-
-for (const [path, url] of Object.entries(CONDITION_ASSET_MODULES)) {
-  const filename = path.split("/").pop();
-  if (!filename) continue;
-  CONDITION_ASSET_BY_NAME.set(
-    normalizeAssetName(filename),
-    toAbsoluteAssetUrl(url),
+function getConditionTrackerIconId(
+  condition: Pick<StatTokenCondition, "conditionId" | "label" | "shortLabel">,
+): string | undefined {
+  return (
+    CONDITION_ICON_BY_ID[normalizeConditionId(condition.conditionId)] ??
+    CONDITION_ICON_BY_ID[normalizeConditionId(condition.label)] ??
+    CONDITION_ICON_BY_ID[normalizeConditionId(condition.shortLabel)]
   );
 }
 
 export function getConditionAssetUrl(
   condition: Pick<StatTokenCondition, "conditionId" | "label" | "shortLabel">,
 ): string | undefined {
-  return (
-    CONDITION_ASSET_BY_NAME.get(normalizeAssetName(condition.label)) ??
-    CONDITION_ASSET_BY_NAME.get(normalizeAssetName(condition.shortLabel)) ??
-    CONDITION_ASSET_BY_NAME.get(normalizeAssetName(condition.conditionId))
-  );
+  const iconId = getConditionTrackerIconId(condition);
+  if (!iconId) return undefined;
+
+  const src = getTrackerIcon(iconId).src;
+  return src ? toAbsoluteAssetUrl(src) : undefined;
 }
 
 export function hasConditionAsset(
@@ -63,7 +97,5 @@ export function hasConditionAsset(
 }
 
 export function getConditionAssetNames(): string[] {
-  return [...CONDITION_ASSET_BY_NAME.keys()].sort((a, b) =>
-    a.localeCompare(b, "fr"),
-  );
+  return Object.keys(CONDITION_ICON_BY_ID).sort((a, b) => a.localeCompare(b, "fr"));
 }
