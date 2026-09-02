@@ -30,7 +30,7 @@ export type StatTrackerIcon = {
   label: string;
   category: StatTrackerIconCategory;
   src?: string;
-  symbol?: string;
+  symbol: string;
 };
 
 export type StatConditionSeverity = "none" | "value" | "staged";
