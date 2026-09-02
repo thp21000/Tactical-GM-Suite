@@ -14,6 +14,8 @@ export type StatConditionQuickConfig = {
   durationType?: StatConditionDurationType;
   rounds?: number;
   visibility?: StatTrackerVisibility;
+  initiativeEncounterId?: string;
+  initiativeRound?: number;
 };
 
 function now(): string {
@@ -28,14 +30,29 @@ function normalizePositiveInteger(value: number | undefined, fallback = 1): numb
 function createConfiguredCondition(
   conditionId: string,
   config: StatConditionQuickConfig,
+  existing?: StatTokenCondition,
 ): StatTokenCondition | null {
   const definition = getStatConditionDefinition(conditionId);
   if (!definition) return null;
 
   const durationType = config.durationType === "manual" ? undefined : config.durationType;
   const rounds = durationType === "rounds" ? normalizePositiveInteger(config.rounds) : undefined;
+  const encounterId =
+    durationType === "rounds" || durationType === "encounter"
+      ? config.initiativeEncounterId ?? existing?.initiativeEncounterId
+      : undefined;
+  const initiativeRound =
+    durationType === "rounds"
+      ? config.initiativeRound ?? existing?.initiativeStartRound
+      : undefined;
+  const expiresAtRound =
+    durationType === "rounds"
+      ? typeof config.initiativeRound === "number" && typeof rounds === "number"
+        ? config.initiativeRound + rounds
+        : existing?.initiativeExpiresAtRound
+      : undefined;
 
-  return createTokenCondition(conditionId, {
+  const condition = createTokenCondition(conditionId, {
     value:
       definition.severityType === "none"
         ? undefined
@@ -48,6 +65,13 @@ function createConfiguredCondition(
     tokenDisplayMode: "icon",
     tokenDisplayPriority: 50,
   });
+
+  return {
+    ...condition,
+    initiativeEncounterId: encounterId,
+    initiativeStartRound: initiativeRound,
+    initiativeExpiresAtRound: expiresAtRound,
+  };
 }
 
 export function getActiveTokenCondition(
@@ -62,10 +86,10 @@ export function upsertQuickCondition(
   conditionId: string,
   config: StatConditionQuickConfig,
 ): StatTrackedToken {
-  const nextCondition = createConfiguredCondition(conditionId, config);
+  const existing = getActiveTokenCondition(token, conditionId);
+  const nextCondition = createConfiguredCondition(conditionId, config, existing);
   if (!nextCondition) return token;
 
-  const existing = getActiveTokenCondition(token, conditionId);
   const condition: StatTokenCondition = existing
     ? {
         ...nextCondition,
@@ -113,7 +137,19 @@ export function getConditionDurationText(
   return "Durée manuelle";
 }
 
+export function getConditionDurationListText(
+  condition: StatTokenCondition,
+): string | undefined {
+  if (condition.durationType === "rounds") {
+    const rounds = condition.remainingRounds ?? condition.durationValue ?? 0;
+    return `${rounds} round${rounds > 1 ? "s" : ""}`;
+  }
+  if (condition.durationType === "encounter") return "Rencontre";
+  if (condition.durationType === "rest") return "Repos";
+  return undefined;
+}
+
 export function getConditionDisplayName(condition: StatTokenCondition): string {
-  const value = typeof condition.value === "number" ? ` ${condition.value}` : "";
+  const value = typeof condition.value === "number" ? ` + ${condition.value}` : "";
   return `${condition.label}${value}`;
 }
