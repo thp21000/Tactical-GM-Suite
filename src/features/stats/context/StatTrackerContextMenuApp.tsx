@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import OBR from "@owlbear-rodeo/sdk";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import OBR, { type Player } from "@owlbear-rodeo/sdk";
 import {
   applyThemeVariables,
   createTgmThemeFromObrTheme,
@@ -8,13 +8,15 @@ import {
 import type { StatTrackedToken, StatTrackerInput } from "../statTypes";
 import { StatTrackerCard } from "../components/StatTrackerCard";
 import { updateEmbeddedStatToken } from "../services/statEmbeddedProfileActions";
+import {
+  canViewerEditTracker,
+  GM_VIEWER,
+  type StatPermissionViewer,
+} from "../services/statPermissions";
 import { isSupportedStatTokenItem } from "../services/statTokenEligibility";
 import { createOrUpdateTokenOverlay } from "../services/statTokenOverlayObrSync";
 import { readEmbeddedStatToken } from "../services/statTokenSceneLinks";
-import {
-  removeTrackerFromToken,
-  updateTokenTracker,
-} from "../services/statTokens";
+import { updateTokenTracker } from "../services/statTokens";
 import {
   changeTrackerValue,
   toggleTracker,
@@ -22,9 +24,17 @@ import {
 } from "../services/statTrackers";
 import "./statTrackerContextMenu.css";
 
+function viewerFromPlayer(player: Player): StatPermissionViewer {
+  if (player.role === "PLAYER") {
+    return { role: "player", playerId: player.id, playerName: player.name };
+  }
+  return GM_VIEWER;
+}
+
 export function StatTrackerContextMenuApp() {
   const [token, setToken] = useState<StatTrackedToken | null>(null);
   const [itemId, setItemId] = useState<string | null>(null);
+  const [viewer, setViewer] = useState<StatPermissionViewer | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,10 +87,26 @@ export function StatTrackerContextMenuApp() {
         applyThemeVariables(createTgmThemeFromObrTheme(obrTheme));
       });
 
+      void Promise.all([
+        OBR.player.getRole(),
+        OBR.player.getId().catch(() => undefined),
+        OBR.player.getName().catch(() => undefined),
+      ]).then(([role, playerId, playerName]) => {
+        if (!mounted) return;
+        setViewer(
+          role === "GM"
+            ? GM_VIEWER
+            : { role: "player", playerId, playerName },
+        );
+      });
+
       void refresh();
       unsubscribePlayer?.();
       unsubscribeItems?.();
-      unsubscribePlayer = OBR.player.onChange(() => void refresh());
+      unsubscribePlayer = OBR.player.onChange((player) => {
+        setViewer(viewerFromPlayer(player));
+        void refresh();
+      });
       unsubscribeItems = OBR.scene.items.onChange(() => void refresh());
     });
 
@@ -92,6 +118,14 @@ export function StatTrackerContextMenuApp() {
       unsubscribeTheme?.();
     };
   }, [refresh]);
+
+  const visibleTrackers = useMemo(() => {
+    if (!token || !viewer) return [];
+    if (viewer.role === "gm") return token.trackers;
+    return token.trackers.filter((tracker) =>
+      canViewerEditTracker(token, tracker, viewer),
+    );
+  }, [token, viewer]);
 
   const mutate = useCallback(
     async (update: (current: StatTrackedToken) => StatTrackedToken) => {
@@ -107,7 +141,9 @@ export function StatTrackerContextMenuApp() {
         }
 
         setToken(updated);
-        await createOrUpdateTokenOverlay(updated).catch(() => undefined);
+        if (viewer?.role === "gm") {
+          await createOrUpdateTokenOverlay(updated).catch(() => undefined);
+        }
       } catch (cause) {
         setError(
           cause instanceof Error
@@ -118,29 +154,52 @@ export function StatTrackerContextMenuApp() {
         setBusy(false);
       }
     },
-    [itemId],
+    [itemId, viewer],
   );
 
-  if (!itemId) {
+  const mutateTracker = useCallback(
+    (
+      trackerId: string,
+      update: Parameters<typeof updateTokenTracker>[2],
+    ) => {
+      void mutate((current) => {
+        const currentTracker = current.trackers.find((tracker) => tracker.id === trackerId);
+        if (!currentTracker) return current;
+        if (
+          viewer?.role === "player" &&
+          !canViewerEditTracker(current, currentTracker, viewer)
+        ) {
+          return current;
+        }
+        return updateTokenTracker(current, trackerId, update);
+      });
+    },
+    [mutate, viewer],
+  );
+
+  if (!itemId || !viewer) {
     return (
       <main className="stat-tracker-context stat-tracker-context--empty">
-        <p>{error ?? "Sélectionnez un token."}</p>
+        <p>{error ?? "Chargement des stats…"}</p>
       </main>
     );
   }
 
-  if (!token || token.trackers.length === 0) {
+  if (!token || visibleTrackers.length === 0) {
     return (
       <main className="stat-tracker-context stat-tracker-context--empty">
-        <p>{error ?? "Aucun tracker configuré pour ce token."}</p>
+        <p>
+          {error ??
+            (viewer.role === "gm"
+              ? "Aucun tracker configuré pour ce token."
+              : "Aucun tracker modifiable ne vous est attribué sur ce token.")}
+        </p>
       </main>
     );
   }
 
   const updateTrackerInput = (trackerId: string, input: StatTrackerInput) => {
-    void mutate((current) =>
-      updateTokenTracker(current, trackerId, (tracker) => updateTracker(tracker, input)),
-    );
+    mutateTracker(trackerId, (tracker) => updateTracker(tracker, input));
   };
 
   return (
@@ -148,33 +207,37 @@ export function StatTrackerContextMenuApp() {
       {error ? <p className="stat-tracker-context__error">{error}</p> : null}
 
       <div className="stat-tracker-list stat-tracker-context__list">
-        {token.trackers.map((tracker) => (
-          <StatTrackerCard
-            key={tracker.id}
-            canEdit={!busy}
-            isGm
-            token={token}
-            tracker={tracker}
-            onChangeValue={(delta) => {
-              void mutate((current) =>
-                updateTokenTracker(current, tracker.id, (currentTracker) =>
+        {visibleTrackers.map((tracker) => {
+          const canEdit =
+            !busy &&
+            (viewer.role === "gm" || canViewerEditTracker(token, tracker, viewer));
+
+          return (
+            <StatTrackerCard
+              key={tracker.id}
+              canEdit={canEdit}
+              /*
+               * Le sous-menu Stats est une interface de changement rapide :
+               * aucun menu d'administration, même pour le MJ.
+               */
+              isGm={false}
+              token={token}
+              tracker={tracker}
+              onChangeValue={(delta) => {
+                mutateTracker(tracker.id, (currentTracker) =>
                   changeTrackerValue(currentTracker, delta),
-                ),
-              );
-            }}
-            onRemove={() => {
-              void mutate((current) => removeTrackerFromToken(current, tracker.id));
-            }}
-            onToggle={() => {
-              void mutate((current) =>
-                updateTokenTracker(current, tracker.id, (currentTracker) =>
+                );
+              }}
+              onRemove={() => undefined}
+              onToggle={() => {
+                mutateTracker(tracker.id, (currentTracker) =>
                   toggleTracker(currentTracker),
-                ),
-              );
-            }}
-            onUpdate={(input) => updateTrackerInput(tracker.id, input)}
-          />
-        ))}
+                );
+              }}
+              onUpdate={(input) => updateTrackerInput(tracker.id, input)}
+            />
+          );
+        })}
       </div>
     </main>
   );
