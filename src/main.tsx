@@ -11,6 +11,7 @@ import "./features/stats/context/statConditionListMeta.css";
 import "./shared/styles/obrIntegratedUi.css";
 import "./features/stats/statMaxValueBar.css";
 import "./features/stats/statMaxValueBarLiquid.css";
+import "./features/stats/statCounterBar.css";
 
 const view = new URLSearchParams(window.location.search).get("view");
 
