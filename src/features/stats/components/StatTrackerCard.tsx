@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { Badge } from "../../../shared/components/Badge";
 import { Button } from "../../../shared/components/Button";
 import { STAT_TRACKER_VISUAL_TYPE_LABELS } from "../services/statLabels";
@@ -67,19 +74,26 @@ function StatMaxValueBar({
   const [editingValue, setEditingValue] = useState(false);
   const [draftValue, setDraftValue] = useState(String(tracker.current ?? 0));
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [dragValue, setDragValue] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
 
   const icon = getTrackerIcon(tracker.iconId);
   const accent = getTrackerIconAccent(tracker.iconId);
-  const percent = getTrackerPercent(tracker);
   const current = tracker.current ?? 0;
   const max = tracker.max ?? 0;
+  const displayedCurrent = dragValue ?? current;
+  const percent =
+    max > 0
+      ? Math.max(0, Math.min(100, (displayedCurrent / max) * 100))
+      : getTrackerPercent(tracker);
 
   useEffect(() => {
-    if (!editingValue) {
+    if (!editingValue && !dragging) {
       setDraftValue(String(current));
     }
-  }, [current, editingValue]);
+  }, [current, editingValue, dragging]);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -122,17 +136,116 @@ function StatMaxValueBar({
     setEditingValue(false);
   };
 
+  const getValueFromPointer = (clientX: number): number => {
+    const rail = railRef.current;
+    if (!rail || max <= 0) return current;
+
+    const rect = rail.getBoundingClientRect();
+    if (rect.width <= 0) return current;
+
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    return Math.round(ratio * max);
+  };
+
+  const beginDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!canEdit || editingValue || max <= 0) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(true);
+    setDragValue(getValueFromPointer(event.clientX));
+  };
+
+  const moveDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dragging || !canEdit) return;
+
+    event.preventDefault();
+    setDragValue(getValueFromPointer(event.clientX));
+  };
+
+  const finishDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dragging) return;
+
+    event.preventDefault();
+    const nextCurrent = getValueFromPointer(event.clientX);
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    setDragging(false);
+    setDragValue(null);
+
+    if (nextCurrent !== current) {
+      onUpdate(trackerToInput(tracker, { current: nextCurrent }));
+    }
+  };
+
+  const cancelDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dragging) return;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    setDragging(false);
+    setDragValue(null);
+  };
+
+  const handleRailKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (!canEdit || editingValue || max <= 0) return;
+
+    let nextCurrent: number | null = null;
+
+    if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+      nextCurrent = Math.max(0, current - 1);
+    } else if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+      nextCurrent = Math.min(max, current + 1);
+    } else if (event.key === "Home") {
+      nextCurrent = 0;
+    } else if (event.key === "End") {
+      nextCurrent = max;
+    }
+
+    if (nextCurrent === null) return;
+
+    event.preventDefault();
+    if (nextCurrent !== current) {
+      onUpdate(trackerToInput(tracker, { current: nextCurrent }));
+    }
+  };
+
   const style = {
     "--stat-bar-accent": accent,
     "--stat-bar-fill": `${percent}%`,
   } as CSSProperties;
 
+  const fillClassName = `stat-max-bar__fill${
+    percent >= 99.999 ? " is-full" : ""
+  }${percent <= 0 ? " is-empty" : ""}`;
+
   return (
-    <div className="stat-max-bar" style={style}>
+    <div className={`stat-max-bar${dragging ? " is-dragging" : ""}`} style={style}>
       <div className="stat-max-bar__assembly">
-        <div className="stat-max-bar__rail" aria-hidden="true">
-          <span className="stat-max-bar__fill" />
-          <span className="stat-max-bar__shine" />
+        <div
+          ref={railRef}
+          aria-label={`${tracker.name} : ${displayedCurrent} sur ${max}`}
+          aria-valuemax={max}
+          aria-valuemin={0}
+          aria-valuenow={displayedCurrent}
+          className="stat-max-bar__rail"
+          role="slider"
+          tabIndex={canEdit ? 0 : -1}
+          title={canEdit ? "Cliquer ou faire glisser pour modifier la valeur" : "Lecture seule"}
+          onKeyDown={handleRailKeyDown}
+          onPointerCancel={cancelDrag}
+          onPointerDown={beginDrag}
+          onPointerMove={moveDrag}
+          onPointerUp={finishDrag}
+        >
+          <span className={fillClassName} />
+          <span className="stat-max-bar__shine" aria-hidden="true" />
         </div>
 
         <span className="stat-max-bar__ornament" aria-hidden="true" />
@@ -173,13 +286,13 @@ function StatMaxValueBar({
             <button
               className="stat-max-bar__value-button"
               disabled={!canEdit}
-              title={canEdit ? "Cliquer pour modifier la valeur" : "Lecture seule"}
+              title={canEdit ? "Cliquer pour saisir une valeur précise" : "Lecture seule"}
               type="button"
               onClick={() => {
                 if (canEdit) setEditingValue(true);
               }}
             >
-              {current}
+              {displayedCurrent}
             </button>
           )}
         </div>
