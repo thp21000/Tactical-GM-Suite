@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -36,6 +37,13 @@ type BarTrackerProps = {
   onUpdate: (input: StatTrackerInput) => void;
 };
 
+type BubbleSpec = {
+  x: number;
+  y: number;
+  size: number;
+  opacity: number;
+};
+
 function getTrackerPercent(tracker: StatTracker): number {
   if (tracker.visualType !== "bar" || !tracker.max) {
     return 0;
@@ -61,6 +69,67 @@ function trackerToInput(
     showOnToken: tracker.showOnToken,
     ...overrides,
   };
+}
+
+function createSeed(value: string): number {
+  let hash = 2166136261;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return hash >>> 0;
+}
+
+function createSeededRandom(seed: number): () => number {
+  let state = seed || 1;
+
+  return () => {
+    state += 0x6d2b79f5;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function buildBubbleSpecs(seedKey: string, count: number): BubbleSpec[] {
+  const random = createSeededRandom(createSeed(seedKey));
+
+  return Array.from({ length: count }, () => ({
+    x: 4 + random() * 92,
+    y: 14 + random() * 72,
+    size: 1.3 + random() * 3.2,
+    opacity: 0.18 + random() * 0.42,
+  }));
+}
+
+function parseInlineMath(input: string, baseValue: number): number | null {
+  const normalized = input.trim().replace(",", ".");
+  if (!normalized) return null;
+
+  const operation = normalized.match(
+    /^([+\-*/×÷xX])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))$/,
+  );
+
+  if (operation) {
+    const operator = operation[1];
+    const operand = Number(operation[2]);
+    if (!Number.isFinite(operand)) return null;
+
+    if (operator === "+") return baseValue + operand;
+    if (operator === "-") return baseValue - operand;
+    if (operator === "*" || operator === "×" || operator === "x" || operator === "X") {
+      return baseValue * operand;
+    }
+    if (operator === "/" || operator === "÷") {
+      return operand === 0 ? null : baseValue / operand;
+    }
+  }
+
+  const absoluteValue = Number(normalized);
+  return Number.isFinite(absoluteValue) ? absoluteValue : null;
 }
 
 function StatMaxValueBar({
@@ -89,6 +158,15 @@ function StatMaxValueBar({
       ? Math.max(0, Math.min(100, (displayedCurrent / max) * 100))
       : getTrackerPercent(tracker);
   const fillRatio = percent / 100;
+  const bubbleSpecs = useMemo(
+    () => buildBubbleSpecs(`${tracker.id}:${tracker.iconId}`, 56),
+    [tracker.id, tracker.iconId],
+  );
+  const visibleBubbleCount = Math.min(
+    bubbleSpecs.length,
+    Math.round(bubbleSpecs.length * Math.pow(fillRatio, 1.35)),
+  );
+  const visibleBubbles = bubbleSpecs.slice(0, visibleBubbleCount);
 
   useEffect(() => {
     if (!editingValue && !dragging) {
@@ -122,8 +200,8 @@ function StatMaxValueBar({
   };
 
   const commitValue = () => {
-    const parsed = Number(draftValue.replace(",", "."));
-    if (!Number.isFinite(parsed)) {
+    const parsed = parseInlineMath(draftValue, current);
+    if (parsed === null || !Number.isFinite(parsed)) {
       cancelValueEdit();
       return;
     }
@@ -221,7 +299,6 @@ function StatMaxValueBar({
     "--stat-bar-accent": accent,
     "--stat-bar-fill": `${percent}%`,
     "--stat-bar-fill-ratio": fillRatio,
-    "--stat-bar-bubble-opacity": Math.max(0, Math.min(1, fillRatio * 1.08)),
     "--stat-bar-icon-grayscale": `${100 - percent}%`,
   } as CSSProperties;
 
@@ -231,80 +308,7 @@ function StatMaxValueBar({
 
   return (
     <div className={`stat-max-bar${dragging ? " is-dragging" : ""}`} style={style}>
-      <div className="stat-max-bar__assembly">
-        <div
-          ref={railRef}
-          aria-label={`${tracker.name} : ${displayedCurrent} sur ${max}`}
-          aria-valuemax={max}
-          aria-valuemin={0}
-          aria-valuenow={displayedCurrent}
-          className="stat-max-bar__rail"
-          role="slider"
-          tabIndex={canEdit ? 0 : -1}
-          title={canEdit ? "Cliquer ou faire glisser pour modifier la valeur" : "Lecture seule"}
-          onKeyDown={handleRailKeyDown}
-          onPointerCancel={cancelDrag}
-          onPointerDown={beginDrag}
-          onPointerMove={moveDrag}
-          onPointerUp={finishDrag}
-        >
-          <span className={fillClassName} />
-          <span className="stat-max-bar__shine" aria-hidden="true" />
-        </div>
-
-        <span className="stat-max-bar__ornament" aria-hidden="true" />
-
-        <span className="stat-max-bar__icon" aria-hidden="true">
-          {icon.src ? (
-            <img alt="" draggable={false} src={icon.src} />
-          ) : (
-            icon.symbol ?? "◆"
-          )}
-        </span>
-
-        <div className="stat-max-bar__value-slot">
-          {editingValue ? (
-            <input
-              aria-label={`Valeur actuelle de ${tracker.name}`}
-              autoFocus
-              className="stat-max-bar__value-input"
-              inputMode="decimal"
-              max={max}
-              min={0}
-              type="number"
-              value={draftValue}
-              onBlur={commitValue}
-              onChange={(event) => setDraftValue(event.target.value)}
-              onFocus={(event) => event.currentTarget.select()}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  commitValue();
-                } else if (event.key === "Escape") {
-                  event.preventDefault();
-                  cancelValueEdit();
-                }
-              }}
-            />
-          ) : (
-            <button
-              className="stat-max-bar__value-button"
-              disabled={!canEdit}
-              title={canEdit ? "Cliquer pour saisir une valeur précise" : "Lecture seule"}
-              type="button"
-              onClick={() => {
-                if (canEdit) setEditingValue(true);
-              }}
-            >
-              {displayedCurrent}
-            </button>
-          )}
-        </div>
-
-        <span className="stat-max-bar__max">max {max}</span>
-      </div>
-
-      <div className="stat-max-bar__footer">
+      <div className="stat-max-bar__header">
         <span className="stat-max-bar__name" title={tracker.name}>
           {tracker.name}
         </span>
@@ -364,6 +368,101 @@ function StatMaxValueBar({
             ) : null}
           </div>
         ) : null}
+      </div>
+
+      <div className="stat-max-bar__assembly">
+        <div
+          ref={railRef}
+          aria-label={`${tracker.name} : ${displayedCurrent} sur ${max}`}
+          aria-valuemax={max}
+          aria-valuemin={0}
+          aria-valuenow={displayedCurrent}
+          className="stat-max-bar__rail"
+          role="slider"
+          tabIndex={canEdit ? 0 : -1}
+          title={canEdit ? "Cliquer ou faire glisser pour modifier la valeur" : "Lecture seule"}
+          onKeyDown={handleRailKeyDown}
+          onPointerCancel={cancelDrag}
+          onPointerDown={beginDrag}
+          onPointerMove={moveDrag}
+          onPointerUp={finishDrag}
+        >
+          <span className={fillClassName}>
+            <span className="stat-max-bar__bubble-layer" aria-hidden="true">
+              {visibleBubbles.map((bubble, index) => (
+                <span
+                  className="stat-max-bar__bubble"
+                  key={`${index}-${bubble.x.toFixed(3)}`}
+                  style={
+                    {
+                      left: `${bubble.x}%`,
+                      top: `${bubble.y}%`,
+                      width: `${bubble.size}px`,
+                      height: `${bubble.size}px`,
+                      opacity: bubble.opacity,
+                    } as CSSProperties
+                  }
+                />
+              ))}
+            </span>
+          </span>
+          <span className="stat-max-bar__shine" aria-hidden="true" />
+        </div>
+
+        <span className="stat-max-bar__ornament" aria-hidden="true" />
+
+        <span className="stat-max-bar__icon" aria-hidden="true">
+          {icon.src ? (
+            <img alt="" draggable={false} src={icon.src} />
+          ) : (
+            icon.symbol ?? "◆"
+          )}
+        </span>
+
+        <div className="stat-max-bar__value-slot">
+          {editingValue ? (
+            <input
+              aria-label={`Valeur actuelle de ${tracker.name}`}
+              autoFocus
+              className="stat-max-bar__value-input"
+              inputMode="decimal"
+              placeholder="+3, -2, ×2, ÷2"
+              title="Valeur directe ou calcul : +3, -2, *2, /2"
+              type="text"
+              value={draftValue}
+              onBlur={commitValue}
+              onChange={(event) => setDraftValue(event.target.value)}
+              onFocus={(event) => event.currentTarget.select()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  commitValue();
+                } else if (event.key === "Escape") {
+                  event.preventDefault();
+                  cancelValueEdit();
+                }
+              }}
+            />
+          ) : (
+            <button
+              className="stat-max-bar__value-button"
+              disabled={!canEdit}
+              title={
+                canEdit
+                  ? "Cliquer pour saisir une valeur ou un calcul (+3, -2, *2, /2)"
+                  : "Lecture seule"
+              }
+              type="button"
+              onClick={() => {
+                if (canEdit) setEditingValue(true);
+              }}
+            >
+              {displayedCurrent}
+            </button>
+          )}
+        </div>
+
+        <span className="stat-max-bar__max">max {max}</span>
       </div>
     </div>
   );
