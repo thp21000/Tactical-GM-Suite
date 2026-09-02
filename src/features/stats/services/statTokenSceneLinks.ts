@@ -35,6 +35,10 @@ export type StatTokenLinkMetadata = {
   kind: typeof STAT_TOKEN_LINK_KIND;
   tokenId: string;
   tracked?: boolean;
+  /** Résumé indexable par le filtre ContextMenu Owlbear. */
+  playerEditable?: boolean;
+  /** Copie indexable de l'assignation, utilisée par le menu rapide joueur. */
+  assignedPlayerId?: string;
   profile?: StatTokenProfileMetadata;
 };
 
@@ -148,6 +152,10 @@ function serializeProfile(token: StatTrackedToken): StatTokenProfileMetadata {
   };
 }
 
+export function hasPlayerEditableTrackers(token: StatTrackedToken): boolean {
+  return token.trackers.some((tracker) => tracker.canPlayerEdit === true);
+}
+
 export function readStatTokenLinkMetadata(
   item: Pick<Item, "metadata">,
 ): StatTokenLinkMetadata | undefined {
@@ -161,6 +169,9 @@ export function readStatTokenLinkMetadata(
     kind: STAT_TOKEN_LINK_KIND,
     tokenId: value.tokenId,
     tracked: typeof value.tracked === "boolean" ? value.tracked : undefined,
+    playerEditable:
+      typeof value.playerEditable === "boolean" ? value.playerEditable : undefined,
+    assignedPlayerId: cleanOptionalText(value.assignedPlayerId),
     profile: normalizeProfile(value.profile),
   };
 }
@@ -280,9 +291,12 @@ export async function ensureCurrentSceneStatTokenLinks(
 
     const existing = readStatTokenLinkMetadata(item);
     const tracked = token.isTracked !== false;
+    const playerEditable = hasPlayerEditableTrackers(token);
     return (
       existing?.tokenId !== token.id ||
       existing.tracked !== tracked ||
+      existing.playerEditable !== playerEditable ||
+      existing.assignedPlayerId !== token.assignedPlayerId ||
       existing.profile?.version !== STAT_TOKEN_PROFILE_VERSION ||
       existing.profile?.updatedAt !== token.updatedAt
     );
@@ -299,6 +313,8 @@ export async function ensureCurrentSceneStatTokenLinks(
         kind: STAT_TOKEN_LINK_KIND,
         tokenId: token.id,
         tracked: token.isTracked !== false,
+        playerEditable: hasPlayerEditableTrackers(token),
+        assignedPlayerId: token.assignedPlayerId,
         profile: serializeProfile(token),
       } satisfies StatTokenLinkMetadata;
     }
