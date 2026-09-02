@@ -12,6 +12,7 @@ import "./shared/styles/obrIntegratedUi.css";
 import "./features/stats/statMaxValueBar.css";
 import "./features/stats/statMaxValueBarLiquid.css";
 import "./features/stats/statCounterBar.css";
+import "./features/stats/statFixedOrb.css";
 
 const view = new URLSearchParams(window.location.search).get("view");
 
