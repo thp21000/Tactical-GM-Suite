@@ -37,6 +37,16 @@ type BarTrackerProps = {
   onUpdate: (input: StatTrackerInput) => void;
 };
 
+type CounterTrackerProps = {
+  canEdit: boolean;
+  isGm: boolean;
+  tracker: StatTracker;
+  onChangeValue: (delta: number) => void;
+  onEdit: () => void;
+  onRemove: () => void;
+  onUpdate: (input: StatTrackerInput) => void;
+};
+
 type BubbleSpec = {
   x: number;
   y: number;
@@ -468,6 +478,111 @@ function StatMaxValueBar({
   );
 }
 
+function StatCounterValueTracker({
+  canEdit,
+  isGm,
+  tracker,
+  onChangeValue,
+  onEdit,
+  onRemove,
+  onUpdate,
+}: CounterTrackerProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    const closeFromOutside = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const closeFromEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeFromOutside);
+    document.addEventListener("keydown", closeFromEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeFromOutside);
+      document.removeEventListener("keydown", closeFromEscape);
+    };
+  }, [menuOpen]);
+
+  return (
+    <div className="stat-counter-card">
+      <div className="stat-counter-card__header">
+        <span className="stat-counter-card__name" title={tracker.name}>
+          {tracker.name}
+        </span>
+
+        {isGm ? (
+          <div className="stat-max-bar__menu stat-counter-card__menu" ref={menuRef}>
+            <button
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              aria-label={`Actions pour ${tracker.name}`}
+              className="stat-max-bar__menu-trigger"
+              title="Actions"
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              ⋯
+            </button>
+
+            {menuOpen ? (
+              <div className="stat-max-bar__menu-panel" role="menu">
+                <button
+                  role="menuitem"
+                  type="button"
+                  onClick={() => {
+                    onUpdate(
+                      trackerToInput(tracker, {
+                        showOnToken: !tracker.showOnToken,
+                      }),
+                    );
+                    setMenuOpen(false);
+                  }}
+                >
+                  {tracker.showOnToken ? "Masquer du token" : "Afficher sur le token"}
+                </button>
+                <button
+                  role="menuitem"
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onEdit();
+                  }}
+                >
+                  Modifier
+                </button>
+                <button
+                  className="is-danger"
+                  role="menuitem"
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onRemove();
+                  }}
+                >
+                  Supprimer
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      <StatTrackerValueControls
+        canEdit={canEdit}
+        tracker={tracker}
+        onChange={onChangeValue}
+      />
+    </div>
+  );
+}
+
 export function StatTrackerCard({
   onChangeValue,
   onRemove,
@@ -485,6 +600,7 @@ export function StatTrackerCard({
   const visibilityLabel = getTrackerVisibilityBadgeLabel(tracker);
   const editLabel = getTrackerEditBadgeLabel(token, tracker);
   const isBar = tracker.visualType === "bar";
+  const isCounter = tracker.visualType === "counter";
 
   return (
     <article
@@ -508,6 +624,16 @@ export function StatTrackerCard({
           canEdit={canEdit}
           isGm={isGm}
           tracker={tracker}
+          onEdit={() => setEditing(true)}
+          onRemove={onRemove}
+          onUpdate={onUpdate}
+        />
+      ) : isCounter ? (
+        <StatCounterValueTracker
+          canEdit={canEdit}
+          isGm={isGm}
+          tracker={tracker}
+          onChangeValue={onChangeValue}
           onEdit={() => setEditing(true)}
           onRemove={onRemove}
           onUpdate={onUpdate}
