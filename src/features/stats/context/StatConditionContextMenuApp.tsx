@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import OBR from "@owlbear-rodeo/sdk";
+import {
+  applyThemeVariables,
+  createTgmThemeFromObrTheme,
+  fallbackTgmTheme,
+} from "../../../core/theme/obrTheme";
 import type {
   StatConditionDefinition,
   StatConditionDurationType,
@@ -215,8 +220,28 @@ export function StatConditionContextMenuApp() {
   useEffect(() => {
     let unsubscribePlayer: (() => void) | undefined;
     let unsubscribeItems: (() => void) | undefined;
+    let unsubscribeTheme: (() => void) | undefined;
+    let mounted = true;
+
+    applyThemeVariables(fallbackTgmTheme);
 
     OBR.onReady(() => {
+      if (!mounted) return;
+
+      void OBR.theme
+        .getTheme()
+        .then((obrTheme) => {
+          if (mounted) {
+            applyThemeVariables(createTgmThemeFromObrTheme(obrTheme));
+          }
+        })
+        .catch(() => applyThemeVariables(fallbackTgmTheme));
+
+      unsubscribeTheme?.();
+      unsubscribeTheme = OBR.theme.onChange((obrTheme) => {
+        applyThemeVariables(createTgmThemeFromObrTheme(obrTheme));
+      });
+
       void refresh();
       unsubscribePlayer?.();
       unsubscribeItems?.();
@@ -225,8 +250,10 @@ export function StatConditionContextMenuApp() {
     });
 
     return () => {
+      mounted = false;
       unsubscribePlayer?.();
       unsubscribeItems?.();
+      unsubscribeTheme?.();
     };
   }, [refresh]);
 
