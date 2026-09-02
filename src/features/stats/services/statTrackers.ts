@@ -73,14 +73,14 @@ export function updateTracker(tracker: StatTracker, patch: Partial<StatTrackerIn
 }
 
 export function canQuickModifyTracker(tracker: StatTracker): boolean {
-  return tracker.visualType === "bar" || tracker.visualType === "counter";
+  return tracker.visualType === "bar" || tracker.visualType === "counter" || tracker.visualType === "readonly";
 }
 
 export function changeTrackerValue(tracker: StatTracker, delta: number): StatTracker {
   if (tracker.visualType === "bar") {
     return { ...tracker, current: clamp((tracker.current ?? 0) + delta, tracker.max), updatedAt: now() };
   }
-  if (tracker.visualType === "counter") {
+  if (tracker.visualType === "counter" || tracker.visualType === "readonly") {
     return { ...tracker, value: (tracker.value ?? tracker.current ?? 0) + delta, updatedAt: now() };
   }
   return tracker;
