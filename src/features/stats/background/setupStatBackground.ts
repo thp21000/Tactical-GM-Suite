@@ -38,9 +38,9 @@ async function syncCurrentSceneConditionBadges(): Promise<void> {
 }
 
 export function setupStatBackground(): () => void {
-  const cleanups: Array<() => void> = [];
+  let unsubscribeSceneReady: (() => void) | undefined;
 
-  const unsubscribeReady = OBR.onReady(() => {
+  OBR.onReady(() => {
     const iconUrl = `${import.meta.env.BASE_URL}icon.svg`;
     const conditionIconUrl = `${import.meta.env.BASE_URL}condition.svg`;
 
@@ -112,16 +112,14 @@ export function setupStatBackground(): () => void {
 
     void syncCurrentSceneConditionBadges();
 
-    const unsubscribeSceneReady = OBR.scene.onReadyChange((ready) => {
+    unsubscribeSceneReady?.();
+    unsubscribeSceneReady = OBR.scene.onReadyChange((ready) => {
       if (ready) void syncCurrentSceneConditionBadges();
     });
-    cleanups.push(unsubscribeSceneReady);
   });
 
-  cleanups.push(unsubscribeReady);
-
   return () => {
-    for (const cleanup of cleanups.splice(0)) cleanup();
+    unsubscribeSceneReady?.();
     void OBR.contextMenu.remove(STAT_TRACKER_CONTEXT_MENU_ID);
     void OBR.contextMenu.remove(STAT_CONDITION_CONTEXT_MENU_ID);
   };
