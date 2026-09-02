@@ -6,6 +6,7 @@ import {
   STAT_TOKEN_LINK_KIND,
   STAT_TOKEN_LINK_METADATA_KEY,
   STAT_TOKEN_PROFILE_VERSION,
+  hasPlayerEditableTrackers,
   readEmbeddedStatToken,
   type StatTokenLinkMetadata,
   type StatTokenProfileMetadata,
@@ -44,6 +45,8 @@ export function createEmbeddedStatTokenMetadata(
     kind: STAT_TOKEN_LINK_KIND,
     tokenId: token.id,
     tracked,
+    playerEditable: hasPlayerEditableTrackers(token),
+    assignedPlayerId: token.assignedPlayerId,
     profile: serializeProfile(token),
   };
 }
