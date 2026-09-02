@@ -6,10 +6,10 @@ import { StatConditionContextMenuApp } from "./features/stats/context/StatCondit
 import "./shared/styles/globals.css";
 import "./shared/styles/scrollbars.css";
 import "./features/stats/statTrackerUi.css";
-import "./features/stats/statMaxValueBar.css";
 import "./features/stats/context/statConditionCustomSelect.css";
 import "./features/stats/context/statConditionListMeta.css";
 import "./shared/styles/obrIntegratedUi.css";
+import "./features/stats/statMaxValueBar.css";
 
 const view = new URLSearchParams(window.location.search).get("view");
 
