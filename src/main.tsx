@@ -13,6 +13,7 @@ import "./features/stats/statMaxValueBar.css";
 import "./features/stats/statMaxValueBarLiquid.css";
 import "./features/stats/statCounterBar.css";
 import "./features/stats/statFixedOrb.css";
+import "./features/stats/statIconUnits.css";
 
 const view = new URLSearchParams(window.location.search).get("view");
 
