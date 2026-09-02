@@ -41,6 +41,9 @@ export const fallbackTgmTheme: TgmTheme = {
     "--tgm-obr-text": "#f5f5f7",
     "--tgm-obr-text-muted": "#b8bac7",
     "--tgm-obr-accent": "#b995ff",
+    "--tgm-obr-overlay": "rgba(255, 255, 255, 0.08)",
+    "--tgm-obr-overlay-hover": "rgba(255, 255, 255, 0.12)",
+    "--tgm-obr-overlay-active": "rgba(185, 149, 255, 0.18)",
     "--tgm-bg": "rgba(32, 34, 48, 0.92)",
     "--tgm-bg-soft": "rgba(38, 40, 56, 0.88)",
     "--tgm-surface": "rgba(42, 44, 62, 0.86)",
@@ -77,6 +80,10 @@ export function createTgmThemeFromObrTheme(theme: ObrTheme): TgmTheme {
   const primary = theme.primary.main;
   const divider = typedTheme.divider;
   const hoverSurface = lighten(paperBackground, theme.mode === "LIGHT" ? 0.08 : 0.12);
+  const overlayBase = theme.text.primary;
+  const overlay = withAlpha(overlayBase, theme.mode === "DARK" ? 0.08 : 0.04);
+  const overlayHover = withAlpha(overlayBase, theme.mode === "DARK" ? 0.12 : 0.08);
+  const overlayActive = withAlpha(primary, theme.mode === "DARK" ? 0.18 : 0.12);
 
   return {
     source: "owlbear",
@@ -100,6 +107,9 @@ export function createTgmThemeFromObrTheme(theme: ObrTheme): TgmTheme {
       "--tgm-obr-text": theme.text.primary,
       "--tgm-obr-text-muted": theme.text.secondary,
       "--tgm-obr-accent": primary,
+      "--tgm-obr-overlay": overlay,
+      "--tgm-obr-overlay-hover": overlayHover,
+      "--tgm-obr-overlay-active": overlayActive,
       "--tgm-bg": withAlpha(defaultBackground, 0.94),
       "--tgm-bg-soft": withAlpha(paperBackground, 0.86),
       "--tgm-surface": withAlpha(paperBackground, 0.88),
