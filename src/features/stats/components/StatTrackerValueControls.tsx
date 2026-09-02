@@ -4,7 +4,12 @@ import { getTrackerIcon, getTrackerIconAccent } from "../services/statTrackerIco
 import type { StatTracker } from "../statTypes";
 import { canQuickModifyTracker } from "../services/statTrackers";
 
-type Props = { canEdit: boolean; tracker: StatTracker; onChange: (delta: number) => void };
+type Props = {
+  canEdit: boolean;
+  tracker: StatTracker;
+  onChange: (delta: number) => void;
+  onToggle?: () => void;
+};
 
 type ValueOrbProps = Props & {
   standalone?: boolean;
@@ -188,13 +193,56 @@ function StatFixedOrb({ canEdit, onChange, tracker }: Props) {
   );
 }
 
-export function StatTrackerValueControls({ canEdit, onChange, tracker }: Props) {
+function StatToggleOrb({ canEdit, onToggle, tracker }: Props) {
+  const icon = getTrackerIcon(tracker.iconId);
+  const accent = getTrackerIconAccent(tracker.iconId);
+  const enabled = tracker.enabled ?? false;
+  const style = {
+    "--stat-counter-accent": accent,
+  } as CSSProperties;
+
+  return (
+    <div className="stat-fixed-orb stat-toggle-orb" aria-label={`${tracker.name} : ${enabled ? "actif" : "inactif"}`}>
+      <button
+        aria-pressed={enabled}
+        className={`stat-counter-bar__orb stat-counter-bar__orb--standalone stat-toggle-orb__button${
+          enabled ? " is-active" : " is-inactive"
+        }`}
+        disabled={!canEdit}
+        style={style}
+        title={canEdit ? (enabled ? "Cliquer pour désactiver" : "Cliquer pour activer") : enabled ? "Actif" : "Inactif"}
+        type="button"
+        onClick={() => {
+          if (canEdit) onToggle?.();
+        }}
+      >
+        <span className="stat-counter-bar__orb-glass" aria-hidden="true" />
+        <span className="stat-counter-bar__icon" aria-hidden="true">
+          {icon.src ? <img alt="" draggable={false} src={icon.src} /> : icon.symbol ?? "◆"}
+        </span>
+      </button>
+    </div>
+  );
+}
+
+export function StatTrackerValueControls({ canEdit, onChange, onToggle, tracker }: Props) {
   if (tracker.visualType === "counter") {
     return <StatCounterBar canEdit={canEdit} onChange={onChange} tracker={tracker} />;
   }
 
   if (tracker.visualType === "readonly") {
     return <StatFixedOrb canEdit={canEdit} onChange={onChange} tracker={tracker} />;
+  }
+
+  if (tracker.visualType === "toggle") {
+    return (
+      <StatToggleOrb
+        canEdit={canEdit}
+        onChange={onChange}
+        onToggle={onToggle}
+        tracker={tracker}
+      />
+    );
   }
 
   if (!canEdit || !canQuickModifyTracker(tracker)) return null;
