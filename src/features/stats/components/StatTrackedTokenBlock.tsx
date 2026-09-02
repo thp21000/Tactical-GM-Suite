@@ -192,7 +192,7 @@ export function StatTrackedTokenBlock({
                   </Button>
 
                   <Button onClick={() => onRemoveToken(token.id)}>
-                    Supprimer token
+                    Retirer du Stat Tracker
                   </Button>
                 </div>
               ) : null}
