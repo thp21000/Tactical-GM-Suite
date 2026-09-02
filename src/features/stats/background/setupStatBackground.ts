@@ -29,7 +29,7 @@ async function syncCurrentSceneConditionBadges(): Promise<void> {
     const items = await OBR.scene.items.getItems();
     for (const item of items) {
       const token = readEmbeddedStatToken(item);
-      if (!token || token.isTracked === false) continue;
+      if (!token) continue;
       await createOrUpdateTokenConditionOverlay(token).catch(() => undefined);
     }
   } catch {
@@ -43,14 +43,6 @@ export function setupStatBackground(): () => void {
   OBR.onReady(() => {
     const iconUrl = `${import.meta.env.BASE_URL}icon.svg`;
     const conditionIconUrl = `${import.meta.env.BASE_URL}condition.svg`;
-    // Les versions récentes d'Owlbear acceptent une largeur de panneau embed.
-    // Si une version l'ignore, le CSS du panneau repasse automatiquement en
-    // une colonne pour ne jamais rogner les libellés.
-    const conditionEmbed = {
-      url: getExtensionUrl("stats-conditions"),
-      height: 500,
-      width: 360,
-    };
 
     void OBR.contextMenu.create({
       id: STAT_TRACKER_CONTEXT_MENU_ID,
@@ -102,16 +94,13 @@ export function setupStatBackground(): () => void {
             min: 1,
             max: 1,
             roles: ["GM"],
-            every: [
-              {
-                key: ["metadata", STAT_TOKEN_LINK_METADATA_KEY, "tracked"],
-                value: true,
-              },
-            ],
           },
         },
       ],
-      embed: conditionEmbed,
+      embed: {
+        url: getExtensionUrl("stats-conditions"),
+        height: 500,
+      },
       onClick: () => undefined,
     });
 
