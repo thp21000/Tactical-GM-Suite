@@ -5,6 +5,7 @@ import type {
   StatTrackerInput,
   StatTrackerPreset,
   StatTrackerPresetMap,
+  StatTrackerSkinId,
   StatTrackerVisibility,
   StatTrackerVisualType,
 } from "../statTypes";
@@ -246,6 +247,20 @@ function isVisibility(value: unknown): value is StatTrackerVisibility {
   return value === "gm" || value === "private" || value === "public";
 }
 
+function isSkinId(value: unknown): value is StatTrackerSkinId {
+  return (
+    value === "neutral" ||
+    value === "red" ||
+    value === "blue" ||
+    value === "purple" ||
+    value === "gold" ||
+    value === "green" ||
+    value === "orange" ||
+    value === "steel" ||
+    value === "dark"
+  );
+}
+
 function normalizePresetTrackerInput(value: unknown): StatTrackerInput | null {
   if (!isRecord(value)) {
     return null;
@@ -263,6 +278,7 @@ function normalizePresetTrackerInput(value: unknown): StatTrackerInput | null {
     name: value.name,
     visualType: value.visualType,
     iconId: value.iconId,
+    skinId: isSkinId(value.skinId) ? value.skinId : "neutral",
     current: typeof value.current === "number" ? value.current : undefined,
     max: typeof value.max === "number" ? value.max : undefined,
     value: typeof value.value === "number" ? value.value : undefined,
