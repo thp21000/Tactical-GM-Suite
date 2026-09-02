@@ -172,21 +172,23 @@ function getOrder(iconId: string): number {
 }
 
 export const STAT_TRACKER_ICONS: StatTrackerIcon[] = Object.entries(iconModules)
-  .map(([path, src]) => {
+  .flatMap(([path, src]): StatTrackerIcon[] => {
     const category = getCategory(path);
     const fileName = getPathPart(path, 1);
     const id = fileName.replace(/\.png$/i, "");
 
-    if (!category || !id) return null;
+    if (!category || !id) return [];
 
-    return {
-      id,
-      label: ICON_LABELS[id] ?? humanizeIconId(id),
-      category,
-      src,
-    } satisfies StatTrackerIcon;
+    return [
+      {
+        id,
+        label: ICON_LABELS[id] ?? humanizeIconId(id),
+        category,
+        src,
+        symbol: "◆",
+      },
+    ];
   })
-  .filter((icon): icon is StatTrackerIcon => icon !== null)
   .sort((a, b) => {
     const orderDiff = getOrder(a.id) - getOrder(b.id);
     return orderDiff || a.label.localeCompare(b.label, "fr");
