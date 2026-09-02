@@ -1,6 +1,7 @@
 import OBR from "@owlbear-rodeo/sdk";
 import {
   STAT_CONDITION_CONTEXT_MENU_ID,
+  STAT_STATS_CONTEXT_MENU_ID,
   STAT_TRACKER_CONTEXT_MENU_ID,
 } from "../statConstants";
 import {
@@ -97,6 +98,27 @@ export function setupStatBackground(): () => void {
     });
 
     void OBR.contextMenu.create({
+      id: STAT_STATS_CONTEXT_MENU_ID,
+      icons: [
+        {
+          icon: iconUrl,
+          label: "Stats",
+          filter: {
+            min: 1,
+            max: 1,
+            roles: ["GM"],
+            every: tokenFilters,
+          },
+        },
+      ],
+      embed: {
+        url: getExtensionUrl("stats-trackers"),
+        height: 500,
+      },
+      onClick: () => undefined,
+    });
+
+    void OBR.contextMenu.create({
       id: STAT_CONDITION_CONTEXT_MENU_ID,
       icons: [
         {
@@ -131,6 +153,7 @@ export function setupStatBackground(): () => void {
     unsubscribeSceneReady?.();
     unsubscribeInitiativeSync?.();
     void OBR.contextMenu.remove(STAT_TRACKER_CONTEXT_MENU_ID);
+    void OBR.contextMenu.remove(STAT_STATS_CONTEXT_MENU_ID);
     void OBR.contextMenu.remove(STAT_CONDITION_CONTEXT_MENU_ID);
   };
 }
