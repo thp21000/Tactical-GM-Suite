@@ -61,12 +61,25 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    const iconMax = Math.min(6, Math.max(1, toNumber(max) || 1));
+    const iconCurrent = Math.max(0, Math.min(iconMax, toNumber(current)));
+
     onSubmit({
       name,
       visualType,
       iconId,
-      current: visualType === "bar" ? toNumber(current) : undefined,
-      max: visualType === "bar" ? toNumber(max) : undefined,
+      current:
+        visualType === "bar"
+          ? toNumber(current)
+          : visualType === "icon"
+            ? iconCurrent
+            : undefined,
+      max:
+        visualType === "bar"
+          ? toNumber(max)
+          : visualType === "icon"
+            ? iconMax
+            : undefined,
       value:
         visualType === "counter" || visualType === "readonly"
           ? toNumber(value)
@@ -139,21 +152,25 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
             </span>
           </label>
 
-          {visualType === "bar" ? (
+          {visualType === "bar" || visualType === "icon" ? (
             <>
               <label>
-                Valeur actuelle
+                {visualType === "icon" ? "Icônes actives" : "Valeur actuelle"}
                 <input
                   value={current}
+                  min={visualType === "icon" ? 0 : undefined}
+                  max={visualType === "icon" ? Math.min(6, Math.max(1, toNumber(max) || 1)) : undefined}
                   onChange={(event) => setCurrent(event.target.value)}
                   type="number"
                 />
               </label>
 
               <label>
-                Valeur max
+                {visualType === "icon" ? "Nombre d’icônes (max 6)" : "Valeur max"}
                 <input
                   value={max}
+                  min={visualType === "icon" ? 1 : undefined}
+                  max={visualType === "icon" ? 6 : undefined}
                   onChange={(event) => setMax(event.target.value)}
                   type="number"
                 />
