@@ -66,11 +66,9 @@ export function canViewerEditTracker(
   viewer: StatPermissionViewer,
 ): boolean {
   if (viewer.role === "gm") return true;
-  if (tracker.visibility === "gm") return false;
   if (!tracker.canPlayerEdit) return false;
   return isTokenAssignedToViewer(token, viewer);
 }
-
 
 export function filterTrackersForViewer(
   token: StatTrackedToken,
@@ -78,6 +76,20 @@ export function filterTrackersForViewer(
 ): StatTracker[] {
   if (viewer.role === "gm") return token.trackers;
   return token.trackers.filter((tracker) => canViewerSeeTracker(token, tracker, viewer));
+}
+
+/**
+ * Vue de contrôle Stats : contrairement à une simple vue de lecture, un joueur
+ * ne doit y retrouver que les trackers que le MJ l'autorise réellement à
+ * modifier. Le flag canPlayerEdit rend donc le tracker visible dans cette UI
+ * pour le joueur assigné au token, indépendamment de la visibilité de l'overlay.
+ */
+export function filterTrackersForControlViewer(
+  token: StatTrackedToken,
+  viewer: StatPermissionViewer,
+): StatTracker[] {
+  if (viewer.role === "gm") return token.trackers;
+  return token.trackers.filter((tracker) => canViewerEditTracker(token, tracker, viewer));
 }
 
 export function filterTokensForViewer(
@@ -95,6 +107,21 @@ export function filterTokensForViewer(
       ),
     }))
     .filter((token) => token.trackers.length > 0 || token.conditions.length > 0);
+}
+
+export function filterTokensForControlViewer(
+  tokens: StatTrackedToken[],
+  viewer: StatPermissionViewer,
+): StatTrackedToken[] {
+  if (viewer.role === "gm") return tokens;
+
+  return tokens
+    .map((token) => ({
+      ...token,
+      trackers: filterTrackersForControlViewer(token, viewer),
+      conditions: [],
+    }))
+    .filter((token) => token.trackers.length > 0);
 }
 
 export function getTrackerVisibilityBadgeLabel(tracker: StatTracker): string {
