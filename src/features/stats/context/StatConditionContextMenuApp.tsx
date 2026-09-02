@@ -207,19 +207,20 @@ export function StatConditionContextMenuApp() {
   }, []);
 
   useEffect(() => {
-    let unsubscribePlayer = () => undefined;
-    let unsubscribeItems = () => undefined;
+    let unsubscribePlayer: (() => void) | undefined;
+    let unsubscribeItems: (() => void) | undefined;
 
-    const unsubscribeReady = OBR.onReady(() => {
+    OBR.onReady(() => {
       void refresh();
+      unsubscribePlayer?.();
+      unsubscribeItems?.();
       unsubscribePlayer = OBR.player.onChange(() => void refresh());
       unsubscribeItems = OBR.scene.items.onChange(() => void refresh());
     });
 
     return () => {
-      unsubscribeReady();
-      unsubscribePlayer();
-      unsubscribeItems();
+      unsubscribePlayer?.();
+      unsubscribeItems?.();
     };
   }, [refresh]);
 
