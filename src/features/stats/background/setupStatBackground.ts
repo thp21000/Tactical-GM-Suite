@@ -10,13 +10,16 @@ import {
 } from "../services/statContextMenuActions";
 import { setupStatConditionInitiativeSync } from "../services/statConditionInitiativeSync";
 import { createOrUpdateTokenConditionOverlay } from "../services/statConditionOverlayObrSync";
+import { createEmbeddedStatTokenMetadata } from "../services/statEmbeddedProfileActions";
 import {
   getStatTokenContextKeyFilters,
   isSupportedStatTokenItem,
 } from "../services/statTokenEligibility";
 import {
+  hasPlayerEditableTrackers,
   isStatTokenTrackedItem,
   readEmbeddedStatToken,
+  readStatTokenLinkMetadata,
   STAT_TOKEN_LINK_METADATA_KEY,
 } from "../services/statTokenSceneLinks";
 
@@ -43,6 +46,109 @@ async function syncCurrentSceneConditionBadges(): Promise<void> {
   }
 }
 
+/**
+ * Les filtres de ContextMenu Owlbear ne savent pas parcourir un tableau de
+ * trackers. On maintient donc deux résumés indexables au niveau du lien token :
+ * playerEditable + assignedPlayerId. Le profil complet reste la source de vérité.
+ */
+async function syncCurrentScenePlayerEditMetadata(): Promise<void> {
+  try {
+    if (!(await OBR.scene.isReady())) return;
+    if ((await OBR.player.getRole()) !== "GM") return;
+
+    const items = await OBR.scene.items.getItems();
+    const targets = items.filter((item) => {
+      const token = readEmbeddedStatToken(item);
+      if (!token) return false;
+      const link = readStatTokenLinkMetadata(item);
+      return (
+        link?.playerEditable !== hasPlayerEditableTrackers(token) ||
+        link?.assignedPlayerId !== token.assignedPlayerId
+      );
+    });
+
+    if (targets.length === 0) return;
+
+    await OBR.scene.items.updateItems(targets, (drafts) => {
+      for (const draft of drafts) {
+        const token = readEmbeddedStatToken(draft);
+        if (!token) continue;
+        draft.metadata[STAT_TOKEN_LINK_METADATA_KEY] = createEmbeddedStatTokenMetadata(
+          token,
+          token.isTracked !== false,
+        );
+      }
+    });
+  } catch {
+    // La synchronisation des résumés ne doit jamais empêcher le reste du background.
+  }
+}
+
+async function registerStatsQuickContextMenu(
+  iconUrl: string,
+  tokenFilters: ReturnType<typeof getStatTokenContextKeyFilters>,
+): Promise<void> {
+  const role = await OBR.player.getRole();
+
+  if (role === "GM") {
+    await OBR.contextMenu.create({
+      id: STAT_STATS_CONTEXT_MENU_ID,
+      icons: [
+        {
+          icon: iconUrl,
+          label: "Stats",
+          filter: {
+            min: 1,
+            max: 1,
+            roles: ["GM"],
+            every: tokenFilters,
+          },
+        },
+      ],
+      embed: {
+        url: getExtensionUrl("stats-trackers"),
+        height: 500,
+      },
+      onClick: () => undefined,
+    });
+    return;
+  }
+
+  const playerId = await OBR.player.getId();
+  if (!playerId) return;
+
+  await OBR.contextMenu.create({
+    id: STAT_STATS_CONTEXT_MENU_ID,
+    icons: [
+      {
+        icon: iconUrl,
+        label: "Stats",
+        filter: {
+          min: 1,
+          max: 1,
+          roles: ["PLAYER"],
+          every: [
+            ...tokenFilters,
+            {
+              key: ["metadata", STAT_TOKEN_LINK_METADATA_KEY, "playerEditable"],
+              value: true,
+            },
+            {
+              key: ["metadata", STAT_TOKEN_LINK_METADATA_KEY, "assignedPlayerId"],
+              value: playerId,
+            },
+          ],
+        },
+      },
+    ],
+    embed: {
+      url: getExtensionUrl("stats-trackers"),
+      height: 500,
+    },
+    onClick: () => undefined,
+  });
+}
+
 export function setupStatBackground(): () => void {
   let unsubscribeSceneReady: (() => void) | undefined;
   let unsubscribeInitiativeSync: (() => void) | undefined;
@@ -60,6 +166,7 @@ export function setupStatBackground(): () => void {
           label: "Ajouter au Stat Tracker",
           filter: {
             min: 1,
+            roles: ["GM"],
             every: [
               ...tokenFilters,
               {
@@ -75,6 +182,7 @@ export function setupStatBackground(): () => void {
           label: "Retirer du Stat Tracker",
           filter: {
             min: 1,
+            roles: ["GM"],
             every: [
               ...tokenFilters,
               {
@@ -97,26 +205,7 @@ export function setupStatBackground(): () => void {
       },
     });
 
-    void OBR.contextMenu.create({
-      id: STAT_STATS_CONTEXT_MENU_ID,
-      icons: [
-        {
-          icon: iconUrl,
-          label: "Stats",
-          filter: {
-            min: 1,
-            max: 1,
-            roles: ["GM"],
-            every: tokenFilters,
-          },
-        },
-      ],
-      embed: {
-        url: getExtensionUrl("stats-trackers"),
-        height: 500,
-      },
-      onClick: () => undefined,
-    });
+    void registerStatsQuickContextMenu(iconUrl, tokenFilters).catch(() => undefined);
 
     void OBR.contextMenu.create({
       id: STAT_CONDITION_CONTEXT_MENU_ID,
@@ -140,12 +229,15 @@ export function setupStatBackground(): () => void {
     });
 
     void syncCurrentSceneConditionBadges();
+    void syncCurrentScenePlayerEditMetadata();
     unsubscribeInitiativeSync?.();
     unsubscribeInitiativeSync = setupStatConditionInitiativeSync();
 
     unsubscribeSceneReady?.();
     unsubscribeSceneReady = OBR.scene.onReadyChange((ready) => {
-      if (ready) void syncCurrentSceneConditionBadges();
+      if (!ready) return;
+      void syncCurrentSceneConditionBadges();
+      void syncCurrentScenePlayerEditMetadata();
     });
   });
 
