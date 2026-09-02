@@ -14,11 +14,21 @@ function clamp(value: number, max?: number): number {
   return Math.max(0, Math.min(value, Math.max(max, 0)));
 }
 
+function normalizeIconMax(value: number | undefined): number {
+  return Math.min(6, Math.max(1, value ?? 1));
+}
+
 export function createTracker(input: StatTrackerInput): StatTracker {
   const timestamp = now();
   const visualType = input.visualType;
-  const max = input.max !== undefined ? Math.max(0, input.max) : undefined;
-  const current = visualType === "bar" ? clamp(input.current ?? max ?? 0, max) : input.current;
+  const requestedMax = input.max !== undefined ? Math.max(0, input.max) : undefined;
+  const max = visualType === "icon" ? normalizeIconMax(requestedMax) : requestedMax;
+  const current =
+    visualType === "bar"
+      ? clamp(input.current ?? max ?? 0, max)
+      : visualType === "icon"
+        ? clamp(input.current ?? 0, max)
+        : input.current;
   const value = visualType === "counter" || visualType === "readonly" ? input.value ?? input.current ?? 0 : input.value;
 
   return {
@@ -40,7 +50,8 @@ export function createTracker(input: StatTrackerInput): StatTracker {
 
 export function updateTracker(tracker: StatTracker, patch: Partial<StatTrackerInput>): StatTracker {
   const visualType = patch.visualType ?? tracker.visualType;
-  const max = patch.max !== undefined ? Math.max(0, patch.max) : tracker.max;
+  const requestedMax = patch.max !== undefined ? Math.max(0, patch.max) : tracker.max;
+  const max = visualType === "icon" ? normalizeIconMax(requestedMax) : requestedMax;
   const next: StatTracker = {
     ...tracker,
     ...patch,
@@ -59,6 +70,9 @@ export function updateTracker(tracker: StatTracker, patch: Partial<StatTrackerIn
   if (visualType === "bar") {
     next.current = clamp(patch.current ?? tracker.current ?? max ?? 0, max);
   }
+  if (visualType === "icon") {
+    next.current = clamp(patch.current ?? tracker.current ?? 0, max);
+  }
   if (visualType === "counter") {
     next.value = patch.value ?? tracker.value ?? tracker.current ?? 0;
   }
@@ -73,11 +87,11 @@ export function updateTracker(tracker: StatTracker, patch: Partial<StatTrackerIn
 }
 
 export function canQuickModifyTracker(tracker: StatTracker): boolean {
-  return tracker.visualType === "bar" || tracker.visualType === "counter" || tracker.visualType === "readonly";
+  return tracker.visualType === "bar" || tracker.visualType === "counter" || tracker.visualType === "readonly" || tracker.visualType === "icon";
 }
 
 export function changeTrackerValue(tracker: StatTracker, delta: number): StatTracker {
-  if (tracker.visualType === "bar") {
+  if (tracker.visualType === "bar" || tracker.visualType === "icon") {
     return { ...tracker, current: clamp((tracker.current ?? 0) + delta, tracker.max), updatedAt: now() };
   }
   if (tracker.visualType === "counter" || tracker.visualType === "readonly") {
@@ -90,7 +104,7 @@ export function changeTrackerValue(tracker: StatTracker, delta: number): StatTra
 }
 
 export function setTrackerValue(tracker: StatTracker, value: number): StatTracker {
-  if (tracker.visualType === "bar") {
+  if (tracker.visualType === "bar" || tracker.visualType === "icon") {
     return { ...tracker, current: clamp(value, tracker.max), updatedAt: now() };
   }
   if (tracker.visualType === "counter" || tracker.visualType === "readonly") {
@@ -106,6 +120,7 @@ export function toggleTracker(tracker: StatTracker): StatTracker {
 
 export function getTrackerDisplayValue(tracker: StatTracker): string {
   if (tracker.visualType === "bar") return `${tracker.current ?? 0}${tracker.max !== undefined ? ` / ${tracker.max}` : ""}`;
+  if (tracker.visualType === "icon") return `${tracker.current ?? 0} / ${normalizeIconMax(tracker.max)}`;
   if (tracker.visualType === "counter" || tracker.visualType === "readonly") return String(tracker.value ?? tracker.current ?? 0);
   if (tracker.visualType === "toggle") return tracker.enabled ? "Actif" : "Inactif";
   return "—";
