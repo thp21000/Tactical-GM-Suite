@@ -65,6 +65,7 @@ function createConfiguredCondition(
     tokenDisplayMode: "icon",
     tokenDisplayPriority: 50,
   });
+  if (!condition) return null;
 
   return {
     ...condition,
