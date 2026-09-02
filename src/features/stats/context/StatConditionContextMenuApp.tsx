@@ -17,7 +17,7 @@ import {
   upsertQuickCondition,
 } from "../services/statConditionContextActions";
 import { getStatConditionDefinitions } from "../services/statConditions";
-import { updateEmbeddedStatToken } from "../services/statEmbeddedProfileActions";
+import { updateOrCreateEmbeddedConditionToken } from "../services/statEmbeddedProfileActions";
 import { createOrUpdateTokenConditionOverlay } from "../services/statConditionOverlayObrSync";
 import { readEmbeddedStatToken } from "../services/statTokenSceneLinks";
 import { getTrackerIcon } from "../services/statTrackerIcons";
@@ -198,9 +198,15 @@ export function StatConditionContextMenuApp() {
       }
 
       const [item] = await OBR.scene.items.getItems([selectedItemId]);
-      const embedded = item ? readEmbeddedStatToken(item) : undefined;
-      setItemId(embedded?.isTracked === false ? null : selectedItemId);
-      setToken(embedded?.isTracked === false ? null : embedded ?? null);
+      if (!item) {
+        setItemId(null);
+        setToken(null);
+        return;
+      }
+
+      setItemId(selectedItemId);
+      setToken(readEmbeddedStatToken(item) ?? null);
+      setError(null);
     } catch {
       setError("Impossible de lire le token sélectionné.");
     }
@@ -238,9 +244,9 @@ export function StatConditionContextMenuApp() {
       setBusy(true);
       setError(null);
       try {
-        const updated = await updateEmbeddedStatToken(itemId, update);
+        const updated = await updateOrCreateEmbeddedConditionToken(itemId, update);
         if (!updated) {
-          setError("Le profil Stats du token est introuvable.");
+          setError("Le token est introuvable.");
           return;
         }
         setToken(updated);
@@ -258,10 +264,10 @@ export function StatConditionContextMenuApp() {
     [itemId],
   );
 
-  if (!token) {
+  if (!itemId) {
     return (
       <main className="stat-condition-context stat-condition-context--empty">
-        <p>{error ?? "Sélectionnez un token suivi par le Stat Tracker."}</p>
+        <p>{error ?? "Sélectionnez un token."}</p>
       </main>
     );
   }
@@ -269,7 +275,7 @@ export function StatConditionContextMenuApp() {
   const editorDefinition = editor
     ? definitions.find((definition) => definition.id === editor.conditionId)
     : undefined;
-  const editorCondition = editorDefinition
+  const editorCondition = editorDefinition && token
     ? getActiveTokenCondition(token, editorDefinition.id)
     : undefined;
 
@@ -290,7 +296,9 @@ export function StatConditionContextMenuApp() {
 
       <div className="stat-condition-context__list" aria-label="Conditions">
         {filteredDefinitions.map((definition) => {
-          const active = getActiveTokenCondition(token, definition.id);
+          const active = token
+            ? getActiveTokenCondition(token, definition.id)
+            : undefined;
           const assetUrl = getConditionAssetUrl({
             conditionId: definition.id,
             label: definition.label,
