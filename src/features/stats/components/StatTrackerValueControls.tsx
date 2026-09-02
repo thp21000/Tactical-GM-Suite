@@ -6,6 +6,10 @@ import { canQuickModifyTracker } from "../services/statTrackers";
 
 type Props = { canEdit: boolean; tracker: StatTracker; onChange: (delta: number) => void };
 
+type ValueOrbProps = Props & {
+  standalone?: boolean;
+};
+
 function parseInlineMath(input: string, baseValue: number): number | null {
   const normalized = input.trim().replace(",", ".");
   if (!normalized) return null;
@@ -33,7 +37,7 @@ function parseInlineMath(input: string, baseValue: number): number | null {
   return Number.isFinite(absoluteValue) ? absoluteValue : null;
 }
 
-function StatCounterBar({ canEdit, onChange, tracker }: Props) {
+function StatValueOrb({ canEdit, onChange, standalone = false, tracker }: ValueOrbProps) {
   const value = tracker.value ?? tracker.current ?? 0;
   const icon = getTrackerIcon(tracker.iconId);
   const accent = getTrackerIconAccent(tracker.iconId);
@@ -62,6 +66,70 @@ function StatCounterBar({ canEdit, onChange, tracker }: Props) {
     setEditing(false);
   };
 
+  const style = {
+    "--stat-counter-accent": accent,
+  } as CSSProperties;
+
+  return (
+    <div
+      className={`stat-counter-bar__orb${editing ? " is-editing" : ""}${
+        standalone ? " stat-counter-bar__orb--standalone" : ""
+      }`}
+      style={style}
+    >
+      <span className="stat-counter-bar__orb-glass" aria-hidden="true" />
+      <span className="stat-counter-bar__icon" aria-hidden="true">
+        {icon.src ? <img alt="" draggable={false} src={icon.src} /> : icon.symbol ?? "◆"}
+      </span>
+
+      <span className="stat-counter-bar__value-slot">
+        {editing ? (
+          <input
+            aria-label={`Valeur actuelle de ${tracker.name}`}
+            autoFocus
+            className="stat-counter-bar__value-input"
+            inputMode="decimal"
+            placeholder="+3"
+            title="Valeur directe ou calcul : +3, -2, *2, /2"
+            type="text"
+            value={draft}
+            onBlur={commitEdit}
+            onChange={(event) => setDraft(event.target.value)}
+            onFocus={(event) => event.currentTarget.select()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                commitEdit();
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                cancelEdit();
+              }
+            }}
+          />
+        ) : (
+          <button
+            className="stat-counter-bar__value-button"
+            disabled={!canEdit}
+            title={
+              canEdit
+                ? "Cliquer pour saisir une valeur ou un calcul (+3, -2, *2, /2)"
+                : "Lecture seule"
+            }
+            type="button"
+            onClick={() => {
+              if (canEdit) setEditing(true);
+            }}
+          >
+            {value}
+          </button>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function StatCounterBar({ canEdit, onChange, tracker }: Props) {
+  const accent = getTrackerIconAccent(tracker.iconId);
   const style = {
     "--stat-counter-accent": accent,
   } as CSSProperties;
@@ -106,56 +174,16 @@ function StatCounterBar({ canEdit, onChange, tracker }: Props) {
           +5
         </button>
 
-        <div className={`stat-counter-bar__orb${editing ? " is-editing" : ""}`}>
-          <span className="stat-counter-bar__orb-glass" aria-hidden="true" />
-          <span className="stat-counter-bar__icon" aria-hidden="true">
-            {icon.src ? <img alt="" draggable={false} src={icon.src} /> : icon.symbol ?? "◆"}
-          </span>
-
-          <span className="stat-counter-bar__value-slot">
-            {editing ? (
-              <input
-                aria-label={`Valeur actuelle de ${tracker.name}`}
-                autoFocus
-                className="stat-counter-bar__value-input"
-                inputMode="decimal"
-                placeholder="+3"
-                title="Valeur directe ou calcul : +3, -2, *2, /2"
-                type="text"
-                value={draft}
-                onBlur={commitEdit}
-                onChange={(event) => setDraft(event.target.value)}
-                onFocus={(event) => event.currentTarget.select()}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    commitEdit();
-                  } else if (event.key === "Escape") {
-                    event.preventDefault();
-                    cancelEdit();
-                  }
-                }}
-              />
-            ) : (
-              <button
-                className="stat-counter-bar__value-button"
-                disabled={!canEdit}
-                title={
-                  canEdit
-                    ? "Cliquer pour saisir une valeur ou un calcul (+3, -2, *2, /2)"
-                    : "Lecture seule"
-                }
-                type="button"
-                onClick={() => {
-                  if (canEdit) setEditing(true);
-                }}
-              >
-                {value}
-              </button>
-            )}
-          </span>
-        </div>
+        <StatValueOrb canEdit={canEdit} onChange={onChange} tracker={tracker} />
       </div>
+    </div>
+  );
+}
+
+function StatFixedOrb({ canEdit, onChange, tracker }: Props) {
+  return (
+    <div className="stat-fixed-orb" aria-label={`Valeur ${tracker.name}`}>
+      <StatValueOrb canEdit={canEdit} onChange={onChange} standalone tracker={tracker} />
     </div>
   );
 }
@@ -163,6 +191,10 @@ function StatCounterBar({ canEdit, onChange, tracker }: Props) {
 export function StatTrackerValueControls({ canEdit, onChange, tracker }: Props) {
   if (tracker.visualType === "counter") {
     return <StatCounterBar canEdit={canEdit} onChange={onChange} tracker={tracker} />;
+  }
+
+  if (tracker.visualType === "readonly") {
+    return <StatFixedOrb canEdit={canEdit} onChange={onChange} tracker={tracker} />;
   }
 
   if (!canEdit || !canQuickModifyTracker(tracker)) return null;
