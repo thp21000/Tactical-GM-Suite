@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import OBR from "@owlbear-rodeo/sdk";
 import {
   applyThemeVariables,
@@ -40,6 +40,19 @@ type QuickEditorProps = {
   onSubmit: (config: StatConditionQuickConfig) => void;
 };
 
+type CompactSelectOption = {
+  value: string;
+  label: string;
+};
+
+type CompactSelectProps = {
+  ariaLabel: string;
+  value: string;
+  options: readonly CompactSelectOption[];
+  disabled?: boolean;
+  onChange: (value: string) => void;
+};
+
 const DURATION_OPTIONS: Array<{
   value: StatConditionDurationType;
   label: string;
@@ -50,11 +63,110 @@ const DURATION_OPTIONS: Array<{
   { value: "rest", label: "Repos" },
 ];
 
+const VISIBILITY_OPTIONS: Array<{
+  value: StatTrackerVisibility;
+  label: string;
+}> = [
+  { value: "public", label: "Public" },
+  { value: "private", label: "Privé" },
+  { value: "gm", label: "MJ" },
+];
+
 function normalizeSearch(value: string): string {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+function CompactSelect({
+  ariaLabel,
+  value,
+  options,
+  disabled = false,
+  onChange,
+}: CompactSelectProps) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selected = options.find((option) => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div
+      className={`stat-condition-context__select${open ? " is-open" : ""}`}
+      ref={rootRef}
+    >
+      <button
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-label={ariaLabel}
+        className="stat-condition-context__select-trigger"
+        disabled={disabled}
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{selected?.label ?? value}</span>
+        <span className="stat-condition-context__select-chevron" aria-hidden="true">
+          ▾
+        </span>
+      </button>
+
+      {open ? (
+        <div
+          aria-label={ariaLabel}
+          className="stat-condition-context__select-menu"
+          role="listbox"
+        >
+          {options.map((option) => {
+            const isSelected = option.value === value;
+            return (
+              <button
+                aria-selected={isSelected}
+                className={`stat-condition-context__select-option${isSelected ? " is-selected" : ""}`}
+                key={option.value}
+                role="option"
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                }}
+              >
+                <span>{option.label}</span>
+                <span
+                  className="stat-condition-context__select-check"
+                  aria-hidden="true"
+                >
+                  {isSelected ? "✓" : ""}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function QuickEditor({
@@ -124,18 +236,15 @@ function QuickEditor({
 
         <label>
           <span>Durée</span>
-          <select
+          <CompactSelect
+            ariaLabel="Durée"
+            disabled={busy}
+            options={DURATION_OPTIONS}
             value={durationType}
-            onChange={(event) =>
-              setDurationType(event.target.value as StatConditionDurationType)
+            onChange={(nextValue) =>
+              setDurationType(nextValue as StatConditionDurationType)
             }
-          >
-            {DURATION_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          />
         </label>
 
         {durationType === "rounds" ? (
@@ -152,16 +261,15 @@ function QuickEditor({
 
         <label>
           <span>Visibilité</span>
-          <select
+          <CompactSelect
+            ariaLabel="Visibilité"
+            disabled={busy}
+            options={VISIBILITY_OPTIONS}
             value={visibility}
-            onChange={(event) =>
-              setVisibility(event.target.value as StatTrackerVisibility)
+            onChange={(nextValue) =>
+              setVisibility(nextValue as StatTrackerVisibility)
             }
-          >
-            <option value="public">Public</option>
-            <option value="private">Privé</option>
-            <option value="gm">MJ</option>
-          </select>
+          />
         </label>
       </div>
 
