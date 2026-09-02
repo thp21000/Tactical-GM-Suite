@@ -601,6 +601,7 @@ export function StatTrackerCard({
   const editLabel = getTrackerEditBadgeLabel(token, tracker);
   const isBar = tracker.visualType === "bar";
   const isCounter = tracker.visualType === "counter";
+  const isReadonly = tracker.visualType === "readonly";
 
   return (
     <article
@@ -628,7 +629,7 @@ export function StatTrackerCard({
           onRemove={onRemove}
           onUpdate={onUpdate}
         />
-      ) : isCounter ? (
+      ) : isCounter || isReadonly ? (
         <StatCounterValueTracker
           canEdit={canEdit}
           isGm={isGm}
