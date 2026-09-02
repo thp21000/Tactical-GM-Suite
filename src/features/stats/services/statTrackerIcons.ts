@@ -150,14 +150,19 @@ const LEGACY_ICON_ALIASES: Record<string, string> = {
   other: "object_circle",
 };
 
+function getPathPart(path: string, offsetFromEnd: number): string {
+  const parts = path.split("/");
+  return parts[parts.length - offsetFromEnd] ?? "";
+}
+
 function getCategory(path: string): StatTrackerIconCategory | null {
-  const folder = path.split("/").at(-2) ?? "";
+  const folder = getPathPart(path, 2);
   return CATEGORY_BY_FOLDER[folder] ?? null;
 }
 
 function humanizeIconId(iconId: string): string {
   const withoutPrefix = iconId.replace(/^(body|arcane|resource|object)_/, "");
-  const label = withoutPrefix.replaceAll("_", " ");
+  const label = withoutPrefix.replace(/_/g, " ");
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
@@ -169,7 +174,7 @@ function getOrder(iconId: string): number {
 export const STAT_TRACKER_ICONS: StatTrackerIcon[] = Object.entries(iconModules)
   .map(([path, src]) => {
     const category = getCategory(path);
-    const fileName = path.split("/").at(-1) ?? "";
+    const fileName = getPathPart(path, 1);
     const id = fileName.replace(/\.png$/i, "");
 
     if (!category || !id) return null;
