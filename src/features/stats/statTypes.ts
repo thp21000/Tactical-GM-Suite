@@ -111,6 +111,12 @@ export type StatTokenCondition = {
   durationType?: StatConditionDurationType;
   durationValue?: number;
   remainingRounds?: number;
+  /** Rencontre d'initiative qui pilote une durée en rounds ou "Rencontre". */
+  initiativeEncounterId?: string;
+  /** Round où une durée en rounds a été (re)configurée. */
+  initiativeStartRound?: number;
+  /** Round d'expiration absolu utilisé pour calculer les rounds restants. */
+  initiativeExpiresAtRound?: number;
   source?: string;
   note?: string;
   showOnToken?: boolean;
