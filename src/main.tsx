@@ -10,6 +10,7 @@ import "./features/stats/context/statConditionCustomSelect.css";
 import "./features/stats/context/statConditionListMeta.css";
 import "./shared/styles/obrIntegratedUi.css";
 import "./features/stats/statMaxValueBar.css";
+import "./features/stats/statMaxValueBarLiquid.css";
 
 const view = new URLSearchParams(window.location.search).get("view");
 
