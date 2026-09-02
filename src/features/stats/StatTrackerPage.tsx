@@ -10,7 +10,7 @@ import { useStatPermissionViewer } from "./hooks/useStatPermissionViewer";
 import { useStatSceneTokenBindings } from "./hooks/useStatSceneTokenBindings";
 import { useStatTokenOverlayAutoSync } from "./hooks/useStatTokenOverlayAutoSync";
 import { useStatTrackerState } from "./hooks/useStatTrackerState";
-import { filterTokensForViewer } from "./services/statPermissions";
+import { filterTokensForControlViewer } from "./services/statPermissions";
 import type { StatTrackedToken } from "./statTypes";
 
 type Props = {
@@ -45,7 +45,7 @@ export function StatTrackerPage({ obr }: Props) {
       stats.displayGroups
         .map((group) => ({
           ...group,
-          tokens: filterTokensForViewer(
+          tokens: filterTokensForControlViewer(
             group.tokens.flatMap(
               (token) => sceneTokensByCanonicalId.get(token.id) ?? [],
             ),
