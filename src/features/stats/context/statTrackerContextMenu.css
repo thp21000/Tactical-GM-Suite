@@ -84,12 +84,13 @@ body.stat-tracker-context-host #root {
 
 /* Les trackers larges occupent toute la largeur du sous-menu. */
 .stat-tracker-context .stat-tracker-card--bar,
+.stat-tracker-context .stat-tracker-card--bar-compact,
 .stat-tracker-context .stat-tracker-card--counter,
 .stat-tracker-context .stat-tracker-card--icon {
   grid-column: 1 / -1;
 }
 
-/* Les indicateurs fixes et toggles gardent le rangement compact 3 par ligne. */
+/* Les indicateurs fixes et toggles sont volontairement rangés trois par ligne. */
 .stat-tracker-context .stat-tracker-card--readonly,
 .stat-tracker-context .stat-tracker-card--toggle {
   grid-column: auto;
@@ -110,6 +111,16 @@ body.stat-tracker-context-host #root {
   border-radius: 7px;
 }
 
+/*
+ * Le menu contextuel Stats sert uniquement aux changements rapides. Tous les
+ * contrôles d'administration restent dans l'addon principal.
+ */
+.stat-tracker-context .stat-max-bar__menu,
+.stat-tracker-context .stat-max-bar__menu-trigger,
+.stat-tracker-context .stat-max-bar__menu-panel {
+  display: none !important;
+}
+
 .stat-tracker-context .stat-max-bar,
 .stat-tracker-context .stat-counter-bar {
   padding-inline: 0;
@@ -118,32 +129,13 @@ body.stat-tracker-context-host #root {
 .stat-tracker-context .stat-max-bar__header,
 .stat-tracker-context .stat-counter-card__header {
   min-height: 18px;
-  padding-inline: 25px;
+  padding-inline: 0;
 }
 
 .stat-tracker-context .stat-max-bar__name,
 .stat-tracker-context .stat-counter-card__name {
   font-size: 10.5px;
   line-height: 16px;
-}
-
-.stat-tracker-context .stat-max-bar__menu-trigger {
-  width: 22px;
-  height: 18px;
-  font-size: 16px;
-}
-
-.stat-tracker-context .stat-max-bar__menu-panel {
-  width: min(142px, calc(100vw - 12px));
-  gap: 1px;
-  padding: 3px;
-  border-radius: 7px;
-  font-size: 11px;
-}
-
-.stat-tracker-context .stat-max-bar__menu-panel button {
-  min-height: 28px;
-  padding: 4px 7px;
 }
 
 /* Barre min/max : même design, proportions resserrées pour le panneau OBR. */
@@ -244,7 +236,7 @@ body.stat-tracker-context-host #root {
   font-size: 14px;
 }
 
-/* Fixe / toggle : la pastille reste lisible malgré les colonnes étroites. */
+/* Fixe / toggle : trois colonnes, avec la pastille gardée lisible. */
 .stat-tracker-context .stat-fixed-orb {
   min-height: 48px;
   padding-top: 0;
@@ -259,7 +251,7 @@ body.stat-tracker-context-host #root {
 
 .stat-tracker-context .stat-tracker-card--readonly .stat-counter-card__header,
 .stat-tracker-context .stat-tracker-card--toggle .stat-counter-card__header {
-  padding-inline: 20px;
+  padding-inline: 0;
 }
 
 .stat-tracker-context .stat-tracker-card--readonly .stat-counter-card__name,
@@ -285,50 +277,6 @@ body.stat-tracker-context-host #root {
 .stat-tracker-context .stat-icon-units__item img {
   width: 27px;
   height: 27px;
-}
-
-/* Le formulaire de modification reste utilisable dans l’iframe étroite. */
-.stat-tracker-context .stat-tracker-modal__backdrop {
-  padding: 4px;
-}
-
-.stat-tracker-context .stat-tracker-modal {
-  width: 100%;
-  max-height: calc(100vh - 8px);
-  border-radius: 10px;
-}
-
-.stat-tracker-context .stat-tracker-modal__header {
-  padding: 10px 11px 9px;
-}
-
-.stat-tracker-context .stat-tracker-modal__header h2 {
-  font-size: 14px;
-}
-
-.stat-tracker-context .stat-tracker-modal__header p {
-  display: none;
-}
-
-.stat-tracker-context .stat-tracker-modal__form {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-  max-height: calc(100vh - 62px);
-  padding: 10px 10px 0;
-}
-
-.stat-tracker-context .stat-tracker-modal__half-field,
-.stat-tracker-context .stat-form__wide {
-  grid-column: 1 / -1;
-}
-
-.stat-tracker-context .stat-icon-picker {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.stat-tracker-context .stat-tracker-modal__footer {
-  margin-inline: -10px;
-  padding: 9px 10px 10px;
 }
 
 @media (max-width: 210px) {
