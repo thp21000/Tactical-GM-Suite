@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Item } from "@owlbear-rodeo/sdk";
+import OBR, { type Item } from "@owlbear-rodeo/sdk";
 import type {
   StatTokenInput,
   StatTokenType,
@@ -53,6 +53,10 @@ function touch(state: StatTrackerState): StatTrackerState {
   return { ...state, updatedAt: new Date().toISOString() };
 }
 
+function now(): string {
+  return new Date().toISOString();
+}
+
 function createPresetTrackers(
   tokenType: StatTokenInput["tokenType"],
   state: StatTrackerState,
@@ -93,16 +97,30 @@ export function useStatTrackerState(isObrReady: boolean) {
   const hasLoaded = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
+    // In Owlbear, never fall back to local storage while the SDK is still
+    // starting. Doing so could load an empty local state and write it back to
+    // room metadata before the real room state has been read.
+    if (OBR.isAvailable && !isObrReady) {
+      hasLoaded.current = false;
+      return undefined;
+    }
 
-    readStatTrackerState().then((next) => {
-      if (mounted) {
+    let mounted = true;
+    hasLoaded.current = false;
+
+    void readStatTrackerState()
+      .then((next) => {
+        if (!mounted) return;
         hasLoaded.current = true;
         setState(next);
-      }
-    });
+      })
+      .catch(() => {
+        // Keep the current in-memory state and, importantly, do not enable
+        // writes after a failed room read.
+      });
 
     const unsubscribe = subscribeToStatTrackerState((next) => {
+      if (!mounted) return;
       hasLoaded.current = true;
       setState(next);
     });
@@ -114,10 +132,10 @@ export function useStatTrackerState(isObrReady: boolean) {
   }, [isObrReady]);
 
   useEffect(() => {
-    if (hasLoaded.current) {
-      void writeStatTrackerState(state);
-    }
-  }, [state]);
+    if (!hasLoaded.current) return;
+    if (OBR.isAvailable && !isObrReady) return;
+    void writeStatTrackerState(state);
+  }, [isObrReady, state]);
 
   const tokens = state.tokens;
   const groups = state.groups;
@@ -134,22 +152,64 @@ export function useStatTrackerState(isObrReady: boolean) {
 
   const addItems = useCallback((items: Item[]) => {
     setState((current) => {
-      const existingSourceIds = new Set(
-        current.tokens.map((token) => token.sourceItemId).filter(Boolean),
+      const nextTokens = [...current.tokens];
+      let changed = false;
+
+      for (const item of items) {
+        const linkedTokenId = getLinkedStatTokenId(item);
+        const existingIndex = nextTokens.findIndex(
+          (token) =>
+            token.sourceItemId === item.id ||
+            (linkedTokenId !== undefined && token.id === linkedTokenId),
+        );
+
+        if (existingIndex >= 0) {
+          const existing = nextTokens[existingIndex];
+          if (existing && existing.isTracked === false) {
+            nextTokens[existingIndex] = {
+              ...existing,
+              isTracked: true,
+              updatedAt: now(),
+            };
+            changed = true;
+          }
+          continue;
+        }
+
+        const created = createTokenFromObrItemWithPreset(item, current);
+        // A copied Owlbear token inherits our canonical tokenId metadata. If
+        // the room profile is missing, keep that ID so all copies reconnect to
+        // the same canonical profile instead of fragmenting into new ones.
+        if (linkedTokenId) created.id = linkedTokenId;
+        nextTokens.push(created);
+        changed = true;
+      }
+
+      return changed ? touch({ ...current, tokens: nextTokens }) : current;
+    });
+  }, []);
+
+  const removeItems = useCallback((items: Item[]) => {
+    setState((current) => {
+      const sourceItemIds = new Set(items.map((item) => item.id));
+      const linkedTokenIds = new Set(
+        items
+          .map(getLinkedStatTokenId)
+          .filter((tokenId): tokenId is string => Boolean(tokenId)),
       );
-      const existingTokenIds = new Set(current.tokens.map((token) => token.id));
+      let changed = false;
 
-      const additions = items
-        .filter((item) => {
-          if (existingSourceIds.has(item.id)) return false;
-          const linkedTokenId = getLinkedStatTokenId(item);
-          return !linkedTokenId || !existingTokenIds.has(linkedTokenId);
-        })
-        .map((item) => createTokenFromObrItemWithPreset(item, current));
+      const nextTokens = current.tokens.map((token) => {
+        const matches =
+          linkedTokenIds.has(token.id) ||
+          (token.sourceItemId !== undefined && sourceItemIds.has(token.sourceItemId));
+        if (!matches || token.isTracked === false) return token;
 
-      return additions.length
-        ? touch({ ...current, tokens: [...current.tokens, ...additions] })
-        : current;
+        changed = true;
+        return { ...token, isTracked: false, updatedAt: now() };
+      });
+
+      return changed ? touch({ ...current, tokens: nextTokens }) : current;
     });
   }, []);
 
@@ -168,16 +228,16 @@ export function useStatTrackerState(isObrReady: boolean) {
   );
 
   const removeToken = useCallback((tokenId: string) => {
-    setState((current) =>
-      touch({
-        ...current,
-        tokens: current.tokens.filter((token) => token.id !== tokenId),
-        groups: current.groups.map((group) => ({
-          ...group,
-          tokenIds: group.tokenIds.filter((id) => id !== tokenId),
-        })),
-      }),
-    );
+    setState((current) => {
+      let changed = false;
+      const nextTokens = current.tokens.map((token) => {
+        if (token.id !== tokenId || token.isTracked === false) return token;
+        changed = true;
+        return { ...token, isTracked: false, updatedAt: now() };
+      });
+
+      return changed ? touch({ ...current, tokens: nextTokens }) : current;
+    });
   }, []);
 
   const mapToken = useCallback(
@@ -374,24 +434,32 @@ export function useStatTrackerState(isObrReady: boolean) {
   }, []);
 
   const displayGroups = useMemo(() => getDisplayGroups(state), [state]);
+  const trackedTokens = useMemo(
+    () => tokens.filter((token) => token.isTracked !== false),
+    [tokens],
+  );
 
   const summary = useMemo(() => {
-    const trackerCount = tokens.reduce(
+    const trackerCount = trackedTokens.reduce(
       (total, token) => total + token.trackers.length,
       0,
     );
-    const visibleOnTokenCount = tokens.reduce(
+    const visibleOnTokenCount = trackedTokens.reduce(
       (total, token) => total + getTokenDisplayItems(token).length,
       0,
     );
 
     return {
-      tokenCount: tokens.length,
+      tokenCount: trackedTokens.length,
       trackerCount,
-      groupCount: groups.length,
+      groupCount: groups.filter((group) =>
+        group.tokenIds.some((tokenId) =>
+          trackedTokens.some((token) => token.id === tokenId),
+        ),
+      ).length,
       visibleOnTokenCount,
     };
-  }, [groups.length, tokens]);
+  }, [groups, trackedTokens]);
 
   return {
     addConditionToToken,
@@ -407,6 +475,7 @@ export function useStatTrackerState(isObrReady: boolean) {
     groups,
     presets,
     removeConditionFromToken,
+    removeItems,
     removeToken,
     removeTracker,
     removeTrackerFromPreset: removeTrackerFromPresetForType,

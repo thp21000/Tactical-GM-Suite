@@ -9,6 +9,8 @@ export const STAT_TOKEN_LINK_KIND = "stats-token-link";
 export type StatTokenLinkMetadata = {
   kind: typeof STAT_TOKEN_LINK_KIND;
   tokenId: string;
+  /** Whether the canonical Stats profile is currently active in the tracker. */
+  tracked?: boolean;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -27,6 +29,7 @@ export function readStatTokenLinkMetadata(
   return {
     kind: STAT_TOKEN_LINK_KIND,
     tokenId: value.tokenId,
+    tracked: typeof value.tracked === "boolean" ? value.tracked : undefined,
   };
 }
 
@@ -34,6 +37,12 @@ export function getLinkedStatTokenId(
   item: Pick<Item, "metadata">,
 ): string | undefined {
   return readStatTokenLinkMetadata(item)?.tokenId;
+}
+
+export function isStatTokenTrackedItem(
+  item: Pick<Item, "metadata">,
+): boolean {
+  return readStatTokenLinkMetadata(item)?.tracked === true;
 }
 
 export function getSceneStatTokenInstances(
@@ -56,6 +65,8 @@ export function getSceneStatTokenInstances(
   const instances: StatTrackedToken[] = [];
 
   for (const token of tokens) {
+    if (token.isTracked === false) continue;
+
     const linkedItemIds = [...(itemIdsByTokenId.get(token.id) ?? [])];
 
     // Backward compatibility: tokens tracked before scene-link metadata existed
@@ -89,28 +100,43 @@ export async function ensureCurrentSceneStatTokenLinks(
 ): Promise<void> {
   if (!isObrReady() || items.length === 0) return;
 
+  const tokenById = new Map(tokens.map((token) => [token.id, token]));
   const tokenBySourceItemId = new Map(
     tokens.flatMap((token) =>
       token.sourceItemId ? ([[token.sourceItemId, token]] as const) : [],
     ),
   );
 
+  const tokenForItem = (item: Item): StatTrackedToken | undefined => {
+    const linkedTokenId = getLinkedStatTokenId(item);
+    if (linkedTokenId) {
+      const linkedToken = tokenById.get(linkedTokenId);
+      if (linkedToken) return linkedToken;
+    }
+
+    return tokenBySourceItemId.get(item.id);
+  };
+
   const targets = items.filter((item) => {
-    const token = tokenBySourceItemId.get(item.id);
+    const token = tokenForItem(item);
     if (!token) return false;
-    return getLinkedStatTokenId(item) !== token.id;
+
+    const existing = readStatTokenLinkMetadata(item);
+    const tracked = token.isTracked !== false;
+    return existing?.tokenId !== token.id || existing.tracked !== tracked;
   });
 
   if (targets.length === 0) return;
 
   await OBR.scene.items.updateItems(targets, (drafts) => {
     for (const draft of drafts) {
-      const token = tokenBySourceItemId.get(draft.id);
+      const token = tokenForItem(draft);
       if (!token) continue;
 
       draft.metadata[STAT_TOKEN_LINK_METADATA_KEY] = {
         kind: STAT_TOKEN_LINK_KIND,
         tokenId: token.id,
+        tracked: token.isTracked !== false,
       } satisfies StatTokenLinkMetadata;
     }
   });

@@ -149,6 +149,12 @@ export type StatTrackedToken = {
   assignedPlayerName?: string;
   notes?: string;
   isHiddenFromPlayers: boolean;
+  /**
+   * False means the canonical profile is archived but its full Stats setup is
+   * deliberately kept so re-adding the Owlbear token restores it unchanged.
+   * Older saved profiles have no flag and are treated as tracked.
+   */
+  isTracked?: boolean;
   createdAt: string;
   updatedAt: string;
 };

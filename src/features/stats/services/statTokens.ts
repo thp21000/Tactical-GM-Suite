@@ -23,6 +23,10 @@ function cleanOptionalText(value: string | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+function isTrackedToken(token: StatTrackedToken): boolean {
+  return token.isTracked !== false;
+}
+
 export function createEmptyStatTrackerState(): StatTrackerState {
   const timestamp = now();
 
@@ -51,6 +55,7 @@ export function createTrackedToken(input: StatTokenInput): StatTrackedToken {
     assignedPlayerName: cleanOptionalText(input.assignedPlayerName),
     notes: cleanOptionalText(input.notes),
     isHiddenFromPlayers: input.isHiddenFromPlayers ?? false,
+    isTracked: true,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -199,11 +204,12 @@ export function removeTokenFromGroup(
 
 export function getDisplayGroups(state: StatTrackerState): StatDisplayGroup[] {
   const groupedTokenIds = new Set<string>();
+  const trackedTokens = state.tokens.filter(isTrackedToken);
 
   const groups = state.groups
     .map((group) => {
       const tokens = group.tokenIds
-        .map((tokenId) => state.tokens.find((token) => token.id === tokenId))
+        .map((tokenId) => trackedTokens.find((token) => token.id === tokenId))
         .filter((token): token is StatTrackedToken => Boolean(token));
 
       tokens.forEach((token) => groupedTokenIds.add(token.id));
@@ -218,7 +224,7 @@ export function getDisplayGroups(state: StatTrackerState): StatDisplayGroup[] {
     })
     .filter((group) => group.tokens.length > 0);
 
-  const looseTokens = state.tokens
+  const looseTokens = trackedTokens
     .filter((token) => !groupedTokenIds.has(token.id))
     .map(
       (token) =>

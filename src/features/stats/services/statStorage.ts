@@ -171,6 +171,7 @@ export function normalizeStatTrackerState(value: unknown): StatTrackerState {
         conditions: normalizeTokenConditions(
           (token as { conditions?: unknown }).conditions,
         ),
+        isTracked: token.isTracked !== false,
       })),
       groups: value.groups,
       presets: normalizeStatTrackerPresets(
@@ -209,13 +210,8 @@ function readStateFromMetadata(metadata: Metadata): StatTrackerState | null {
 
 export async function readStatTrackerState(): Promise<StatTrackerState> {
   if (isObrReady()) {
-    try {
-      const metadata = await OBR.room.getMetadata();
-
-      return readStateFromMetadata(metadata) ?? createEmptyStatTrackerState();
-    } catch {
-      return createEmptyStatTrackerState();
-    }
+    const metadata = await OBR.room.getMetadata();
+    return readStateFromMetadata(metadata) ?? createEmptyStatTrackerState();
   }
 
   return normalizeStatTrackerState(

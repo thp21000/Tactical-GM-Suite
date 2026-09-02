@@ -64,6 +64,7 @@ export function StatTrackerPage({ obr }: Props) {
   useStatTrackerContextMenu({
     isReady: obr.isReady,
     onAddItems: stats.addItems,
+    onRemoveItems: stats.removeItems,
   });
 
   return (
