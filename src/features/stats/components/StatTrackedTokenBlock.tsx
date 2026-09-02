@@ -3,14 +3,12 @@ import { Badge } from "../../../shared/components/Badge";
 import { Button } from "../../../shared/components/Button";
 import { CollapsibleSection } from "../../../shared/components/CollapsibleSection";
 import { STAT_TOKEN_TYPE_LABELS } from "../services/statLabels";
-import type { StatTokenConditionInput } from "../services/statConditions";
 import { canViewerEditTracker, type StatPermissionViewer } from "../services/statPermissions";
 import type {
   StatDisplayGroup,
   StatTokenInput,
   StatTrackerInput,
 } from "../statTypes";
-import { StatConditionList } from "./StatConditionList";
 import { StatTokenForm } from "./StatTokenForm";
 import { StatTokenDisplayPreview } from "./StatTokenDisplayPreview";
 import { StatTokenSyncPreview } from "./StatTokenSyncPreview";
@@ -24,21 +22,12 @@ type Props = {
   group: StatDisplayGroup;
   isGm: boolean;
   viewer: StatPermissionViewer;
-  onAddCondition: (tokenId: string, conditionId: string, value?: number) => void;
-  onClearConditionDuration: (tokenId: string, tokenConditionId: string) => void;
   onAddTracker: (tokenId: string, input: StatTrackerInput) => void;
   onApplyPreset: (tokenId: string) => void;
   onChangeTrackerValue: (tokenId: string, trackerId: string, delta: number) => void;
-  onDecrementConditionDuration: (tokenId: string, tokenConditionId: string) => void;
-  onRemoveCondition: (tokenId: string, tokenConditionId: string) => void;
   onRemoveToken: (tokenId: string) => void;
   onRemoveTracker: (tokenId: string, trackerId: string) => void;
   onToggleTracker: (tokenId: string, trackerId: string) => void;
-  onUpdateCondition: (
-    tokenId: string,
-    tokenConditionId: string,
-    input: StatTokenConditionInput,
-  ) => void;
   onUpdateToken: (tokenId: string, input: Partial<StatTokenInput>) => void;
   onUpdateTracker: (
     tokenId: string,
@@ -68,17 +57,12 @@ export function StatTrackedTokenBlock({
   group,
   isGm,
   viewer,
-  onAddCondition,
-  onClearConditionDuration,
   onAddTracker,
   onApplyPreset,
   onChangeTrackerValue,
-  onDecrementConditionDuration,
-  onRemoveCondition,
   onRemoveToken,
   onRemoveTracker,
   onToggleTracker,
-  onUpdateCondition,
   onUpdateToken,
   onUpdateTracker,
 }: Props) {
@@ -135,26 +119,6 @@ export function StatTrackedTokenBlock({
               </div>
 
               {token.notes ? <p className="stat-notes">{token.notes}</p> : null}
-
-              <StatConditionList
-                isGm={isGm}
-                token={token}
-                onAddCondition={(conditionId, value) =>
-                  onAddCondition(token.id, conditionId, value)
-                }
-                onClearConditionDuration={(tokenConditionId) =>
-                  onClearConditionDuration(token.id, tokenConditionId)
-                }
-                onDecrementConditionDuration={(tokenConditionId) =>
-                  onDecrementConditionDuration(token.id, tokenConditionId)
-                }
-                onRemoveCondition={(tokenConditionId) =>
-                  onRemoveCondition(token.id, tokenConditionId)
-                }
-                onUpdateCondition={(tokenConditionId, input) =>
-                  onUpdateCondition(token.id, tokenConditionId, input)
-                }
-              />
 
               <StatTokenDisplayPreview isGm={isGm} token={token} />
               <StatTokenSyncPreview isGm={isGm} token={token} />
