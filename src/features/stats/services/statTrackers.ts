@@ -83,6 +83,9 @@ export function changeTrackerValue(tracker: StatTracker, delta: number): StatTra
   if (tracker.visualType === "counter" || tracker.visualType === "readonly") {
     return { ...tracker, value: (tracker.value ?? tracker.current ?? 0) + delta, updatedAt: now() };
   }
+  if (tracker.visualType === "toggle" && delta === 0) {
+    return { ...tracker, enabled: !tracker.enabled, updatedAt: now() };
+  }
   return tracker;
 }
 
