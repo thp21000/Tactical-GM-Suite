@@ -1,10 +1,15 @@
-import { FormEvent, useState } from "react";
+import { ChevronDown, X } from "lucide-react";
+import { FormEvent, useEffect, useId, useState } from "react";
 import { Button } from "../../../shared/components/Button";
 import { Toggle } from "../../../shared/components/Toggle";
 import {
   STAT_TRACKER_VISIBILITY_OPTIONS,
   STAT_TRACKER_VISUAL_TYPE_OPTIONS,
 } from "../services/statLabels";
+import {
+  getDefaultTrackerIconId,
+  normalizeTrackerIconId,
+} from "../services/statTrackerIcons";
 import type {
   StatTracker,
   StatTrackerInput,
@@ -24,11 +29,14 @@ function toNumber(value: string): number {
 }
 
 export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
+  const titleId = useId();
   const [name, setName] = useState(tracker?.name ?? "");
   const [visualType, setVisualType] = useState<StatTrackerVisualType>(
     tracker?.visualType ?? "counter",
   );
-  const [iconId, setIconId] = useState(tracker?.iconId ?? "counter");
+  const [iconId, setIconId] = useState(
+    normalizeTrackerIconId(tracker?.iconId ?? getDefaultTrackerIconId()),
+  );
   const [current, setCurrent] = useState(String(tracker?.current ?? 0));
   const [max, setMax] = useState(String(tracker?.max ?? 1));
   const [value, setValue] = useState(String(tracker?.value ?? 0));
@@ -41,15 +49,37 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
   );
   const [showOnToken, setShowOnToken] = useState(tracker?.showOnToken ?? false);
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onCancel();
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onCancel]);
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const iconMax = Math.min(6, Math.max(1, toNumber(max) || 1));
+    const iconCurrent = Math.max(0, Math.min(iconMax, toNumber(current)));
 
     onSubmit({
       name,
       visualType,
       iconId,
-      current: visualType === "bar" ? toNumber(current) : undefined,
-      max: visualType === "bar" ? toNumber(max) : undefined,
+      current:
+        visualType === "bar"
+          ? toNumber(current)
+          : visualType === "icon"
+            ? iconCurrent
+            : undefined,
+      max:
+        visualType === "bar"
+          ? toNumber(max)
+          : visualType === "icon"
+            ? iconMax
+            : undefined,
       value:
         visualType === "counter" || visualType === "readonly"
           ? toNumber(value)
@@ -62,122 +92,183 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
   }
 
   return (
-    <form className="stat-form stat-tracker-form" onSubmit={submit}>
-      <label>
-        Nom
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          required
-        />
-      </label>
+    <div
+      className="stat-tracker-modal__backdrop"
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) onCancel();
+      }}
+    >
+      <section
+        aria-labelledby={titleId}
+        aria-modal="true"
+        className="stat-tracker-modal"
+        role="dialog"
+      >
+        <header className="stat-tracker-modal__header">
+          <div>
+            <h2 id={titleId}>{tracker ? "Modifier le tracker" : "Ajouter un tracker"}</h2>
+            <p>Configurez son affichage et les droits d’accès.</p>
+          </div>
 
-      <label>
-        Type visuel
-        <select
-          value={visualType}
-          onChange={(event) =>
-            setVisualType(event.target.value as StatTrackerVisualType)
-          }
-        >
-          {STAT_TRACKER_VISUAL_TYPE_OPTIONS.map((item) => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          <button
+            aria-label="Fermer"
+            className="stat-tracker-modal__close"
+            onClick={onCancel}
+            title="Fermer"
+            type="button"
+          >
+            <X aria-hidden size={18} />
+          </button>
+        </header>
 
-      <div className="stat-form__wide">
-        <span className="stat-form__label">Icône</span>
-        <StatTrackerIconPicker value={iconId} onChange={setIconId} />
-      </div>
-
-      {visualType === "bar" ? (
-        <>
+        <form className="stat-form stat-tracker-modal__form" onSubmit={submit}>
           <label>
-            Valeur actuelle
+            Nom
             <input
-              value={current}
-              onChange={(event) => setCurrent(event.target.value)}
-              type="number"
+              autoFocus
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Nom du tracker"
+              required
             />
           </label>
 
           <label>
-            Valeur max
-            <input
-              value={max}
-              onChange={(event) => setMax(event.target.value)}
-              type="number"
-            />
+            Type visuel
+            <span className="stat-select-wrap">
+              <select
+                value={visualType}
+                onChange={(event) =>
+                  setVisualType(event.target.value as StatTrackerVisualType)
+                }
+              >
+                {STAT_TRACKER_VISUAL_TYPE_OPTIONS.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown aria-hidden size={15} />
+            </span>
           </label>
-        </>
-      ) : null}
 
-      {visualType === "counter" || visualType === "readonly" ? (
-        <label>
-          Valeur
-          <input
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            type="number"
-          />
-        </label>
-      ) : null}
+          {visualType === "bar" || visualType === "icon" ? (
+            <>
+              <label>
+                {visualType === "icon" ? "Icônes actives" : "Valeur actuelle"}
+                <input
+                  value={current}
+                  min={visualType === "icon" ? 0 : undefined}
+                  max={visualType === "icon" ? Math.min(6, Math.max(1, toNumber(max) || 1)) : undefined}
+                  onChange={(event) => setCurrent(event.target.value)}
+                  type="number"
+                />
+              </label>
 
-      {visualType === "toggle" ? (
-        <div className="stat-toggle-line">
-          <span className="stat-form__label">État activé</span>
-          <Toggle
-            checked={enabled}
-            label="État activé"
-            onChange={setEnabled}
-          />
-        </div>
-      ) : null}
+              <label>
+                {visualType === "icon" ? "Nombre d’icônes (max 6)" : "Valeur max"}
+                <input
+                  value={max}
+                  min={visualType === "icon" ? 1 : undefined}
+                  max={visualType === "icon" ? 6 : undefined}
+                  onChange={(event) => setMax(event.target.value)}
+                  type="number"
+                />
+              </label>
+            </>
+          ) : null}
 
-      <label>
-        Visibilité
-        <select
-          value={visibility}
-          onChange={(event) =>
-            setVisibility(event.target.value as StatTrackerVisibility)
-          }
-        >
-          {STAT_TRACKER_VISIBILITY_OPTIONS.map((item) => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          {visualType === "counter" || visualType === "readonly" ? (
+            <label className="stat-tracker-modal__half-field">
+              Valeur
+              <input
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+                type="number"
+              />
+            </label>
+          ) : null}
 
-      <div className="stat-toggle-line">
-        <span className="stat-form__label">Modification joueur autorisée</span>
-        <Toggle
-          checked={canPlayerEdit}
-          label="Modification joueur autorisée"
-          onChange={setCanPlayerEdit}
-        />
-      </div>
+          {visualType === "toggle" ? (
+            <div className="stat-tracker-modal__half-field stat-setting-row">
+              <div>
+                <strong>État initial</strong>
+                <span>{enabled ? "Actif" : "Inactif"}</span>
+              </div>
+              <Toggle checked={enabled} label="État activé" onChange={setEnabled} />
+            </div>
+          ) : null}
 
-      <div className="stat-toggle-line">
-        <span className="stat-form__label">Afficher sur token</span>
-        <Toggle
-          checked={showOnToken}
-          label="Afficher sur token"
-          onChange={setShowOnToken}
-        />
-      </div>
+          <section className="stat-tracker-modal__section stat-form__wide">
+            <div className="stat-tracker-modal__section-title">
+              <strong>Icône</strong>
+              <span>L’icône choisie porte l’identité visuelle du tracker.</span>
+            </div>
+            <StatTrackerIconPicker value={iconId} onChange={setIconId} />
+          </section>
 
-      <div className="stat-form__actions">
-        <Button type="submit">
-          {tracker ? "Enregistrer" : "Ajouter le tracker"}
-        </Button>
+          <section className="stat-tracker-modal__section stat-form__wide">
+            <div className="stat-tracker-modal__section-title">
+              <strong>Accès & affichage</strong>
+              <span>Contrôlez qui voit et qui peut modifier ce tracker.</span>
+            </div>
 
-        <Button onClick={onCancel}>Annuler</Button>
-      </div>
-    </form>
+            <div className="stat-tracker-modal__access-grid">
+              <label>
+                Visibilité
+                <span className="stat-select-wrap">
+                  <select
+                    value={visibility}
+                    onChange={(event) =>
+                      setVisibility(event.target.value as StatTrackerVisibility)
+                    }
+                  >
+                    {STAT_TRACKER_VISIBILITY_OPTIONS.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown aria-hidden size={15} />
+                </span>
+              </label>
+
+              <div className="stat-setting-row">
+                <div>
+                  <strong>Modification joueur autorisée</strong>
+                  <span>Autoriser les changements rapides si les droits le permettent.</span>
+                </div>
+                <Toggle
+                  checked={canPlayerEdit}
+                  label="Modification joueur autorisée"
+                  onChange={setCanPlayerEdit}
+                />
+              </div>
+
+              <div className="stat-setting-row">
+                <div>
+                  <strong>Afficher sur le token</strong>
+                  <span>Inclure ce tracker dans l’affichage au-dessus du token.</span>
+                </div>
+                <Toggle
+                  checked={showOnToken}
+                  label="Afficher sur token"
+                  onChange={setShowOnToken}
+                />
+              </div>
+            </div>
+          </section>
+
+          <footer className="stat-form__actions stat-tracker-modal__footer">
+            <Button className="stat-tracker-modal__cancel" onClick={onCancel}>
+              Annuler
+            </Button>
+            <Button className="stat-tracker-modal__primary" type="submit">
+              {tracker ? "Enregistrer" : "Ajouter"}
+            </Button>
+          </footer>
+        </form>
+      </section>
+    </div>
   );
 }

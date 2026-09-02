@@ -114,15 +114,20 @@ export function StatPresetManager({
               const visibilityLabel = STAT_TRACKER_VISIBILITY_LABELS[
                 tracker.visibility ?? "public"
               ];
+              const skinId = tracker.skinId ?? "neutral";
 
               return (
                 <article
-                  className={`stat-tracker-card stat-tracker-card--${tracker.visualType}`}
+                  className={`stat-tracker-card stat-tracker-card--${tracker.visualType} stat-tracker-card--skin-${skinId}`}
                   key={`${tracker.name}-${index}`}
                 >
                   <div className="stat-tracker-card__header">
                     <span className="stat-tracker-card__icon" aria-hidden>
-                      {icon.symbol}
+                      {icon.src ? (
+                        <img alt="" draggable={false} src={icon.src} />
+                      ) : (
+                        icon.symbol ?? "◆"
+                      )}
                     </span>
 
                     <div>

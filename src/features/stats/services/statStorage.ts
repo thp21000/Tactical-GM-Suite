@@ -2,7 +2,7 @@ import OBR, { type Metadata } from "@owlbear-rodeo/sdk";
 import { ROOM_METADATA_KEYS, STORAGE_KEYS } from "../../../core/constants/ids";
 import { isObrReady } from "../../../core/obr/obrReady";
 import { readJson, removeItem, writeJson } from "../../../core/storage/localStorage";
-import type { StatTrackerState } from "../statTypes";
+import type { StatTrackedToken, StatTrackerState } from "../statTypes";
 import { normalizeTokenConditions } from "./statConditions";
 import { normalizeStatTrackerPresets } from "./statPresets";
 import { createTracker } from "./statTrackers";
@@ -81,6 +81,55 @@ function isV21State(value: unknown): value is StatTrackerState {
   return isRecord(value) && Array.isArray(value.tokens) && Array.isArray(value.groups);
 }
 
+function removeLegacyTrackerSkin<T extends { skinId?: unknown }>(tracker: T): T {
+  const copy = { ...tracker };
+  delete copy.skinId;
+  return copy;
+}
+
+function prepareTokenForRoomStorage(token: StatTrackedToken): StatTrackedToken {
+  const copy = {
+    ...token,
+    trackers: token.trackers.map(removeLegacyTrackerSkin),
+  };
+  delete copy.isItemMetadataSynced;
+  return copy;
+}
+
+function prepareStateForRoomStorage(state: StatTrackerState): StatTrackerState {
+  const tokens = state.tokens
+    .filter(
+      (token) =>
+        !token.sourceItemId || token.isItemMetadataSynced !== true,
+    )
+    .map(prepareTokenForRoomStorage);
+
+  const knownTokenIds = new Set(state.tokens.map((token) => token.id));
+  const groups = state.groups
+    .map((group) => {
+      const tokenIds = group.tokenIds.filter((tokenId) => knownTokenIds.has(tokenId));
+      return {
+        ...group,
+        tokenIds,
+        primaryTokenId:
+          group.primaryTokenId && tokenIds.includes(group.primaryTokenId)
+            ? group.primaryTokenId
+            : undefined,
+      };
+    })
+    .filter((group) => group.tokenIds.length > 0);
+
+  return {
+    ...state,
+    tokens,
+    groups,
+    selectedTokenId:
+      state.selectedTokenId && knownTokenIds.has(state.selectedTokenId)
+        ? state.selectedTokenId
+        : undefined,
+  };
+}
+
 function migrateLegacyEntity(entity: LegacyEntity) {
   const token = createTrackedToken({
     sourceItemId: entity.sourceItemId,
@@ -152,6 +201,7 @@ function migrateLegacyEntity(entity: LegacyEntity) {
     ...token,
     trackers,
     conditions: normalizeTokenConditions(entity.conditions),
+    isItemMetadataSynced: entity.sourceItemId ? false : undefined,
     createdAt: entity.createdAt ?? token.createdAt,
     updatedAt: entity.updatedAt ?? token.updatedAt,
   };
@@ -167,10 +217,14 @@ export function normalizeStatTrackerState(value: unknown): StatTrackerState {
         ...token,
         assignedPlayerId: cleanOptionalText(token.assignedPlayerId),
         assignedPlayerName: cleanOptionalText(token.assignedPlayerName),
-        trackers: Array.isArray(token.trackers) ? token.trackers : [],
+        trackers: Array.isArray(token.trackers)
+          ? token.trackers.map(removeLegacyTrackerSkin)
+          : [],
         conditions: normalizeTokenConditions(
           (token as { conditions?: unknown }).conditions,
         ),
+        isTracked: token.isTracked !== false,
+        isItemMetadataSynced: token.sourceItemId ? false : undefined,
       })),
       groups: value.groups,
       presets: normalizeStatTrackerPresets(
@@ -209,13 +263,8 @@ function readStateFromMetadata(metadata: Metadata): StatTrackerState | null {
 
 export async function readStatTrackerState(): Promise<StatTrackerState> {
   if (isObrReady()) {
-    try {
-      const metadata = await OBR.room.getMetadata();
-
-      return readStateFromMetadata(metadata) ?? createEmptyStatTrackerState();
-    } catch {
-      return createEmptyStatTrackerState();
-    }
+    const metadata = await OBR.room.getMetadata();
+    return readStateFromMetadata(metadata) ?? createEmptyStatTrackerState();
   }
 
   return normalizeStatTrackerState(
@@ -225,7 +274,9 @@ export async function readStatTrackerState(): Promise<StatTrackerState> {
 
 export async function writeStatTrackerState(state: StatTrackerState): Promise<void> {
   if (isObrReady()) {
-    await OBR.room.setMetadata({ [ROOM_METADATA_KEYS.STAT_TRACKER_STATE]: state });
+    await OBR.room.setMetadata({
+      [ROOM_METADATA_KEYS.STAT_TRACKER_STATE]: prepareStateForRoomStorage(state),
+    });
     return;
   }
 

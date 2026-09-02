@@ -9,9 +9,8 @@ import { StatTrackerToolbar } from "./components/StatTrackerToolbar";
 import { useStatPermissionViewer } from "./hooks/useStatPermissionViewer";
 import { useStatSceneTokenBindings } from "./hooks/useStatSceneTokenBindings";
 import { useStatTokenOverlayAutoSync } from "./hooks/useStatTokenOverlayAutoSync";
-import { useStatTrackerContextMenu } from "./hooks/useStatTrackerContextMenu";
 import { useStatTrackerState } from "./hooks/useStatTrackerState";
-import { filterTokensForViewer } from "./services/statPermissions";
+import { filterTokensForControlViewer } from "./services/statPermissions";
 import type { StatTrackedToken } from "./statTypes";
 
 type Props = {
@@ -28,6 +27,7 @@ export function StatTrackerPage({ obr }: Props) {
     enabled: obr.isReady,
     isGm,
     tokens: stats.tokens,
+    onSceneItems: stats.hydrateSceneItems,
   });
 
   const sceneTokensByCanonicalId = useMemo(() => {
@@ -45,7 +45,7 @@ export function StatTrackerPage({ obr }: Props) {
       stats.displayGroups
         .map((group) => ({
           ...group,
-          tokens: filterTokensForViewer(
+          tokens: filterTokensForControlViewer(
             group.tokens.flatMap(
               (token) => sceneTokensByCanonicalId.get(token.id) ?? [],
             ),
@@ -59,11 +59,6 @@ export function StatTrackerPage({ obr }: Props) {
   useStatTokenOverlayAutoSync({
     enabled: obr.isReady && sceneBindings.sceneReady && isGm,
     tokens: sceneBindings.sceneTokens,
-  });
-
-  useStatTrackerContextMenu({
-    isReady: obr.isReady,
-    onAddItems: stats.addItems,
   });
 
   return (
@@ -120,17 +115,12 @@ export function StatTrackerPage({ obr }: Props) {
                 group={group}
                 isGm={isGm}
                 viewer={viewer}
-                onAddCondition={stats.addConditionToToken}
-                onClearConditionDuration={stats.clearConditionDuration}
                 onAddTracker={stats.addTracker}
                 onApplyPreset={stats.applyPresetToToken}
                 onChangeTrackerValue={stats.changeTrackerValue}
-                onDecrementConditionDuration={stats.decrementConditionDuration}
-                onRemoveCondition={stats.removeConditionFromToken}
                 onRemoveToken={stats.removeToken}
                 onRemoveTracker={stats.removeTracker}
                 onToggleTracker={stats.toggleTracker}
-                onUpdateCondition={stats.updateConditionOnToken}
                 onUpdateToken={stats.updateToken}
                 onUpdateTracker={stats.updateTracker}
               />

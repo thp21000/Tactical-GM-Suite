@@ -1,0 +1,29 @@
+.stat-condition-context__condition-level {
+  color: var(--tgm-obr-accent, #b995ff);
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.stat-condition-context__condition-duration {
+  max-width: 72px;
+  overflow: hidden;
+  color: var(--tgm-obr-text-muted, #b8bac7);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-condition-context__editor input:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.stat-condition-context__select-option:disabled,
+.stat-condition-context__select-option:disabled:hover,
+.stat-condition-context__select-option:disabled:focus-visible {
+  cursor: not-allowed;
+  opacity: 0.38;
+  background: transparent;
+}

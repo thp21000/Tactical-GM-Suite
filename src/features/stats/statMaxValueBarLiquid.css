@@ -1,0 +1,194 @@
+.stat-max-bar__header {
+  position: relative;
+  z-index: 20;
+  display: grid;
+  min-height: 20px;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  align-items: center;
+  margin-bottom: 2px;
+  padding: 0 2px;
+}
+
+.stat-max-bar__header .stat-max-bar__name {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--tgm-obr-text-muted, #b8bac7);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-max-bar__header .stat-max-bar__menu {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.stat-max-bar__header .stat-max-bar__menu-panel {
+  top: calc(100% + 4px);
+  right: 0;
+  bottom: auto;
+}
+
+.stat-max-bar__rail {
+  cursor: ew-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.stat-max-bar__rail[tabindex="-1"] {
+  cursor: default;
+}
+
+.stat-max-bar__rail:focus-visible {
+  outline: 0;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.13),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.44),
+    0 0 0 1px var(--tgm-obr-accent, #b995ff),
+    0 1px 3px rgba(0, 0, 0, 0.34);
+}
+
+.stat-max-bar__fill {
+  overflow: hidden;
+  border-radius: 999px 0 0 999px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.23) 0%,
+      rgba(255, 255, 255, 0.08) 28%,
+      transparent 48%,
+      rgba(0, 0, 0, 0.12) 76%,
+      rgba(0, 0, 0, 0.24) 100%
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--stat-bar-accent) 56%, black 44%) 0%,
+      color-mix(in srgb, var(--stat-bar-accent) 70%, black 30%) 28%,
+      color-mix(in srgb, var(--stat-bar-accent) 88%, black 12%) 58%,
+      var(--stat-bar-accent) 78%,
+      color-mix(in srgb, var(--stat-bar-accent) 84%, white 16%) 100%
+    );
+  background-size: auto;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 5px) 0,
+    100% 8%,
+    calc(100% - 2px) 20%,
+    100% 33%,
+    calc(100% - 5px) 47%,
+    100% 61%,
+    calc(100% - 2px) 75%,
+    100% 89%,
+    calc(100% - 4px) 100%,
+    0 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.30),
+    2px 0 8px color-mix(in srgb, var(--stat-bar-accent) 35%, transparent);
+  transition: width 125ms ease;
+}
+
+/*
+ * Les bulles sont de vrais éléments positionnés à partir d'un seed stable par
+ * tracker. Il n'y a donc plus de motif CSS répétitif visible. Leur quantité
+ * augmente de façon non linéaire avec current/max : aucune à 0, puis une
+ * densité de plus en plus forte à l'approche du maximum.
+ */
+.stat-max-bar__bubble-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.stat-max-bar__bubble {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      rgba(255, 255, 255, 0.66) 0%,
+      rgba(255, 255, 255, 0.34) 26%,
+      rgba(255, 255, 255, 0.12) 58%,
+      transparent 76%
+    );
+  box-shadow:
+    inset 0 0 1px rgba(255, 255, 255, 0.45),
+    0 0 2px rgba(255, 255, 255, 0.16);
+  transform: translate(-50%, -50%);
+}
+
+.stat-max-bar__fill::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 0;
+  bottom: 2px;
+  z-index: 3;
+  width: 8px;
+  pointer-events: none;
+  border-radius: 48% 64% 56% 42% / 28% 42% 58% 72%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 38%),
+    color-mix(in srgb, var(--stat-bar-accent) 88%, white 12%);
+  box-shadow: -2px 0 5px color-mix(in srgb, var(--stat-bar-accent) 34%, transparent);
+  opacity: 0.72;
+}
+
+.stat-max-bar__fill.is-full {
+  border-radius: 999px;
+  clip-path: none;
+}
+
+.stat-max-bar__fill.is-full::after {
+  display: none;
+}
+
+.stat-max-bar__fill.is-empty {
+  opacity: 0;
+}
+
+/*
+ * L'icône sert aussi de jauge : entièrement désaturée à zéro, elle récupère
+ * progressivement ses couleurs jusqu'à sa saturation originale à max.
+ */
+.stat-max-bar__icon img {
+  filter:
+    grayscale(var(--stat-bar-icon-grayscale, 0%))
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+  transition: filter 140ms ease;
+}
+
+.stat-max-bar.is-dragging .stat-max-bar__rail {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.16),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.44),
+    0 0 0 1px color-mix(in srgb, var(--stat-bar-accent) 52%, transparent),
+    0 0 12px color-mix(in srgb, var(--stat-bar-accent) 18%, transparent);
+}
+
+.stat-max-bar.is-dragging .stat-max-bar__fill {
+  transition: none;
+}
+
+.stat-max-bar.is-dragging .stat-max-bar__icon img {
+  transition: none;
+}
+
+.stat-max-bar.is-dragging .stat-max-bar__value-button {
+  background: rgba(10, 12, 18, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-max-bar__fill,
+  .stat-max-bar__icon img {
+    transition: none;
+  }
+}

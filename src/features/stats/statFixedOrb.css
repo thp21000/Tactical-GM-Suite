@@ -1,0 +1,196 @@
+.stat-tracker-card--readonly,
+.stat-tracker-card--toggle {
+  position: relative;
+  overflow: visible;
+  min-width: 0;
+  padding: 5px 5px 8px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stat-tracker-card--readonly:hover,
+.stat-tracker-card--toggle:hover {
+  background: color-mix(
+    in srgb,
+    var(--tgm-obr-overlay, rgba(255, 255, 255, 0.08)) 42%,
+    transparent
+  );
+}
+
+.stat-tracker-card--readonly:has(.stat-max-bar__menu-trigger[aria-expanded="true"]),
+.stat-tracker-card--toggle:has(.stat-max-bar__menu-trigger[aria-expanded="true"]) {
+  z-index: 160;
+}
+
+/*
+ * Les indicateurs fixes et toggles sont suffisamment compacts pour partager
+ * une ligne. Les autres types conservent toute la largeur disponible.
+ */
+.stat-tracker-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+
+.stat-tracker-list > .stat-tracker-card {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.stat-tracker-list > .stat-tracker-card--readonly,
+.stat-tracker-list > .stat-tracker-card--toggle {
+  grid-column: span 1;
+}
+
+.stat-tracker-card--readonly .stat-counter-card__header,
+.stat-tracker-card--toggle .stat-counter-card__header {
+  padding-inline: 25px;
+}
+
+.stat-tracker-card--readonly .stat-counter-card__name,
+.stat-tracker-card--toggle .stat-counter-card__name {
+  max-width: 100%;
+}
+
+.stat-fixed-orb {
+  display: grid;
+  min-height: 52px;
+  place-items: center;
+  padding: 2px 0 1px;
+}
+
+/* La pastille standalone reprend exactement les dimensions du counter. */
+.stat-counter-bar__orb--standalone {
+  position: relative;
+  top: auto;
+  left: auto;
+  z-index: 8;
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  min-height: 48px;
+  margin: 0 auto;
+  transform: none;
+}
+
+.stat-counter-bar__orb--standalone .stat-counter-bar__value-button,
+.stat-counter-bar__orb--standalone .stat-counter-bar__value-input {
+  background: transparent;
+  box-shadow: none;
+}
+
+.stat-counter-bar__orb--standalone .stat-counter-bar__value-button:not(:disabled):hover,
+.stat-counter-bar__orb--standalone .stat-counter-bar__value-button:not(:disabled):focus-visible {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Toggle : même bulle que l'indicateur fixe, sans valeur centrale. */
+.stat-toggle-orb__button {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    filter 120ms ease;
+}
+
+.stat-toggle-orb__button .stat-counter-bar__icon {
+  transition: opacity 140ms ease, filter 140ms ease;
+}
+
+.stat-toggle-orb__button .stat-counter-bar__icon img {
+  transition: filter 140ms ease, opacity 140ms ease;
+}
+
+.stat-toggle-orb__button.is-active .stat-counter-bar__icon {
+  opacity: 1;
+  filter: none;
+}
+
+.stat-toggle-orb__button.is-active .stat-counter-bar__icon img {
+  opacity: 1;
+  filter:
+    grayscale(0%)
+    saturate(1)
+    brightness(0.98)
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.50));
+}
+
+.stat-toggle-orb__button.is-inactive {
+  border-color: color-mix(
+    in srgb,
+    var(--tgm-obr-text-muted, #b8bac7) 48%,
+    #4d535e
+  );
+  box-shadow:
+    inset 0 0 0 2px rgba(8, 10, 16, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 2px 5px rgba(0, 0, 0, 0.38);
+}
+
+.stat-toggle-orb__button.is-inactive .stat-counter-bar__icon {
+  opacity: 0.72;
+}
+
+.stat-toggle-orb__button.is-inactive .stat-counter-bar__icon img {
+  opacity: 0.82;
+  filter:
+    grayscale(100%)
+    saturate(0)
+    brightness(0.72)
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.42));
+}
+
+.stat-toggle-orb__button:not(:disabled):hover,
+.stat-toggle-orb__button:not(:disabled):focus-visible {
+  outline: 0;
+  filter: brightness(1.08);
+  border-color: color-mix(
+    in srgb,
+    var(--stat-counter-accent) 72%,
+    white 16%
+  );
+  box-shadow:
+    inset 0 0 0 2px rgba(8, 10, 16, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 2px 6px rgba(0, 0, 0, 0.48),
+    0 0 0 2px color-mix(in srgb, var(--stat-counter-accent) 16%, transparent),
+    0 0 10px color-mix(in srgb, var(--stat-counter-accent) 28%, transparent);
+}
+
+.stat-toggle-orb__button:disabled {
+  cursor: default;
+}
+
+@media (max-width: 430px) {
+  .stat-tracker-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-tracker-list > .stat-tracker-card {
+    grid-column: 1 / -1;
+  }
+
+  .stat-tracker-list > .stat-tracker-card--readonly,
+  .stat-tracker-list > .stat-tracker-card--toggle {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 340px) {
+  .stat-tracker-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-toggle-orb__button,
+  .stat-toggle-orb__button .stat-counter-bar__icon,
+  .stat-toggle-orb__button .stat-counter-bar__icon img {
+    transition: none;
+  }
+}

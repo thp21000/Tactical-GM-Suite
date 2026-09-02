@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Item } from "@owlbear-rodeo/sdk";
+import OBR, { type Item } from "@owlbear-rodeo/sdk";
 import type {
   StatTokenInput,
   StatTokenType,
@@ -41,7 +41,12 @@ import {
   updateTrackedToken,
 } from "../services/statTokens";
 import { getTokenDisplayItems } from "../services/statTokenDisplay";
-import { getLinkedStatTokenId } from "../services/statTokenSceneLinks";
+import {
+  clearCurrentSceneStatTokenMetadata,
+  getEmbeddedStatTokens,
+  getLinkedStatTokenId,
+  readEmbeddedStatToken,
+} from "../services/statTokenSceneLinks";
 import {
   readStatTrackerState,
   resetStatTrackerState,
@@ -51,6 +56,60 @@ import {
 
 function touch(state: StatTrackerState): StatTrackerState {
   return { ...state, updatedAt: new Date().toISOString() };
+}
+
+function now(): string {
+  return new Date().toISOString();
+}
+
+function timeValue(value: string | undefined): number {
+  const parsed = value ? Date.parse(value) : 0;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function markItemProfileDirty(token: StatTrackedToken): StatTrackedToken {
+  return token.sourceItemId
+    ? { ...token, isItemMetadataSynced: false }
+    : token;
+}
+
+function tokenRuntimeKey(token: StatTrackedToken): string {
+  return [
+    token.id,
+    token.sourceItemId ?? "manual",
+    token.updatedAt,
+    token.isTracked === false ? "off" : "on",
+    token.isItemMetadataSynced === true
+      ? "synced"
+      : token.isItemMetadataSynced === false
+        ? "dirty"
+        : "manual",
+  ].join("|");
+}
+
+function mergeRoomState(
+  current: StatTrackerState,
+  incoming: StatTrackerState,
+): StatTrackerState {
+  const tokenById = new Map(incoming.tokens.map((token) => [token.id, token]));
+
+  for (const token of current.tokens) {
+    if (!token.sourceItemId) continue;
+
+    const roomToken = tokenById.get(token.id);
+    if (
+      !roomToken ||
+      token.isItemMetadataSynced === true ||
+      timeValue(token.updatedAt) >= timeValue(roomToken.updatedAt)
+    ) {
+      tokenById.set(token.id, token);
+    }
+  }
+
+  return {
+    ...incoming,
+    tokens: [...tokenById.values()],
+  };
 }
 
 function createPresetTrackers(
@@ -69,6 +128,7 @@ function createTokenWithPreset(
   return {
     ...token,
     trackers: createPresetTrackers(input.tokenType, state),
+    isItemMetadataSynced: input.sourceItemId ? false : undefined,
   };
 }
 
@@ -93,18 +153,28 @@ export function useStatTrackerState(isObrReady: boolean) {
   const hasLoaded = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
+    if (OBR.isAvailable && !isObrReady) {
+      hasLoaded.current = false;
+      return undefined;
+    }
 
-    readStatTrackerState().then((next) => {
-      if (mounted) {
+    let mounted = true;
+    hasLoaded.current = false;
+
+    void readStatTrackerState()
+      .then((next) => {
+        if (!mounted) return;
         hasLoaded.current = true;
-        setState(next);
-      }
-    });
+        setState((current) => mergeRoomState(current, next));
+      })
+      .catch(() => {
+        // Keep the in-memory state and never enable writes after a failed read.
+      });
 
     const unsubscribe = subscribeToStatTrackerState((next) => {
+      if (!mounted) return;
       hasLoaded.current = true;
-      setState(next);
+      setState((current) => mergeRoomState(current, next));
     });
 
     return () => {
@@ -114,14 +184,67 @@ export function useStatTrackerState(isObrReady: boolean) {
   }, [isObrReady]);
 
   useEffect(() => {
-    if (hasLoaded.current) {
-      void writeStatTrackerState(state);
-    }
-  }, [state]);
+    if (!hasLoaded.current) return;
+    if (OBR.isAvailable && !isObrReady) return;
+    void writeStatTrackerState(state);
+  }, [isObrReady, state]);
 
   const tokens = state.tokens;
   const groups = state.groups;
   const presets = state.presets;
+
+  const hydrateSceneItems = useCallback((items: Item[]) => {
+    const embeddedTokens = getEmbeddedStatTokens(items);
+    const embeddedById = new Map<string, StatTrackedToken>();
+
+    for (const token of embeddedTokens) {
+      const existing = embeddedById.get(token.id);
+      if (!existing || timeValue(token.updatedAt) > timeValue(existing.updatedAt)) {
+        embeddedById.set(token.id, token);
+      }
+    }
+
+    setState((current) => {
+      const currentById = new Map(current.tokens.map((token) => [token.id, token]));
+      const nextTokens = current.tokens.filter((token) => {
+        if (!token.sourceItemId) return true;
+        if (embeddedById.has(token.id)) return false;
+
+        // Profiles already confirmed in item metadata belong to the previous
+        // scene once no matching item exists in the current scene, so they can
+        // leave the room cache safely. Unsynced legacy profiles are retained
+        // until a scene containing them is opened and migrated.
+        return token.isItemMetadataSynced !== true;
+      });
+
+      for (const embedded of embeddedById.values()) {
+        const currentToken = currentById.get(embedded.id);
+        let nextToken = embedded;
+
+        if (
+          currentToken &&
+          timeValue(currentToken.updatedAt) > timeValue(embedded.updatedAt)
+        ) {
+          nextToken = {
+            ...currentToken,
+            sourceItemId: embedded.sourceItemId,
+            isItemMetadataSynced: false,
+          };
+        }
+
+        nextTokens.push(nextToken);
+      }
+
+      const changed =
+        nextTokens.length !== current.tokens.length ||
+        nextTokens.some(
+          (token, index) =>
+            tokenRuntimeKey(token) !== tokenRuntimeKey(current.tokens[index]),
+        );
+
+      return changed ? touch({ ...current, tokens: nextTokens }) : current;
+    });
+  }, []);
 
   const addToken = useCallback((input: StatTokenInput) => {
     setState((current) =>
@@ -134,22 +257,81 @@ export function useStatTrackerState(isObrReady: boolean) {
 
   const addItems = useCallback((items: Item[]) => {
     setState((current) => {
-      const existingSourceIds = new Set(
-        current.tokens.map((token) => token.sourceItemId).filter(Boolean),
+      const nextTokens = [...current.tokens];
+      let changed = false;
+
+      for (const item of items) {
+        const linkedTokenId = getLinkedStatTokenId(item);
+        const embedded = readEmbeddedStatToken(item);
+        const existingIndex = nextTokens.findIndex(
+          (token) =>
+            token.sourceItemId === item.id ||
+            (linkedTokenId !== undefined && token.id === linkedTokenId) ||
+            (embedded !== undefined && token.id === embedded.id),
+        );
+
+        if (existingIndex >= 0) {
+          const existing = nextTokens[existingIndex];
+          if (existing && existing.isTracked === false) {
+            nextTokens[existingIndex] = {
+              ...existing,
+              isTracked: true,
+              isItemMetadataSynced: existing.sourceItemId ? false : undefined,
+              updatedAt: now(),
+            };
+            changed = true;
+          }
+          continue;
+        }
+
+        if (embedded) {
+          nextTokens.push({
+            ...embedded,
+            sourceItemId: item.id,
+            isTracked: true,
+            isItemMetadataSynced: false,
+            updatedAt: now(),
+          });
+          changed = true;
+          continue;
+        }
+
+        const created = createTokenFromObrItemWithPreset(item, current);
+        if (linkedTokenId) created.id = linkedTokenId;
+        nextTokens.push(created);
+        changed = true;
+      }
+
+      return changed ? touch({ ...current, tokens: nextTokens }) : current;
+    });
+  }, []);
+
+  const removeItems = useCallback((items: Item[]) => {
+    setState((current) => {
+      const sourceItemIds = new Set(items.map((item) => item.id));
+      const linkedTokenIds = new Set(
+        items
+          .map(getLinkedStatTokenId)
+          .filter((tokenId): tokenId is string => Boolean(tokenId)),
       );
-      const existingTokenIds = new Set(current.tokens.map((token) => token.id));
+      let changed = false;
 
-      const additions = items
-        .filter((item) => {
-          if (existingSourceIds.has(item.id)) return false;
-          const linkedTokenId = getLinkedStatTokenId(item);
-          return !linkedTokenId || !existingTokenIds.has(linkedTokenId);
-        })
-        .map((item) => createTokenFromObrItemWithPreset(item, current));
+      const nextTokens = current.tokens.map((token) => {
+        const matches =
+          linkedTokenIds.has(token.id) ||
+          (token.sourceItemId !== undefined && sourceItemIds.has(token.sourceItemId));
+        if (!matches || token.isTracked === false) return token;
 
-      return additions.length
-        ? touch({ ...current, tokens: [...current.tokens, ...additions] })
-        : current;
+        changed = true;
+        return {
+          ...token,
+          isTracked: false,
+          isItemMetadataSynced: token.sourceItemId ? false : undefined,
+          updatedAt: now(),
+        };
+      });
+
+      return changed ? touch({ ...current, tokens: nextTokens }) : current;
     });
   }, []);
 
@@ -159,7 +341,9 @@ export function useStatTrackerState(isObrReady: boolean) {
         touch({
           ...current,
           tokens: current.tokens.map((token) =>
-            token.id === tokenId ? updateTrackedToken(token, patch) : token,
+            token.id === tokenId
+              ? markItemProfileDirty(updateTrackedToken(token, patch))
+              : token,
           ),
         }),
       );
@@ -168,16 +352,21 @@ export function useStatTrackerState(isObrReady: boolean) {
   );
 
   const removeToken = useCallback((tokenId: string) => {
-    setState((current) =>
-      touch({
-        ...current,
-        tokens: current.tokens.filter((token) => token.id !== tokenId),
-        groups: current.groups.map((group) => ({
-          ...group,
-          tokenIds: group.tokenIds.filter((id) => id !== tokenId),
-        })),
-      }),
-    );
+    setState((current) => {
+      let changed = false;
+      const nextTokens = current.tokens.map((token) => {
+        if (token.id !== tokenId || token.isTracked === false) return token;
+        changed = true;
+        return {
+          ...token,
+          isTracked: false,
+          isItemMetadataSynced: token.sourceItemId ? false : undefined,
+          updatedAt: now(),
+        };
+      });
+
+      return changed ? touch({ ...current, tokens: nextTokens }) : current;
+    });
   }, []);
 
   const mapToken = useCallback(
@@ -186,7 +375,7 @@ export function useStatTrackerState(isObrReady: boolean) {
         touch({
           ...current,
           tokens: current.tokens.map((token) =>
-            token.id === tokenId ? update(token) : token,
+            token.id === tokenId ? markItemProfileDirty(update(token)) : token,
           ),
         }),
       );
@@ -247,6 +436,7 @@ export function useStatTrackerState(isObrReady: boolean) {
   const applyPresetToToken = useCallback(
     (tokenId: string) => {
       setState((current) => {
+        let changed = false;
         const nextTokens = current.tokens.map((token) => {
           if (token.id !== tokenId) return token;
 
@@ -257,14 +447,16 @@ export function useStatTrackerState(isObrReady: boolean) {
           ).map(createTracker);
 
           if (missingTrackers.length === 0) return token;
+          changed = true;
 
-          return missingTrackers.reduce(
+          const updated = missingTrackers.reduce(
             (nextToken, tracker) => addTrackerToToken(nextToken, tracker),
             token,
           );
+          return markItemProfileDirty(updated);
         });
 
-        return touch({ ...current, tokens: nextTokens });
+        return changed ? touch({ ...current, tokens: nextTokens }) : current;
       });
     },
     [],
@@ -370,28 +562,43 @@ export function useStatTrackerState(isObrReady: boolean) {
   }, []);
 
   const resetTracker = useCallback(() => {
-    resetStatTrackerState().then(setState);
-  }, []);
+    void (async () => {
+      if (OBR.isAvailable && isObrReady) {
+        await clearCurrentSceneStatTokenMetadata().catch(() => undefined);
+      }
+      const next = await resetStatTrackerState();
+      hasLoaded.current = true;
+      setState(next);
+    })();
+  }, [isObrReady]);
 
   const displayGroups = useMemo(() => getDisplayGroups(state), [state]);
+  const trackedTokens = useMemo(
+    () => tokens.filter((token) => token.isTracked !== false),
+    [tokens],
+  );
 
   const summary = useMemo(() => {
-    const trackerCount = tokens.reduce(
+    const trackerCount = trackedTokens.reduce(
       (total, token) => total + token.trackers.length,
       0,
     );
-    const visibleOnTokenCount = tokens.reduce(
+    const visibleOnTokenCount = trackedTokens.reduce(
       (total, token) => total + getTokenDisplayItems(token).length,
       0,
     );
 
     return {
-      tokenCount: tokens.length,
+      tokenCount: trackedTokens.length,
       trackerCount,
-      groupCount: groups.length,
+      groupCount: groups.filter((group) =>
+        group.tokenIds.some((tokenId) =>
+          trackedTokens.some((token) => token.id === tokenId),
+        ),
+      ).length,
       visibleOnTokenCount,
     };
-  }, [groups.length, tokens]);
+  }, [groups, trackedTokens]);
 
   return {
     addConditionToToken,
@@ -405,8 +612,10 @@ export function useStatTrackerState(isObrReady: boolean) {
     decrementConditionDuration,
     displayGroups,
     groups,
+    hydrateSceneItems,
     presets,
     removeConditionFromToken,
+    removeItems,
     removeToken,
     removeTracker,
     removeTrackerFromPreset: removeTrackerFromPresetForType,

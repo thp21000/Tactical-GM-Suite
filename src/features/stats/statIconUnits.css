@@ -1,0 +1,121 @@
+.stat-tracker-card--icon {
+  position: relative;
+  overflow: visible;
+  padding: 5px 7px 8px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stat-tracker-card--icon:hover {
+  background: color-mix(
+    in srgb,
+    var(--tgm-obr-overlay, rgba(255, 255, 255, 0.08)) 42%,
+    transparent
+  );
+}
+
+.stat-tracker-card--icon:has(.stat-max-bar__menu-trigger[aria-expanded="true"]) {
+  z-index: 160;
+}
+
+.stat-icon-units-card {
+  gap: 3px;
+}
+
+.stat-icon-units {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 3px 4px 2px;
+}
+
+.stat-icon-units__item {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  place-items: center;
+  padding: 1px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    transform 110ms ease,
+    background-color 110ms ease,
+    filter 130ms ease,
+    opacity 130ms ease;
+}
+
+.stat-icon-units__item img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  transition: filter 140ms ease, opacity 140ms ease;
+}
+
+.stat-icon-units__item.is-active img {
+  opacity: 1;
+  filter:
+    grayscale(0%)
+    saturate(1)
+    brightness(1)
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.48));
+}
+
+.stat-icon-units__item.is-inactive img {
+  opacity: 0.72;
+  filter:
+    grayscale(100%)
+    saturate(0)
+    brightness(0.58)
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.34));
+}
+
+.stat-icon-units__item:not(:disabled):hover,
+.stat-icon-units__item:not(:disabled):focus-visible {
+  outline: 0;
+  transform: translateY(-1px) scale(1.06);
+  background: color-mix(
+    in srgb,
+    var(--tgm-obr-overlay, rgba(255, 255, 255, 0.08)) 64%,
+    transparent
+  );
+}
+
+.stat-icon-units__item:disabled {
+  cursor: default;
+}
+
+@media (max-width: 420px) {
+  .stat-icon-units {
+    gap: 5px;
+  }
+
+  .stat-icon-units__item {
+    width: 33px;
+    min-width: 33px;
+    height: 33px;
+    min-height: 33px;
+  }
+
+  .stat-icon-units__item img {
+    width: 29px;
+    height: 29px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-icon-units__item,
+  .stat-icon-units__item img {
+    transition: none;
+  }
+}

@@ -1,10 +1,11 @@
 {
   "name": "Tactical GM Suite",
-  "version": "0.2.36",
+  "version": "0.2.38",
   "manifest_version": 1,
   "description": "A modular tactical GM suite for Owlbear Rodeo.",
   "author": "Quentin",
   "icon": "https://thp21000.github.io/Tactical-GM-Suite/icon.svg",
+  "background_url": "https://thp21000.github.io/Tactical-GM-Suite/background.html",
   "action": {
     "title": "Tactical GM Suite",
     "icon": "https://thp21000.github.io/Tactical-GM-Suite/icon.svg",

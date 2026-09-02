@@ -12,24 +12,27 @@ export type StatTrackerVisualType = "icon" | "bar" | "counter" | "readonly" | "t
 
 export type StatTrackerVisibility = "gm" | "private" | "public";
 
-export type StatTrackerIconCategory =
-  | "health"
-  | "armor"
-  | "magic"
-  | "resource"
-  | "money"
-  | "combat"
-  | "status"
-  | "utility"
-  | "other";
+/** @deprecated Conservé uniquement pour lire les anciennes données. */
+export type StatTrackerSkinId =
+  | "neutral"
+  | "red"
+  | "blue"
+  | "purple"
+  | "gold"
+  | "green"
+  | "orange"
+  | "steel"
+  | "dark";
+
+export type StatTrackerIconCategory = "body" | "arcane" | "resource" | "object";
 
 export type StatTrackerIcon = {
   id: string;
   label: string;
   category: StatTrackerIconCategory;
+  src?: string;
   symbol: string;
 };
-
 
 export type StatConditionSeverity = "none" | "value" | "staged";
 
@@ -108,6 +111,12 @@ export type StatTokenCondition = {
   durationType?: StatConditionDurationType;
   durationValue?: number;
   remainingRounds?: number;
+  /** Rencontre d'initiative qui pilote une durée en rounds ou "Rencontre". */
+  initiativeEncounterId?: string;
+  /** Round où une durée en rounds a été (re)configurée. */
+  initiativeStartRound?: number;
+  /** Round d'expiration absolu utilisé pour calculer les rounds restants. */
+  initiativeExpiresAtRound?: number;
   source?: string;
   note?: string;
   showOnToken?: boolean;
@@ -123,6 +132,8 @@ export type StatTracker = {
   name: string;
   visualType: StatTrackerVisualType;
   iconId: string;
+  /** @deprecated Anciennes sauvegardes uniquement. Le style vient maintenant de l'icône. */
+  skinId?: StatTrackerSkinId;
   current?: number;
   max?: number;
   value?: number;
@@ -146,6 +157,14 @@ export type StatTrackedToken = {
   assignedPlayerName?: string;
   notes?: string;
   isHiddenFromPlayers: boolean;
+  /** False = profil conservé dans le token Owlbear mais non affiché dans le Stat Tracker. */
+  isTracked?: boolean;
+  /**
+   * État runtime uniquement. True signifie que la version courante du profil a
+   * bien été écrite dans les métadonnées du token Owlbear de la scène active.
+   * Cette propriété n'est jamais sérialisée dans le token ni dans la room.
+   */
+  isItemMetadataSynced?: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -164,6 +183,8 @@ export type StatTrackerInput = {
   name: string;
   visualType: StatTrackerVisualType;
   iconId: string;
+  /** @deprecated Ignoré lors de la création/modification. */
+  skinId?: StatTrackerSkinId;
   current?: number;
   max?: number;
   value?: number;
