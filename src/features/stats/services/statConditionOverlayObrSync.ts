@@ -1,8 +1,12 @@
 import OBR, {
   buildImage,
+  buildLabel,
   isImage,
+  isLabel,
+  type BoundingBox,
   type Image,
   type Item,
+  type Label,
   type Vector2,
 } from "@owlbear-rodeo/sdk";
 import { EXTENSION_ID } from "../../../core/constants/ids";
@@ -13,26 +17,32 @@ import type {
   StatTrackerVisibility,
 } from "../statTypes";
 import { getConditionAssetUrl } from "./statConditionAssets";
-import { getTokenDisplayConditions } from "./statConditions";
+import {
+  getConditionDisplayName,
+  getConditionDurationText,
+} from "./statConditionContextActions";
 import type { StatOverlayObrSyncResult } from "./statTokenOverlayObrSync";
 
 export const STAT_CONDITION_OVERLAY_METADATA_KEY = `${EXTENSION_ID}/stats-condition-overlay`;
-export const STAT_CONDITION_OVERLAY_KIND = "stats-condition-overlay";
+export const STAT_CONDITION_OVERLAY_KIND = "stats-condition-badge";
+const LEGACY_CONDITION_OVERLAY_KIND = "stats-condition-overlay";
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-const CONDITION_SIZE_RATIO = 1.10;
-const CONDITION_CENTER_OFFSET_X_RATIO = -0.06;
-const CONDITION_CENTER_OFFSET_Y_RATIO = -0.02;
-const VISIBLE_ALPHA_THRESHOLD = 8;
-const VISIBLE_ANALYSIS_MAX_SIZE = 384;
+const BADGE_SCALE = 0.24;
+const BADGE_RING_GAP = 1.18;
+const MAX_BADGES_PER_RING = 8;
+const LEVEL_LABEL_FONT_SIZE = 10;
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 
-type ConditionOverlayMetadata = {
-  kind: typeof STAT_CONDITION_OVERLAY_KIND;
+type BadgeRole = "icon" | "level";
+
+type ConditionBadgeMetadata = {
+  kind: typeof STAT_CONDITION_OVERLAY_KIND | typeof LEGACY_CONDITION_OVERLAY_KIND;
   tokenId: string;
   sourceItemId: string;
   conditionId: string;
   visibility: StatTrackerVisibility;
+  role: BadgeRole;
   updatedAt: string;
 };
 
@@ -41,20 +51,13 @@ type OverlayItemsApi = Pick<
   "addItems" | "deleteItems" | "getItems" | "updateItems"
 >;
 
-type ConditionOverlayGeometry = {
+type BadgePlacement = {
+  condition: StatTokenCondition;
   position: Vector2;
-  scale: number;
+  visibility: StatTrackerVisibility;
 };
 
-type VisibleImageCenter = {
-  x: number;
-  y: number;
-};
-
-const visibleImageCenterCache = new Map<
-  string,
-  Promise<VisibleImageCenter | undefined>
->();
+type DesiredBadgeItem = Image | Label;
 
 function createResult(
   action: "create-or-update" | "delete",
@@ -74,46 +77,52 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function readMetadata(item: Item): ConditionOverlayMetadata | undefined {
+function isVisibility(value: unknown): value is StatTrackerVisibility {
+  return value === "public" || value === "private" || value === "gm";
+}
+
+function readMetadata(item: Item): ConditionBadgeMetadata | undefined {
   const value = item.metadata?.[STAT_CONDITION_OVERLAY_METADATA_KEY];
   if (!isRecord(value)) return undefined;
-
   if (
-    value.kind !== STAT_CONDITION_OVERLAY_KIND ||
+    value.kind !== STAT_CONDITION_OVERLAY_KIND &&
+    value.kind !== LEGACY_CONDITION_OVERLAY_KIND
+  ) {
+    return undefined;
+  }
+  if (
     typeof value.tokenId !== "string" ||
     typeof value.sourceItemId !== "string" ||
     typeof value.conditionId !== "string" ||
     typeof value.updatedAt !== "string" ||
-    (value.visibility !== "public" &&
-      value.visibility !== "private" &&
-      value.visibility !== "gm")
+    !isVisibility(value.visibility)
   ) {
     return undefined;
   }
 
   return {
-    kind: STAT_CONDITION_OVERLAY_KIND,
+    kind: value.kind,
     tokenId: value.tokenId,
     sourceItemId: value.sourceItemId,
     conditionId: value.conditionId,
     visibility: value.visibility,
+    role: value.role === "level" ? "level" : "icon",
     updatedAt: value.updatedAt,
   };
 }
 
+function matchesTokenOverlay(item: Item, token: StatTrackedToken): boolean {
+  const metadata = readMetadata(item);
+  return Boolean(
+    metadata &&
+      token.sourceItemId &&
+      metadata.tokenId === token.id &&
+      metadata.sourceItemId === token.sourceItemId,
+  );
+}
+
 function getAudienceApi(visibility: StatTrackerVisibility): OverlayItemsApi {
   return visibility === "public" ? OBR.scene.items : OBR.scene.local;
-}
-
-function createConditionOverlayId(
-  sourceItemId: string,
-  visibility: StatTrackerVisibility,
-): string {
-  return `tactical-gm-stats-condition-${visibility}-${sourceItemId}`;
-}
-
-function getDisplayedCondition(token: StatTrackedToken): StatTokenCondition | undefined {
-  return getTokenDisplayConditions(token)[0];
 }
 
 async function canCurrentPlayerManageOverlays(): Promise<boolean> {
@@ -141,220 +150,135 @@ function canUseConditionOverlaySync(): boolean {
   );
 }
 
-/**
- * Measure the centre of the non-transparent artwork inside a token image.
- * Owlbear's grid offset only describes the image canvas anchor; many token PNGs
- * include asymmetric transparent margins, so their visible circle can still be
- * offset after the canvas itself is centred correctly.
- *
- * Results are cached by image URL. If CORS or canvas access is unavailable we
- * simply return undefined and the geometry calculation falls back to the image
- * canvas centre.
- */
-function getVisibleImageCenter(assetUrl: string): Promise<VisibleImageCenter | undefined> {
-  const cached = visibleImageCenterCache.get(assetUrl);
-  if (cached) return cached;
-
-  const pending = (async () => {
-    try {
-      const response = await fetch(assetUrl, {
-        mode: "cors",
-        credentials: "omit",
-      });
-      if (!response.ok) return undefined;
-
-      const blob = await response.blob();
-      const bitmap = await createImageBitmap(blob);
-
-      try {
-        if (bitmap.width <= 0 || bitmap.height <= 0) return undefined;
-
-        const analysisScale = Math.min(
-          1,
-          VISIBLE_ANALYSIS_MAX_SIZE / Math.max(bitmap.width, bitmap.height),
-        );
-        const width = Math.max(1, Math.round(bitmap.width * analysisScale));
-        const height = Math.max(1, Math.round(bitmap.height * analysisScale));
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const context = canvas.getContext("2d", { willReadFrequently: true });
-        if (!context) return undefined;
-
-        context.clearRect(0, 0, width, height);
-        context.drawImage(bitmap, 0, 0, width, height);
-        const pixels = context.getImageData(0, 0, width, height).data;
-
-        let minX = width;
-        let minY = height;
-        let maxX = -1;
-        let maxY = -1;
-
-        for (let y = 0; y < height; y += 1) {
-          for (let x = 0; x < width; x += 1) {
-            const alpha = pixels[(y * width + x) * 4 + 3];
-            if (alpha <= VISIBLE_ALPHA_THRESHOLD) continue;
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
-          }
-        }
-
-        if (maxX < minX || maxY < minY) return undefined;
-
-        return {
-          x: (minX + maxX + 1) / (2 * width),
-          y: (minY + maxY + 1) / (2 * height),
-        };
-      } finally {
-        bitmap.close();
-      }
-    } catch {
-      return undefined;
-    }
-  })();
-
-  visibleImageCenterCache.set(assetUrl, pending);
-  return pending;
-}
-
-function rotateVector(vector: Vector2, degrees: number): Vector2 {
-  if (!degrees) return vector;
-  const radians = (degrees * Math.PI) / 180;
-  const cosine = Math.cos(radians);
-  const sine = Math.sin(radians);
-  return {
-    x: vector.x * cosine - vector.y * sine,
-    y: vector.x * sine + vector.y * cosine,
-  };
-}
-
-/**
- * The condition image itself is defined as exactly one grid cell
- * (1024 px image with a grid DPI of 1024). Its scale is therefore the source
- * token's complete logical size in grid cells.
- *
- * For image tokens the centre is calculated from the visible alpha bounds when
- * possible, then transformed from source-image pixels into scene coordinates.
- * A small template calibration is applied last because the condition artwork's
- * visual opening is not perfectly aligned with Owlbear's image anchor.
- */
-async function getGeometry(sourceItemId: string): Promise<ConditionOverlayGeometry> {
-  const [sourceItem] = await OBR.scene.items.getItems([sourceItemId]);
-  const sceneDpi = await OBR.scene.grid.getDpi();
-
-  if (sourceItem && isImage(sourceItem)) {
-    const widthInCells = sourceItem.image.width / sourceItem.grid.dpi;
-    const heightInCells = sourceItem.image.height / sourceItem.grid.dpi;
-    const widthScale = Math.abs(sourceItem.scale.x);
-    const heightScale = Math.abs(sourceItem.scale.y);
-    const logicalDiameterInCells = Math.max(
-      0.01,
-      Math.min(widthInCells * widthScale, heightInCells * heightScale),
-    );
-
-    const visibleCenter = await getVisibleImageCenter(sourceItem.image.url);
-    const centerX = (visibleCenter?.x ?? 0.5) * sourceItem.image.width;
-    const centerY = (visibleCenter?.y ?? 0.5) * sourceItem.image.height;
-    const dpiScale = sceneDpi / sourceItem.grid.dpi;
-
-    const localOffset = rotateVector(
-      {
-        x:
-          (centerX - sourceItem.grid.offset.x) *
-          dpiScale *
-          sourceItem.scale.x,
-        y:
-          (centerY - sourceItem.grid.offset.y) *
-          dpiScale *
-          sourceItem.scale.y,
-      },
-      sourceItem.rotation,
-    );
-
-    const renderedDiameter =
-      logicalDiameterInCells * sceneDpi * CONDITION_SIZE_RATIO;
-
-    return {
-      position: {
-        x:
-          sourceItem.position.x +
-          localOffset.x +
-          renderedDiameter * CONDITION_CENTER_OFFSET_X_RATIO,
-        y:
-          sourceItem.position.y +
-          localOffset.y +
-          renderedDiameter * CONDITION_CENTER_OFFSET_Y_RATIO,
-      },
-      scale: logicalDiameterInCells * CONDITION_SIZE_RATIO,
-    };
-  }
-
-  const bounds = await OBR.scene.items.getItemBounds([sourceItemId]);
-  const targetSize = Math.min(bounds.width, bounds.height);
-  return {
-    position: {
-      x: bounds.center.x + targetSize * CONDITION_CENTER_OFFSET_X_RATIO,
-      y: bounds.center.y + targetSize * CONDITION_CENTER_OFFSET_Y_RATIO,
-    },
-    scale: Math.max(0.01, (targetSize * CONDITION_SIZE_RATIO) / sceneDpi),
-  };
-}
-
-function matchesOverlay(
-  item: Item,
-  token: StatTrackedToken,
-  visibility: StatTrackerVisibility,
-): boolean {
-  const metadata = readMetadata(item);
-  return Boolean(
-    metadata &&
-      token.sourceItemId &&
-      metadata.tokenId === token.id &&
-      metadata.sourceItemId === token.sourceItemId &&
-      metadata.visibility === visibility,
+function getSortedConditions(token: StatTrackedToken): StatTokenCondition[] {
+  return [...token.conditions].sort(
+    (a, b) =>
+      a.createdAt.localeCompare(b.createdAt) ||
+      a.shortLabel.localeCompare(b.shortLabel, "fr"),
   );
 }
 
-async function findOverlays(
-  token: StatTrackedToken,
-  visibility: StatTrackerVisibility,
-): Promise<Item[]> {
-  if (!token.sourceItemId) return [];
-  return getAudienceApi(visibility).getItems((item) =>
-    matchesOverlay(item, token, visibility),
+function getStartAngle(count: number): number {
+  if (count <= 1) return -90;
+  if (count === 2) return 0;
+  if (count === 3) return -90;
+  if (count === 4) return -45;
+  return -90;
+}
+
+function getRingCount(itemCount: number): number {
+  return Math.ceil(itemCount / MAX_BADGES_PER_RING);
+}
+
+function getPlacementForIndex(
+  index: number,
+  total: number,
+  firstRingIndex: number,
+  bounds: BoundingBox,
+  sceneDpi: number,
+): Vector2 {
+  const ringOffset = Math.floor(index / MAX_BADGES_PER_RING);
+  const indexInRing = index % MAX_BADGES_PER_RING;
+  const ringItemCount = Math.min(
+    MAX_BADGES_PER_RING,
+    total - ringOffset * MAX_BADGES_PER_RING,
   );
+  const angleStep = 360 / Math.max(1, ringItemCount);
+  const angleDegrees = getStartAngle(ringItemCount) + indexInRing * angleStep;
+  const angle = (angleDegrees * Math.PI) / 180;
+  const badgeDiameter = sceneDpi * BADGE_SCALE;
+  const tokenRadius = Math.max(bounds.width, bounds.height) / 2;
+  const globalRing = firstRingIndex + ringOffset;
+  const radius =
+    tokenRadius +
+    badgeDiameter * 0.72 +
+    globalRing * badgeDiameter * BADGE_RING_GAP;
+
+  return {
+    x: bounds.center.x + Math.cos(angle) * radius,
+    y: bounds.center.y + Math.sin(angle) * radius,
+  };
 }
 
-async function deleteAudienceOverlay(
+function createPlacements(
   token: StatTrackedToken,
-  visibility: StatTrackerVisibility,
-): Promise<number> {
-  const overlays = await findOverlays(token, visibility);
-  if (overlays.length === 0) return 0;
-  await getAudienceApi(visibility).deleteItems(overlays.map((item) => item.id));
-  return overlays.length;
+  bounds: BoundingBox,
+  sceneDpi: number,
+): BadgePlacement[] {
+  const conditions = getSortedConditions(token);
+  const publicConditions = conditions.filter(
+    (condition) => (condition.visibility ?? "public") === "public",
+  );
+  const localConditions = conditions.filter(
+    (condition) => (condition.visibility ?? "public") !== "public",
+  );
+  const publicRingCount = getRingCount(publicConditions.length);
+
+  const publicPlacements = publicConditions.map((condition, index) => ({
+    condition,
+    position: getPlacementForIndex(
+      index,
+      publicConditions.length,
+      0,
+      bounds,
+      sceneDpi,
+    ),
+    visibility: "public" as const,
+  }));
+
+  const localPlacements = localConditions.map((condition, index) => ({
+    condition,
+    position: getPlacementForIndex(
+      index,
+      localConditions.length,
+      publicRingCount,
+      bounds,
+      sceneDpi,
+    ),
+    visibility: condition.visibility ?? "gm",
+  }));
+
+  return [...publicPlacements, ...localPlacements];
 }
 
-function buildConditionImage(
+function createBadgeId(
   token: StatTrackedToken,
   condition: StatTokenCondition,
-  assetUrl: string,
-  geometry: ConditionOverlayGeometry,
-): Image {
-  if (!token.sourceItemId) throw new Error("Token Owlbear non lié.");
+  role: BadgeRole,
+): string {
+  return `tactical-gm-condition-badge-${token.sourceItemId}-${condition.id}-${role}`;
+}
 
-  const visibility = condition.visibility ?? "public";
-  const overlayId = createConditionOverlayId(token.sourceItemId, visibility);
-  const metadata: ConditionOverlayMetadata = {
+function createBadgeMetadata(
+  token: StatTrackedToken,
+  condition: StatTokenCondition,
+  role: BadgeRole,
+): ConditionBadgeMetadata {
+  if (!token.sourceItemId) throw new Error("Token Owlbear non lié.");
+  return {
     kind: STAT_CONDITION_OVERLAY_KIND,
     tokenId: token.id,
     sourceItemId: token.sourceItemId,
     conditionId: condition.conditionId,
-    visibility,
+    visibility: condition.visibility ?? "public",
+    role,
     updatedAt: condition.updatedAt,
   };
+}
+
+function getConditionTooltip(condition: StatTokenCondition): string {
+  const duration = getConditionDurationText(condition);
+  return [getConditionDisplayName(condition), duration].filter(Boolean).join(" · ");
+}
+
+function buildConditionBadgeImage(
+  token: StatTrackedToken,
+  placement: BadgePlacement,
+  assetUrl: string,
+): Image {
+  const { condition, position } = placement;
+  if (!token.sourceItemId) throw new Error("Token Owlbear non lié.");
+  const tooltip = getConditionTooltip(condition);
 
   return buildImage(
     {
@@ -371,70 +295,176 @@ function buildConditionImage(
       },
     },
   )
-    .id(overlayId)
-    .name(`Condition — ${condition.label} — ${token.name}`)
-    .position(geometry.position)
+    .id(createBadgeId(token, condition, "icon"))
+    .name(tooltip)
+    .position(position)
     .rotation(0)
-    .scale({ x: geometry.scale, y: geometry.scale })
+    .scale({ x: BADGE_SCALE, y: BADGE_SCALE })
+    .layer("ATTACHMENT")
+    .attachedTo(token.sourceItemId)
+    .locked(true)
+    .disableAutoZIndex(true)
+    .disableAttachmentBehavior(["COPY", "ROTATION"])
+    .metadata({
+      [STAT_CONDITION_OVERLAY_METADATA_KEY]: createBadgeMetadata(
+        token,
+        condition,
+        "icon",
+      ),
+    })
+    .build();
+}
+
+function buildConditionLevelLabel(
+  token: StatTrackedToken,
+  placement: BadgePlacement,
+  sceneDpi: number,
+): Label | null {
+  const { condition, position } = placement;
+  if (!token.sourceItemId || typeof condition.value !== "number") return null;
+  const badgeDiameter = sceneDpi * BADGE_SCALE;
+  const tooltip = getConditionTooltip(condition);
+
+  return buildLabel()
+    .id(createBadgeId(token, condition, "level"))
+    .name(tooltip)
+    .plainText(String(condition.value))
+    .fontSize(LEVEL_LABEL_FONT_SIZE)
+    .fontWeight(800)
+    .padding(2)
+    .fillColor("#ffffff")
+    .backgroundColor("#242333")
+    .backgroundOpacity(0.96)
+    .cornerRadius(8)
+    .position({
+      x: position.x + badgeDiameter * 0.28,
+      y: position.y + badgeDiameter * 0.28,
+    })
+    .rotation(0)
+    .scale({ x: 1, y: 1 })
     .layer("ATTACHMENT")
     .attachedTo(token.sourceItemId)
     .locked(true)
     .disableHit(true)
     .disableAutoZIndex(true)
-    .disableAttachmentBehavior(["COPY", "ROTATION", "SCALE"])
+    .disableAttachmentBehavior(["COPY", "ROTATION"])
     .metadata({
-      [STAT_CONDITION_OVERLAY_METADATA_KEY]: metadata,
+      [STAT_CONDITION_OVERLAY_METADATA_KEY]: createBadgeMetadata(
+        token,
+        condition,
+        "level",
+      ),
     })
     .build();
 }
 
-async function upsertConditionOverlay(
+function buildDesiredItems(
   token: StatTrackedToken,
-  condition: StatTokenCondition,
-  assetUrl: string,
-  geometry: ConditionOverlayGeometry,
-): Promise<"created" | "updated"> {
-  const visibility = condition.visibility ?? "public";
-  const api = getAudienceApi(visibility);
-  const overlays = await findOverlays(token, visibility);
-  const [existing, ...duplicates] = overlays;
-  const nextImage = buildConditionImage(token, condition, assetUrl, geometry);
+  placements: BadgePlacement[],
+  sceneDpi: number,
+): DesiredBadgeItem[] {
+  return placements.flatMap((placement) => {
+    const assetUrl = getConditionAssetUrl(placement.condition);
+    if (!assetUrl) return [];
 
-  if (duplicates.length > 0) {
-    await api.deleteItems(duplicates.map((item) => item.id));
-  }
-
-  if (!existing || !isImage(existing)) {
-    if (existing) await api.deleteItems([existing.id]);
-    await api.addItems([nextImage]);
-    return "created";
-  }
-
-  await api.updateItems([existing], (items) => {
-    const [draft] = items;
-    if (!draft || !isImage(draft)) return;
-
-    draft.name = nextImage.name;
-    draft.image = nextImage.image;
-    draft.grid = nextImage.grid;
-    draft.position = nextImage.position;
-    draft.rotation = 0;
-    draft.scale = nextImage.scale;
-    draft.attachedTo = token.sourceItemId;
-    draft.layer = "ATTACHMENT";
-    draft.locked = true;
-    draft.disableHit = true;
-    draft.disableAutoZIndex = true;
-    draft.disableAttachmentBehavior = ["COPY", "ROTATION", "SCALE"];
-    draft.metadata = {
-      ...draft.metadata,
-      [STAT_CONDITION_OVERLAY_METADATA_KEY]: nextImage.metadata[
-        STAT_CONDITION_OVERLAY_METADATA_KEY
-      ],
-    };
+    const image = buildConditionBadgeImage(token, placement, assetUrl);
+    const level = buildConditionLevelLabel(token, placement, sceneDpi);
+    return level ? [image, level] : [image];
   });
+}
 
-  return "updated";
+async function getExistingItems(
+  api: OverlayItemsApi,
+  token: StatTrackedToken,
+): Promise<Item[]> {
+  return api.getItems((item) => matchesTokenOverlay(item, token));
+}
+
+async function updateExistingItem(
+  api: OverlayItemsApi,
+  existing: Item,
+  desired: DesiredBadgeItem,
+): Promise<boolean> {
+  if (isImage(existing) && isImage(desired)) {
+    await api.updateItems([existing], (drafts) => {
+      const [draft] = drafts;
+      if (!draft || !isImage(draft)) return;
+      draft.name = desired.name;
+      draft.image = desired.image;
+      draft.grid = desired.grid;
+      draft.position = desired.position;
+      draft.rotation = desired.rotation;
+      draft.scale = desired.scale;
+      draft.layer = desired.layer;
+      draft.attachedTo = desired.attachedTo;
+      draft.locked = desired.locked;
+      draft.disableAutoZIndex = desired.disableAutoZIndex;
+      draft.disableAttachmentBehavior = desired.disableAttachmentBehavior;
+      draft.metadata = desired.metadata;
+    });
+    return true;
+  }
+
+  if (isLabel(existing) && isLabel(desired)) {
+    await api.updateItems([existing], (drafts) => {
+      const [draft] = drafts;
+      if (!draft || !isLabel(draft)) return;
+      draft.name = desired.name;
+      draft.position = desired.position;
+      draft.rotation = desired.rotation;
+      draft.scale = desired.scale;
+      draft.layer = desired.layer;
+      draft.attachedTo = desired.attachedTo;
+      draft.locked = desired.locked;
+      draft.disableHit = desired.disableHit;
+      draft.disableAutoZIndex = desired.disableAutoZIndex;
+      draft.disableAttachmentBehavior = desired.disableAttachmentBehavior;
+      draft.text = desired.text;
+      draft.style = desired.style;
+      draft.metadata = desired.metadata;
+    });
+    return true;
+  }
+
+  return false;
+}
+
+async function syncApiItems(
+  api: OverlayItemsApi,
+  token: StatTrackedToken,
+  desiredItems: DesiredBadgeItem[],
+): Promise<{ created: number; updated: number; deleted: number }> {
+  const existingItems = await getExistingItems(api, token);
+  const existingById = new Map(existingItems.map((item) => [item.id, item]));
+  const desiredIds = new Set(desiredItems.map((item) => item.id));
+  const staleIds = existingItems
+    .filter((item) => !desiredIds.has(item.id))
+    .map((item) => item.id);
+
+  if (staleIds.length > 0) await api.deleteItems(staleIds);
+
+  let created = 0;
+  let updated = 0;
+
+  for (const desired of desiredItems) {
+    const existing = existingById.get(desired.id);
+    if (!existing) {
+      await api.addItems([desired]);
+      created += 1;
+      continue;
+    }
+
+    if (await updateExistingItem(api, existing, desired)) {
+      updated += 1;
+      continue;
+    }
+
+    await api.deleteItems([existing.id]);
+    await api.addItems([desired]);
+    created += 1;
+  }
+
+  return { created, updated, deleted: staleIds.length };
 }
 
 export async function createOrUpdateTokenConditionOverlay(
@@ -443,70 +473,68 @@ export async function createOrUpdateTokenConditionOverlay(
   if (!token.sourceItemId) {
     return createResult("create-or-update", "not-ready", "Token non lié à Owlbear.", token);
   }
-
   if (!canUseConditionOverlaySync()) {
     return createResult(
       "create-or-update",
       "unavailable",
-      "Affichage image de condition indisponible.",
+      "Affichage des conditions indisponible.",
       token,
     );
   }
-
   if (!(await canCurrentPlayerManageOverlays())) {
     return createResult("create-or-update", "unavailable", "Action réservée au MJ.", token);
   }
 
   try {
-    const condition = getDisplayedCondition(token);
+    const [bounds, sceneDpi] = await Promise.all([
+      OBR.scene.items.getItemBounds([token.sourceItemId]),
+      OBR.scene.grid.getDpi(),
+    ]);
+    const placements = createPlacements(token, bounds, sceneDpi);
+    const desired = buildDesiredItems(token, placements, sceneDpi);
+    const publicItems = desired.filter((item) => {
+      const metadata = readMetadata(item);
+      return metadata?.visibility === "public";
+    });
+    const localItems = desired.filter((item) => {
+      const metadata = readMetadata(item);
+      return metadata?.visibility !== "public";
+    });
 
-    if (!condition) {
-      let deleted = 0;
-      for (const visibility of AUDIENCES) {
-        deleted += await deleteAudienceOverlay(token, visibility);
-      }
+    const [publicResult, localResult] = await Promise.all([
+      syncApiItems(getAudienceApi("public"), token, publicItems),
+      syncApiItems(getAudienceApi("gm"), token, localItems),
+    ]);
+
+    const created = publicResult.created + localResult.created;
+    const updated = publicResult.updated + localResult.updated;
+    const deleted = publicResult.deleted + localResult.deleted;
+    const conditionCount = token.conditions.length;
+
+    if (conditionCount === 0) {
       return createResult(
         "create-or-update",
         deleted > 0 ? "updated" : "not-ready",
-        deleted > 0 ? "Image de condition retirée." : "Aucune condition affichée sur token.",
+        deleted > 0
+          ? "Badges de conditions retirés."
+          : "Aucune condition active.",
         token,
       );
     }
-
-    const assetUrl = getConditionAssetUrl(condition);
-    if (!assetUrl) {
-      for (const visibility of AUDIENCES) {
-        await deleteAudienceOverlay(token, visibility);
-      }
-      return createResult(
-        "create-or-update",
-        "not-ready",
-        `Image introuvable pour la condition ${condition.label}.`,
-        token,
-      );
-    }
-
-    const desiredVisibility = condition.visibility ?? "public";
-    for (const visibility of AUDIENCES) {
-      if (visibility !== desiredVisibility) {
-        await deleteAudienceOverlay(token, visibility);
-      }
-    }
-
-    const geometry = await getGeometry(token.sourceItemId);
-    const outcome = await upsertConditionOverlay(token, condition, assetUrl, geometry);
 
     return createResult(
       "create-or-update",
-      outcome,
-      `${condition.label} affiché en image sur le token.`,
+      created > 0 ? "created" : updated > 0 || deleted > 0 ? "updated" : "updated",
+      `${conditionCount} condition${conditionCount > 1 ? "s" : ""} affichée${conditionCount > 1 ? "s" : ""} autour du token.`,
       token,
     );
   } catch (error) {
     return createResult(
       "create-or-update",
       "error",
-      error instanceof Error ? error.message : "Erreur pendant l’affichage de la condition.",
+      error instanceof Error
+        ? error.message
+        : "Erreur pendant l’affichage des conditions.",
       token,
     );
   }
@@ -518,28 +546,36 @@ export async function deleteTokenConditionOverlay(
   if (!token.sourceItemId) {
     return createResult("delete", "not-ready", "Token non lié à Owlbear.", token);
   }
-
   if (!canUseConditionOverlaySync()) {
-    return createResult("delete", "unavailable", "Affichage image indisponible.", token);
+    return createResult("delete", "unavailable", "Affichage des conditions indisponible.", token);
   }
 
   try {
     let deleted = 0;
     for (const visibility of AUDIENCES) {
-      deleted += await deleteAudienceOverlay(token, visibility);
+      const api = getAudienceApi(visibility);
+      const items = await getExistingItems(api, token);
+      if (items.length === 0) continue;
+      await api.deleteItems(items.map((item) => item.id));
+      deleted += items.length;
+      if (visibility === "private") break;
     }
 
     return createResult(
       "delete",
       deleted > 0 ? "deleted" : "not-found",
-      deleted > 0 ? "Image de condition supprimée." : "Aucune image de condition trouvée.",
+      deleted > 0
+        ? "Badges de conditions supprimés."
+        : "Aucun badge de condition trouvé.",
       token,
     );
   } catch (error) {
     return createResult(
       "delete",
       "error",
-      error instanceof Error ? error.message : "Erreur pendant la suppression de la condition.",
+      error instanceof Error
+        ? error.message
+        : "Erreur pendant la suppression des conditions.",
       token,
     );
   }
