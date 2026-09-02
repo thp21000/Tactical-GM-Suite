@@ -5,7 +5,11 @@ import {
   createTgmThemeFromObrTheme,
   fallbackTgmTheme,
 } from "../../../core/theme/obrTheme";
-import type { StatTrackedToken, StatTrackerInput } from "../statTypes";
+import type {
+  StatTrackedToken,
+  StatTracker,
+  StatTrackerInput,
+} from "../statTypes";
 import { StatTrackerCard } from "../components/StatTrackerCard";
 import { updateEmbeddedStatToken } from "../services/statEmbeddedProfileActions";
 import {
@@ -158,10 +162,7 @@ export function StatTrackerContextMenuApp() {
   );
 
   const mutateTracker = useCallback(
-    (
-      trackerId: string,
-      update: Parameters<typeof updateTokenTracker>[2],
-    ) => {
+    (trackerId: string, update: (tracker: StatTracker) => StatTracker) => {
       void mutate((current) => {
         const currentTracker = current.trackers.find((tracker) => tracker.id === trackerId);
         if (!currentTracker) return current;
