@@ -1,6 +1,16 @@
 # INDEX_48_PROMPTS_ICONES
 
-Bibliothèque des 48 prompts mono-icône pour Tactical GM Suite.
+Bibliothèque **de base** des 48 prompts mono-icône du Stat Tracker de Tactical GM Suite.
+
+Statut au 2 septembre 2026 :
+
+- 48 IDs de base ;
+- 4 catégories ;
+- 12 sujets par catégorie ;
+- les prompts individuels sont des payloads autonomes de génération ;
+- les 15 ajouts ultérieurs sont listés séparément dans `INDEX_EXTRA_PROMPTS_ICONES_V2.md`.
+
+Le registre runtime charge les PNG réellement présents dans `src/features/stats/assets/icons/` et associe des labels/couleurs d’accent aux IDs connus.
 
 | Catégorie | Nom visible | ID technique | Fichier |
 |---|---|---|---|
@@ -52,3 +62,21 @@ Bibliothèque des 48 prompts mono-icône pour Tactical GM Suite.
 | object | Point | `object_dot` | `object/object_dot.md` |
 | object | Flèche haut | `object_arrow_up` | `object/object_arrow_up.md` |
 | object | Flèche bas | `object_arrow_down` | `object/object_arrow_down.md` |
+
+## Règles d’intégration
+
+Nom du PNG final :
+
+```text
+<ID technique>.png
+```
+
+Exemple :
+
+```text
+body_heart.png
+```
+
+Le dossier runtime détermine la catégorie. Le nom du fichier détermine l’ID.
+
+Le sens du tracker n’est jamais déduit de cet ID.

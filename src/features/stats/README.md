@@ -1,393 +1,495 @@
-# Stats module
+# Stats module — carte du code et état d’implémentation
 
-Le module Stats gère le suivi des tokens dans Tactical GM Suite.
+> Mise à jour : 2 septembre 2026.
 
-Ce module ne doit pas être traité comme une simple fiche de personnage complète. Il doit être développé comme un système de trackers personnalisables liés aux tokens Owlbear.
+Le module Stats gère des trackers personnalisables et des conditions attachés aux tokens Owlbear Rodeo.
+
+Il ne doit pas être traité comme une fiche de personnage complète.
 
 ## Source de vérité
 
-Avant toute modification majeure du module Stats, lire :
+Avant toute modification fonctionnelle importante, lire :
 
-```txt
-../../../docs/features/STATS_V2_SPEC.md
+```text
+docs/features/STATS_V2_SPEC.md
 ```
 
-Le fichier `docs/features/STATS_V2_SPEC.md` est la source de vérité fonctionnelle pour Stats V2.
+Pour le contexte global :
 
-Aucune évolution importante du module Stats ne doit contredire ce document.
-
-## Objectifs du module
-
-Le module Stats doit permettre au MJ de :
-
-* ajouter un token Owlbear au suivi ;
-* suivre des valeurs personnalisables ;
-* gérer des trackers visuels ;
-* préparer les presets par type de token ;
-* préparer les conditions ;
-* préparer l’affichage futur sur token ;
-* rendre les valeurs exploitables par les autres modules de Tactical GM Suite.
-
-## Découpage Stats V2
-
-Le développement doit respecter ce découpage :
-
-* Stats V2.1 — Base des trackers personnalisables ;
-* Stats V2.2 — Types de token et presets automatiques ;
-* Stats V2.3 — Assignation joueur ;
-* Stats V2.4 — Conditions ;
-* Stats V2.5 — Affichage sur token.
-
-Il ne faut pas implémenter plusieurs étapes en même temps sans validation explicite.
-
-## État actuel
-
-Les étapes actuellement implémentées sont :
-
-```txt
-Stats V2.1 — Base des trackers personnalisables
-Stats V2.2A — Presets internes et application automatique
-Stats V2.2B — Gestion simple des presets par le MJ
-Stats V2.3A — Assignation joueur simple
-Stats V2.3B — Permissions joueur préparées
-Stats V2.3C — Mode joueur minimal / filtrage préparé
-Stats V2.4A — Conditions, catalogue de base et assignation simple
-Stats V2.4B — Durée, source, note et édition simple des conditions
-Stats V2.4C — Effets mécaniques préparés
-Stats V2.4D — Préparation affichage conditions sur token
-Stats V2.5A — Aperçu local et modèle unifié d’affichage token
-Stats V2.5B — Préparation synchronisation Owlbear en mode aperçu technique
-Stats V2.5C — Plan de rendu overlay Owlbear
-Stats V2.5D — Rendu SVG local des overlays
-Stats V2.5E — Adaptateur Owlbear préparé et garde-fous de synchronisation
-Stats V2.5F — Affichage réel au-dessus du token et visibilité
+```text
+PROJECT_CONTEXT.md
+docs/ARCHITECTURE.md
+docs/stats/README.md
 ```
 
-## V2.1 implémentée — trackers personnalisables
+## Principes obligatoires
 
-La base Stats V2.1 est en place : le module utilise désormais un modèle `tokens + trackers` plutôt que des champs directs de type PV/CA sur l'entité suivie.
+- le sens d’un tracker est défini par le MJ ;
+- une icône ne définit jamais une stat ;
+- les presets sont des raccourcis modifiables ;
+- `skinId` est legacy ;
+- Conditions et Stat Tracker restent indépendants ;
+- les profils durables sont embarqués dans les métadonnées Owlbear ;
+- les actions rapides ne doivent pas dupliquer toute l’administration Stats ;
+- les permissions d’édition joueur sont séparées de la visibilité d’overlay.
 
-Inclus dans cette étape :
+## Structure du module
 
-* ajout manuel d'un token suivi ;
-* ajout depuis le menu contextuel Owlbear `Ajouter au Stat Tracker` ;
-* blocs verticaux repliables par token ou groupe simple ;
-* trackers personnalisables avec cinq types visuels : icône, barre, compteur, lecture seule et toggle ;
-* bibliothèque interne simple d'icônes textuelles ;
-* migration robuste des anciens états V1 `entities` vers `tokens` + `trackers` ;
-* sélecteurs internes pour permettre aux futurs modules de lire les trackers.
-
-## Stats V2.2A — presets internes
-
-Les presets internes sont en place dans :
-
-```txt
-src/features/stats/services/statPresets.ts
-```
-
-Ils permettent d’appliquer automatiquement des trackers selon le type de token.
-
-Types couverts :
-
-* PJ ;
-* PNJ ;
-* Ennemi ;
-* Monture ;
-* Objet ;
-* Piège ;
-* Familier ;
-* Autre.
-
-Comportement actuel :
-
-* l’ajout manuel d’un token applique le preset du type choisi ;
-* l’ajout depuis le menu contextuel Owlbear applique un preset par défaut de type Ennemi ;
-* le bouton `Appliquer preset` ajoute les trackers manquants du type actuel ;
-* les trackers existants ne sont pas écrasés ;
-* aucun doublon n’est créé si un tracker du même nom existe déjà.
-
-## Stats V2.2B — gestion simple des presets
-
-Les presets sont désormais stockés dans l’état Stats.
-
-Le MJ peut :
-
-* ouvrir le panneau `Gérer les presets` ;
-* sélectionner un type de token ;
-* ajouter un tracker au preset sélectionné ;
-* retirer un tracker d’un preset ;
-* réinitialiser un preset ;
-* réinitialiser tous les presets.
-
-Cette étape reste volontairement simple.
-
-Les presets modifiés s’appliquent aux prochains tokens ajoutés et au bouton `Appliquer preset`.
-
-Le bouton `Appliquer preset` reste prudent : il ajoute les trackers manquants et ne supprime pas les trackers déjà présents sur le token.
-
-## Stats V2.3A — assignation joueur simple
-
-Les tokens suivis peuvent maintenant recevoir une assignation joueur manuelle.
-
-Champs ajoutés au token :
-
-* `assignedPlayerName` ;
-* `assignedPlayerId`.
-
-Le MJ peut renseigner ces champs depuis le formulaire de token.
-
-Le bloc token affiche ensuite le joueur assigné.
-
-Cette étape ne met pas encore en place :
-
-* la récupération automatique des joueurs connectés Owlbear ;
-* le filtrage automatique côté joueur ;
-* les permissions réelles par joueur ;
-* l’édition directe côté joueur.
-
-Ces éléments restent prévus pour une étape ultérieure de V2.3.
-
-## Ce qui reste reporté
-
-Restent volontairement reportés à des étapes ultérieures :
-
-* permissions joueur réelles ;
-* récupération des joueurs connectés Owlbear ;
-* conditions avancées avec effets mécaniques ;
-* affichage direct sur token ;
-* automatisation complète PF2e ;
-* intégration Calendar ;
-* intégration Loot Table.
-
-## Règles d’architecture
-
-Le code spécifique au module Stats doit rester dans :
-
-```txt
+```text
 src/features/stats/
+  StatDashboardOverview.tsx
+  StatTrackerPage.tsx
+  statTypes.ts
+  statConstants.ts
+
+  assets/
+    icons/
+    conditions/
+    ...
+
+  background/
+    setupStatBackground.ts
+
+  components/
+    StatTrackedTokenBlock.tsx
+    StatTrackerCard.tsx
+    StatTrackerForm.tsx
+    StatTrackerValueControls.tsx
+    StatTokenForm.tsx
+    ...
+
+  context/
+    StatConditionContextMenuApp.tsx
+    StatTrackerContextMenuApp.tsx
+    ...
+
+  hooks/
+    useStatPermissionViewer.ts
+    useStatSceneTokenBindings.ts
+    useStatTokenOverlayAutoSync.ts
+    useStatTrackerState.ts
+    ...
+
+  services/
+    statPermissions.ts
+    statPresets.ts
+    statTrackers.ts
+    statTrackerIcons.ts
+    statTokenSceneLinks.ts
+    statEmbeddedProfileActions.ts
+    statContextMenuActions.ts
+    statTokenEligibility.ts
+    statConditionInitiativeSync.ts
+    statConditionOverlayObrSync.ts
+    statTokenOverlayObrSync.ts
+    ...
 ```
 
-Les services de logique métier doivent rester dans :
+## Entrypoints et surfaces UI
 
-```txt
-src/features/stats/services/
+Stats existe sur trois surfaces distinctes.
+
+### 1. Page Stats principale
+
+`StatTrackerPage.tsx`
+
+Responsabilités :
+
+- afficher les groupes/tokens de la scène ;
+- hydrater les instances liées ;
+- appliquer le filtrage du viewer ;
+- lancer la synchronisation automatique des overlays côté MJ ;
+- donner accès aux formulaires/presets côté MJ.
+
+### 2. Sous-menu Conditions
+
+`context/StatConditionContextMenuApp.tsx`
+
+Chargé par :
+
+```text
+?view=stats-conditions
 ```
 
-Les hooks Owlbear propres au module doivent rester dans :
+Il fonctionne depuis le Context Menu Owlbear enregistré par le background.
 
-```txt
-src/features/stats/hooks/
+### 3. Sous-menu Stats rapide
+
+`context/StatTrackerContextMenuApp.tsx`
+
+Chargé par :
+
+```text
+?view=stats-trackers
 ```
 
-Les composants propres au module doivent rester dans :
+Il réutilise `StatTrackerCard` pour garder le même langage visuel, mais passe `isGm={false}` volontairement afin de masquer les menus d’administration `…`.
 
-```txt
-src/features/stats/components/
+Le MJ peut y manipuler tous les trackers du token. Le joueur assigné ne voit que ceux avec `canPlayerEdit = true`.
+
+## Background permanent
+
+`background/setupStatBackground.ts` est chargé depuis le background Owlbear déclaré dans le manifest.
+
+Il doit fonctionner même si le popover principal n’est pas ouvert.
+
+Il enregistre :
+
+- Ajouter au Stat Tracker ;
+- Retirer du Stat Tracker ;
+- Stats ;
+- Conditions.
+
+Il maintient aussi :
+
+- badges/overlays de conditions au changement de scène ;
+- résumé `playerEditable` / `assignedPlayerId` pour filtrer le menu Stats côté joueur ;
+- synchronisation de durée Conditions ↔ Initiative.
+
+## Éligibilité des tokens
+
+`services/statTokenEligibility.ts`
+
+Runtime strict :
+
+```text
+item.type === IMAGE
+layer in CHARACTER | MOUNT | PROP
 ```
 
-Les composants partagés ne doivent aller dans `src/shared/components/` que s’ils sont réellement génériques.
+Les filtres de Context Menu excluent explicitement les autres couches Owlbear.
 
-## Règle importante
+## Modèle de données
 
-Les valeurs suivies par Stats doivent pouvoir être reprises plus tard par les autres modules.
+`statTypes.ts`
 
-Exemples futurs :
+### Types de token
 
-* Initiative peut lire les PV pour signaler une entité vaincue ;
-* un module Combat peut appliquer des dégâts à un tracker PV ;
-* Distance peut lire une valeur de vitesse ou portée ;
-* les conditions peuvent influencer des affichages tactiques.
+```text
+pc
+npc
+enemy
+mount
+object
+trap
+familiar
+other
+```
 
-Il faut donc garder une structure de données claire, stable et exploitable.
+### Types visuels
 
-## Stats V2.3B — permissions joueur préparées
+```text
+icon
+bar
+counter
+readonly
+toggle
+```
 
-Les règles de permissions joueur sont maintenant centralisées pour les trackers Stats.
+Ne pas ajouter un sixième type sans chantier explicite : le comportement « unités » a été intégré au type historique `icon`.
 
-Règles de visibilité préparées :
+## Trackers
 
-* `gm` = visible seulement par le MJ ;
-* `public` = visible par tout le monde ;
-* `private` = visible par le MJ et par le joueur assigné au token ;
-* si aucun joueur n’est assigné au token, `private` reste visible uniquement par le MJ.
+### `bar`
 
-Règles d’édition joueur préparées :
+Barre à valeur max :
 
-* un tracker `gm` n’est jamais éditable par un joueur ;
-* un tracker `public` ou `private` peut être édité par le joueur assigné si `canPlayerEdit` vaut `true` ;
-* un token sans joueur assigné n’est jamais éditable par un joueur ;
-* le MJ conserve tous les droits dans l’interface actuelle.
+- `current/max` ;
+- drag horizontal ;
+- édition inline math ;
+- bulles pseudo-aléatoires ;
+- désaturation progressive de l’icône ;
+- couleur d’accent de l’icône.
 
-Cette étape prépare seulement les fonctions de permissions et les badges courts dans l’UI MJ (`MJ`, `Public`, `Privé`, `Joueur mod.`, `Lecture seule`).
-La récupération automatique des joueurs Owlbear, le filtrage complet de l’interface et la vraie interface joueur restent reportés.
+### `counter`
 
-## Stats V2.3C — mode joueur réel minimal / filtrage préparé
+Indicateur modifiable :
 
-Les règles de permissions préparées en V2.3B sont maintenant utilisées pour construire une vue filtrée selon le viewer courant.
+- pastille centrale 48 px ;
+- `-5`, `-1`, `+1`, `+5` ;
+- pas de borne ;
+- pas de drag ;
+- inline math.
 
-Comportement préparé :
+### `readonly`
 
-* le viewer Stats est centralisé dans un hook dédié ;
-* le MJ voit tous les tokens et tous les trackers ;
-* un joueur ne voit jamais les trackers `gm` ;
-* un joueur voit les trackers `public` ;
-* un joueur assigné au token voit aussi les trackers `private` de ce token ;
-* si aucun tracker n’est visible pour un joueur, le token peut être masqué dans cette vue ;
-* les contrôles rapides de tracker sont préparés selon `canPlayerEdit` et l’assignation du token ;
-* les boutons MJ restent masqués en vue joueur.
+Indicateur fixe :
 
-Le hook utilise l’API joueur Owlbear disponible (`OBR.player.getRole()`, `getId()`, `getName()` et `onChange()`) quand elle est prête. En dehors d’Owlbear ou en cas d’erreur API, l’interface reste volontairement en `Mode MJ` pour éviter de masquer des informations au MJ.
+- nom technique historique ;
+- pastille 48 px ;
+- pas de rail ;
+- pas de boutons ;
+- valeur tout de même éditable par clic/inline math.
 
-L’interface joueur complète, l’édition joueur avancée et l’affichage direct sur token restent reportés.
+### `toggle`
 
-## Stats V2.4A — conditions, base et assignation simple
+- pastille 48 px ;
+- couleur = actif ;
+- désaturé = inactif ;
+- clic pour basculer.
 
-Une première base de conditions est maintenant disponible dans Stats.
+### `icon`
 
-Inclus dans cette étape :
+Indicateur à icônes cumulatives :
 
-* un catalogue simple de conditions fantasy / PF2e-compatible ;
-* un stockage séparé des conditions dans `StatTrackedToken.conditions`, distinct des trackers ;
-* l’ajout d’une condition à un token suivi par le MJ ;
-* le retrait d’une condition active par le MJ ;
-* l’affichage des conditions actives sous forme de badges courts dans le bloc du token ;
-* une normalisation des anciens tokens sans `conditions` vers une liste vide ;
-* une migration prudente des anciennes conditions simples quand elles correspondent au catalogue.
+- `current` = actifs ;
+- `max` = nombre affiché ;
+- max courant = 6 ;
+- clic cumulatif.
 
-Cette étape n’applique aucun effet mécanique automatique. Les malus, durées avancées, sources, immunités, automatisation PF2e et affichage direct sur token Owlbear restent reportés.
+## Calcul inline partagé
 
+Le renderer accepte :
 
-## Stats V2.4B — durée, source, note et édition simple des conditions
+```text
+12
++3
+-2
+*2
+x2
+×2
+/2
+÷2
+```
 
-Les conditions actives peuvent maintenant porter quelques informations de suivi supplémentaires tout en restant séparées des trackers.
+Le `bar` applique ensuite la borne 0..max.
 
-Inclus dans cette étape :
+`counter` et `readonly` ne possèdent pas de borne min/max métier.
 
-* modification de la valeur d’une condition à valeur, par exemple `Effrayé 2` ;
-* source courte optionnelle ;
-* note courte optionnelle ;
-* durée simple : manuelle, rounds, rencontre ou repos ;
-* décrément manuel des rounds via `-1r` sans suppression automatique à 0 ;
-* normalisation des anciennes conditions qui ne possèdent pas encore ces champs.
+## Icônes
 
-Cette étape n’applique toujours aucun effet mécanique automatique. L’automatisation PF2e, les interactions avec Initiative / Distance et l’affichage direct sur token Owlbear restent reportés.
+`services/statTrackerIcons.ts`
 
+Chargement :
 
-## Stats V2.4C — effets mécaniques préparés
+```ts
+import.meta.glob("../assets/icons/**/*.png", ...)
+```
 
-Certaines conditions possèdent maintenant des effets descriptifs exploitables plus tard par les autres modules.
+Catégories reconnues par dossier :
 
-Inclus dans cette étape :
+```text
+Corps & Protection -> body
+Arcane & Combat -> arcane
+Ressources & Richesses -> resource
+Objets & Marques -> object
+```
 
-* effets descriptifs dans les définitions de conditions ;
-* cibles d’effet préparées comme CA, jets, perception, vitesse, actions, visibilité ou initiative ;
-* modes d’effet préparés comme malus de statut, bonus, désactivation ou information ;
-* badges compacts affichables au MJ dans l’éditeur de condition ;
-* effets pouvant indiquer qu’ils dépendent de la valeur de la condition.
+Le registre contient :
 
-Ces effets sont purement informatifs pour le moment. Ils ne modifient automatiquement ni les trackers, ni la CA, ni les PV, ni la vitesse, ni l’initiative, ni les jets. L’automatisation PF2e, les interactions Initiative / Distance et l’affichage direct sur token Owlbear restent reportés.
+- labels explicites ;
+- accents explicites ;
+- aliases legacy ;
+- fallback.
 
+Base documentée : 48 icônes + 15 ajouts.
 
-## Stats V2.4D — préparation affichage conditions sur token
+L’ordre explicite `ICON_ORDER` couvre actuellement la base 48 ; les extras sans position explicite retombent après elle selon le tri secondaire. Ne pas supposer que tous les nouveaux assets ont une position manuelle.
 
-Les conditions actives peuvent maintenant porter une intention d’affichage futur sur token, sans créer d’overlay Owlbear réel.
+## Presets
 
-Choix de conception : comme les trackers existants, les nouvelles conditions ne sont pas affichées sur token par défaut. Le MJ active explicitement l’intention d’affichage depuis l’éditeur de condition.
+`services/statPresets.ts`
 
-Inclus dans cette étape :
+Les presets par type de token :
 
-* intention `showOnToken` sur chaque condition active ;
-* modes préparés : badge, icône ou masqué ;
-* priorité d’affichage bornée de 0 à 100 ;
-* indicateur compact `Token` dans la liste des conditions ;
-* helpers purs pour récupérer et trier les conditions prévues pour affichage futur.
+- proposent des trackers ;
+- s’appliquent à l’ajout ;
+- peuvent être gérés par le MJ ;
+- ne doivent pas écraser les trackers déjà présents ;
+- ne doivent pas transformer le label/icône en règle métier.
 
-Aucun overlay Owlbear réel n’est créé, aucun item Owlbear n’est modifié et aucune synchronisation visuelle automatique n’est faite. L’affichage réel sur token reste prévu pour Stats V2.5.
+## Persistance token
 
-## Stats V2.5A — aperçu local et modèle unifié d’affichage token
+### `statTokenSceneLinks.ts`
 
-Les trackers et conditions prévus pour affichage token sont maintenant réunis dans un modèle commun, sans modifier Owlbear.
+Clé metadata :
 
-Inclus dans cette étape :
+```text
+${EXTENSION_ID}/stats-token-link
+```
 
-* service `statTokenDisplay.ts` qui produit une liste unifiée d’items d’affichage issus des trackers et des conditions ;
-* modes d’aperçu préparés : badge, icône, barre ou valeur ;
-* tri commun par priorité puis par label ;
-* aperçu local compact `Aperçu token` dans chaque bloc de token ;
-* limitation visuelle à six items avec un badge `+X` si nécessaire ;
-* résumé local du nombre de trackers et conditions prévus pour affichage token.
+Profil versionné :
 
-Cet aperçu est seulement affiché dans l’interface Stats. Aucune API Owlbear de modification de token n’est appelée, aucun item Owlbear n’est modifié, aucune metadata de token n’est écrite et aucun overlay réel n’est créé. La synchronisation avec les tokens Owlbear reste reportée aux prochaines étapes de Stats V2.5.
+```text
+version = 1
+```
 
-## Stats V2.5B — préparation synchronisation Owlbear en mode aperçu technique
+Le normalizer doit rester tolérant aux anciennes données.
 
-Un payload technique de synchronisation Owlbear est maintenant préparé en mode aperçu, sans créer d’overlay réel.
+Le serializer retire `skinId`.
 
-Inclus dans cette étape :
+### `statEmbeddedProfileActions.ts`
 
-* service `statTokenSync.ts` qui transforme chaque token suivi en payload technique pur ;
-* statuts de synchronisation `ready`, `not-linked` et `empty` ;
-* aperçu MJ compact indiquant si le token est prêt, non lié Owlbear ou sans item token ;
-* détail repliable listant les labels qui seraient synchronisés ;
-* rapport dry-run `createDryRunStatSyncReport` pour préparer une future synchronisation.
+Fonctions de lecture/écriture du profil embarqué.
 
-Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata d’item et ne crée aucun overlay visible. La synchronisation réelle reste reportée aux prochaines étapes de Stats V2.5.
+Point important : `updateOrCreateEmbeddedConditionToken` permet de conserver des conditions sans activer le suivi Stats.
 
-## Stats V2.5C — plan de rendu overlay Owlbear
+## Copies et instances
 
-Un plan de rendu overlay Owlbear est maintenant préparé à partir des payloads dry-run V2.5B, sans créer d’overlay réel.
+Le système distingue :
 
-Inclus dans cette étape :
+- ID canonique du profil ;
+- `sourceItemId` de l’instance Owlbear.
 
-* service `statTokenOverlayPlan.ts` qui transforme les payloads dry-run en plans d’overlay purs ;
-* `overlayId` stable basé sur le token Owlbear source ;
-* layout préparé avec ancre, limite d’items, espacement et dimensions ;
-* style préparé avec variante compacte, opacité et taille de police ;
-* positions relatives simples pour chaque item prévu ;
-* aperçu MJ compact du plan et détail repliable des positions ;
-* rapport pur `createOverlayPlanReport` pour les futurs écrans ou synchronisations.
+Les services de scène reconstruisent les instances présentes dans la scène courante et évitent les doublons de profil pour les copies.
 
-Choix de conception : les payloads `not-linked` ne produisent pas de plan, tandis que les payloads `empty` produisent un plan vide afin d’indiquer que le token Owlbear est lié mais sans élément affichable.
+Conserver cette séparation lors de toute évolution.
 
-Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item texte/image/shape, n’écrit aucune metadata d’item et ne crée aucun overlay visible. La création réelle d’items Owlbear reste reportée aux prochaines étapes de Stats V2.5.
+## Permissions
 
-## Stats V2.5D — rendu SVG local des overlays
+`services/statPermissions.ts`
 
-Un rendu SVG local est maintenant généré depuis les plans d’overlay V2.5C, sans créer d’overlay Owlbear réel.
+### Viewer MJ
 
-Inclus dans cette étape :
+Tous les trackers sont modifiables.
 
-* service `statTokenOverlaySvg.ts` qui produit une chaîne SVG pure depuis un plan d’overlay ;
-* génération d’une data URL SVG exploitable plus tard par une image Owlbear ;
-* échappement des labels, titres et symboles avant insertion dans le SVG ;
-* calcul de taille selon les items et le layout du plan ;
-* rendu simple des modes badge, icône, valeur et barre ;
-* aperçu MJ local via une balise `img` alimentée par la data URL.
+### Viewer joueur
 
-Cette étape n’utilise pas le DOM, n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata d’item et ne synchronise rien sur la scène. La création réelle d’items Owlbear reste reportée aux prochaines étapes de Stats V2.5.
+Pour les interfaces de contrôle :
 
-## Stats V2.5E — adaptateur Owlbear préparé et garde-fous de synchronisation
+```text
+canPlayerEdit == true
+ET token assigné au viewer
+```
 
-Un adaptateur pur prépare maintenant les images SVG pour une future création d’overlay Owlbear, sans écrire sur la scène.
+La visibilité `gm/private/public` ne bloque plus un tracker explicitement autorisé dans l’interface de contrôle.
 
-Inclus dans cette étape :
+Elle reste utilisée pour les audiences d’affichage/overlay et les conditions.
 
-* service `statTokenOverlayObrAdapter.ts` qui prépare les images SVG et les données futures d’overlay ;
-* statuts de préparation `ready`, `not-linked`, `empty` et `invalid` ;
-* constantes futures `STAT_OVERLAY_METADATA_KEY` et `STAT_OVERLAY_KIND` ;
-* metadata future préparée avec token, source Owlbear, overlay et date de mise à jour ;
-* diagnostic MJ compact indiquant si la synchronisation réelle serait possible ;
-* rapport pur `createObrOverlayPreparationReport` pour les futurs écrans ou synchronisations.
+### Filtrage de la page principale
 
-Cette étape n’appelle aucune API Owlbear de modification de scène, ne crée aucun item Owlbear, n’écrit aucune metadata réelle et ne propose aucun bouton de synchronisation actif. La vraie synchronisation reste reportée à Stats V2.5F.
+`StatTrackerPage` appelle `filterTokensForViewer` avant de construire les groupes visibles.
 
-## Stats V2.5F — affichage réel au-dessus du token et visibilité
+Un joueur ne doit pas recevoir les trackers non modifiables dans sa vue Stats.
 
-- Le premier rendu réel Owlbear est créé manuellement, token par token, depuis le diagnostic Stats du MJ.
-- `showOnToken` est appliqué de bout en bout : un tracker ou une condition désactivé n’entre dans aucun SVG et disparaît lors de la prochaine mise à jour manuelle.
-- Les SVG sont strictement séparés par visibilité. L’overlay `public` est un item de scène partagé ; les overlays `gm` et `private` sont des items `OBR.scene.local` visibles uniquement par le MJ courant.
-- La visibilité `private` n’est pas encore envoyée au joueur assigné : elle reste locale au MJ sur la scène et visible selon les permissions dans le panneau Stats. Elle n’est jamais convertie en contenu public.
-- Chaque overlay utilise la metadata `tactical-gm-suite/stats-overlay`, le kind `stats-token-overlay`, l’audience et un identifiant stable afin d’éviter les doublons.
-- Les bounds réels du token source servent à centrer les lignes au-dessus de celui-ci. La ligne publique est la plus proche du token, puis les lignes privée et MJ sont empilées au-dessus.
-- Les items sont verrouillés, non interactifs, placés sur la couche `ATTACHMENT` et attachés au token source afin de suivre ses déplacements sans gêner sa sélection.
-- La création, la mise à jour et la suppression restent manuelles. Il n’existe encore ni synchronisation globale, ni mise à jour automatique après modification d’un tracker ou d’une condition.
+## Résumé permission pour Context Menu
+
+Les filtres Owlbear ne peuvent pas rechercher `canPlayerEdit` dans un tableau.
+
+Le lien metadata contient donc un résumé :
+
+```text
+playerEditable
+assignedPlayerId
+```
+
+Le background MJ resynchronise ces valeurs.
+
+Ne jamais prendre ce résumé comme source métier principale ; toujours revalider la permission contre le profil au moment de l’écriture.
+
+## Conditions
+
+Les conditions ne sont plus administrées depuis la grande fiche token Stats.
+
+Le flux principal est contextuel.
+
+Fonctions actuelles :
+
+- recherche ;
+- activation/désactivation ;
+- niveau selon définition ;
+- visibilité ;
+- durée ;
+- affichage autour du token ;
+- relation avec Initiative pour rounds/rencontre.
+
+Les effets mécaniques de définition restent descriptifs.
+
+## Durées Initiative
+
+`services/statConditionInitiativeSync.ts`
+
+Utilise les informations de rencontre/round stockées dans la condition pour calculer les durées.
+
+Ne pas étendre cette dépendance à d’autres effets d’initiative sans demande explicite.
+
+## Overlays
+
+La chaîne historique est conservée dans plusieurs services de préparation/rendu.
+
+L’état courant inclut aussi une synchronisation automatique côté MJ via :
+
+```text
+hooks/useStatTokenOverlayAutoSync.ts
+```
+
+et une synchronisation des conditions depuis le background.
+
+La visibilité doit rester audience-aware.
+
+## UI / CSS
+
+Fichiers importants :
+
+```text
+statTrackerUi.css
+statMaxValueBar.css
+statMaxValueBarLiquid.css
+statCounterBar.css
+statFixedOrb.css
+statIconUnits.css
+context/statTrackerContextMenu.css
+context/statConditionCustomSelect.css
+context/statConditionListMeta.css
+```
+
+Les styles globaux OBR sont dans :
+
+```text
+src/shared/styles/obrIntegratedUi.css
+src/shared/styles/scrollbars.css
+```
+
+## Grille compacte
+
+Dans la liste principale et l’interface rapide :
+
+- `bar` : pleine largeur ;
+- `counter` : pleine largeur ;
+- `icon` : pleine largeur ;
+- `readonly` : compact, jusqu’à 3/ligne ;
+- `toggle` : compact, jusqu’à 3/ligne.
+
+## Actions d’administration
+
+Interface principale MJ : menu `…` sur les trackers.
+
+Interface rapide : aucun `…`.
+
+Ne pas remettre les actions Modifier/Supprimer/ShowOnToken dans le menu rapide sans décision explicite, car son but est la manipulation à la volée.
+
+## Audio
+
+La spec existe dans `docs/stats/STAT_AUDIO_FEEDBACK_V1.md`.
+
+Aucun service audio runtime n’est actuellement identifié. Ne pas brancher de sons opportunistement lors d’une modification visuelle.
+
+## Points techniques à surveiller
+
+1. propagation immédiate d’un changement joueur vers un overlay visible chez d’autres clients ;
+2. garbage collection globale après suppression de la dernière copie d’un token dans toutes les scènes ;
+3. cohérence des audiences entre trackers et conditions ;
+4. migration de profils si `STAT_TOKEN_PROFILE_VERSION` évolue ;
+5. ordre explicite des nouvelles icônes extras si la bibliothèque continue de grandir ;
+6. dette de nommage `readonly` devenue incohérente avec son comportement actuel.
+
+## Validation
+
+Après code :
+
+```bash
+npm run typecheck
+npm run build
+```
+
+Pour Stats, ajouter des tests terrain Owlbear sur :
+
+- refresh ;
+- changement de scène ;
+- copie de token ;
+- retrait/réajout ;
+- joueur assigné ;
+- menu sans popover ouvert ;
+- conditions sans suivi ;
+- initiative + rounds ;
+- audiences d’overlay.

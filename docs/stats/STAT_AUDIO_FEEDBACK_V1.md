@@ -1,98 +1,89 @@
 # STAT_AUDIO_FEEDBACK_V1
 
-## Tactical GM Suite — Stats Icon Audio Feedback V1
+## Statut
+
+**Spécification validée, implémentation runtime non encore identifiée dans le code au checkpoint du 2 septembre 2026.**
+
+La bibliothèque visuelle documentée comporte désormais :
+
+- 48 icônes de base ;
+- 15 icônes additionnelles ;
+- soit 63 identifiants connus par le registre visuel.
+
+Ce document décrit la direction audio à suivre lorsque le chantier audio sera ouvert. Il ne faut pas présenter les sons Stats comme une fonctionnalité actuellement livrée.
 
 ## 1. Objectif
 
-Ce document définit le feedback audio du module Stats / Stat Tracker.
+Chaque icône Stats peut posséder un son signature court.
 
-Contrairement aux états visuels dérivés, l'identité sonore est volontairement liée à **l'icône choisie**.
-
-Chaque icône peut donc posséder son propre son signature lié à l'objet ou au symbole représenté.
+Le son suit **l’icône choisie**, jamais la signification supposée de la stat.
 
 Exemples :
 
-- cœur -> battement doux ;
-- bouclier -> impact métallique mat ;
-- rune -> chime magique cristallin ;
-- épée -> courte résonance de lame ;
-- fiole -> verre + léger liquide ;
-- pièce -> tintement de monnaie ;
-- engrenage -> clic mécanique ;
-- sablier -> petit son de verre/sable.
+- `body_heart` → battement doux ;
+- `body_shield` → impact métallique mat ;
+- `arcane_rune` → chime magique cristallin ;
+- `arcane_sword` → résonance courte de lame ;
+- `resource_vial` → verre + liquide discret ;
+- `resource_coin` → tintement de pièce ;
+- `object_gear` → clic mécanique ;
+- `object_hourglass` → verre/sable discret.
 
-Le son reste un feedback UI : court, discret et non envahissant.
+Si le cœur représente des munitions, il conserve tout de même son son de cœur.
 
----
+## 2. Décision de production
 
-## 2. Décision V1
+Règle :
 
-V1 utilise :
+> **1 son signature par icône.**
 
-> **1 son signature spécifique par icône**
+Ne pas créer un fichier différent pour chaque interaction.
 
-Le même fichier peut être réutilisé lorsque :
+Le même asset peut être utilisé pour :
 
-- l'utilisateur clique sur l'icône ;
-- la valeur augmente ;
-- la valeur diminue ;
-- un toggle change ;
-- une action rapide autorisée est effectuée.
+- clic ;
+- augmentation ;
+- diminution ;
+- toggle ON ;
+- toggle OFF.
 
-Cela évite de créer plusieurs sons par interaction.
+Une légère variation runtime peut différencier les interactions.
 
-Avec 48 icônes :
-
-```text
-48 images
-48 sons signature
-```
-
-et non :
+Avec la bibliothèque actuelle, le plafond documentaire devient potentiellement :
 
 ```text
-48 × plusieurs variantes audio
+63 icônes connues
+63 sons signature maximum
 ```
 
----
+Seuls les sons réellement produits/intégrés doivent être chargés.
 
-## 3. Variation runtime sans nouveaux fichiers
-
-L'addon peut appliquer de petites variations au même son.
+## 3. Variations runtime
 
 ### Click
 
 - son original ;
 - pitch neutre ;
-- volume UI standard bas.
+- volume bas.
 
-### Increment
-
-- même son ;
-- très légère variation positive de pitch ou de tonalité.
-
-### Decrement
+### Increase
 
 - même son ;
-- très légère variation négative.
+- pitch très légèrement positif si possible.
 
-### Toggle ON
+### Decrease
 
-- même identité ;
-- variation positive légère possible.
+- même son ;
+- pitch très légèrement négatif.
 
-### Toggle OFF
+### Toggle ON/OFF
 
-- même identité ;
-- variation négative légère possible.
+- même identité sonore ;
+- petite variation positive/négative possible.
 
-Les variations doivent rester discrètes.
+Les variations doivent rester subtiles.
 
-Le son doit toujours être reconnaissable comme celui de la même icône.
-
----
-
-## 4. Brief de génération sonore
+## 4. Brief sonore
 
 Chaque son doit être :
 
@@ -100,126 +91,71 @@ Chaque son doit être :
 - court ;
 - propre ;
 - fantasy/tactique ;
-- évocateur de l'icône ;
-- discret ;
-- adapté à des répétitions fréquentes ;
+- évocateur de l’objet visuel ;
+- adapté aux répétitions ;
 - sans voix ;
 - sans musique ;
 - sans ambiance longue ;
-- sans sample protégé.
+- sans sample protégé ;
+- non agressif.
 
-Durée recommandée :
+Durée cible :
 
 ```text
-80 ms à 450 ms environ
+80 à 450 ms
 ```
 
-Quelques sons peuvent aller jusqu'à environ 600 ms si nécessaire, mais les sons courts sont préférables.
+Exception acceptable : jusqu’à environ 600 ms pour un matériau qui en a besoin.
 
----
+## 5. Direction générale
 
-## 5. Direction sonore
-
-Ambiance cible :
+Ambiance :
 
 - interface RPG fantasy ;
 - tactile ;
-- légèrement premium ;
-- sobre ;
+- premium mais sobre ;
 - non cartoon ;
 - non arcade ;
-- non mobile-game reward spam ;
-- non agressive.
+- non « reward spam » mobile.
 
-Le son accompagne l'action, il ne prend pas le dessus.
+Le son accompagne l’action sans dominer la table.
 
----
+## 6. Registry futur
 
-## 6. Volume et lecture
+Architecture recommandée :
 
-Tous les sons doivent être normalisés à un volume perçu cohérent.
-
-L'addon devrait prévoir :
-
-- activation/désactivation des sons Stats ;
-- volume des sons Stats si pratique ;
-- volume par défaut bas ;
-- limitation des superpositions lors de clics rapides.
-
-Comportement recommandé :
-
-- petit cooldown ou voice limiting ;
-- empêcher des dizaines d'instances simultanées ;
-- éventuellement réutiliser un petit pool audio.
-
----
-
-## 7. Registry audio
-
-Chaque définition d'icône peut référencer un son.
-
-Exemple :
-
-```ts
-{
-  iconId: "body_heart",
-  label: "Heart",
-  categoryId: "body",
-  assetPath: bodyHeartIcon,
-  soundId: "body_heart"
-}
+```text
+tracker.iconId
+  -> icon definition / soundId
+  -> audio registry
+  -> asset
+  -> variation d'interaction
 ```
 
-Registry :
-
-```ts
-{
-  soundId: "body_heart",
-  assetPath: bodyHeartSound
-}
-```
-
-Recommandation :
+Convention privilégiée :
 
 ```text
 iconId == soundId
 ```
 
-lorsque possible.
-
----
-
-## 8. Nommage
-
-Visuel :
+Exemple :
 
 ```text
 body_heart.png
-```
-
-Audio :
-
-```text
 body_heart.ogg
 ```
 
-ou autre format final compatible navigateur/build.
+Le format final doit être choisi au moment de l’implémentation selon la compatibilité navigateur et la taille.
 
-Le codec final doit être validé après vérification du repo et des navigateurs ciblés.
-
-Un WAV peut servir de master de production, mais n'est pas forcément idéal à embarquer à cause de sa taille.
-
----
-
-## 9. Arborescence recommandée
+## 7. Arborescence proposée
 
 ```text
 src/features/stats/assets/
   icons/
-    body/
-    arcane/
-    resource/
-    object/
+    Corps & Protection/
+    Arcane & Combat/
+    Ressources & Richesses/
+    Objets & Marques/
 
   sounds/
     body/
@@ -228,100 +164,28 @@ src/features/stats/assets/
     object/
 ```
 
-Exemple :
+La structure sonore peut utiliser les IDs techniques même si les dossiers d’icônes utilisent actuellement des libellés français.
 
-```text
-icons/body/body_heart.png
-sounds/body/body_heart.ogg
+## 8. Service runtime attendu
+
+Ne pas hardcoder le son dans chaque renderer.
+
+Créer un service conceptuel :
+
+```ts
+playStatIconSound(iconId, interactionType)
 ```
 
-Les structures visuelle et audio restent parallèles.
+Responsabilités :
 
----
+1. résoudre l’icône ;
+2. résoudre le son ;
+3. appliquer volume/pitch ;
+4. gérer cooldown/overlap ;
+5. jouer ;
+6. échouer silencieusement si l’asset manque.
 
-## 10. Lot test — directions sonores
-
-| Icône | ID | Direction sonore |
-|---|---|---|
-| Cœur | `body_heart` | battement de cœur court, doux, grave |
-| Bouclier | `body_shield` | petit impact métallique mat / tap de bouclier |
-| Rune | `arcane_rune` | scintillement/chime magique cristallin très court |
-| Épée | `arcane_sword` | courte résonance propre de lame |
-| Fiole | `resource_vial` | petit tintement de verre + mouvement liquide discret |
-| Pièce | `resource_coin` | tintement bref d'une pièce fantasy |
-| Engrenage | `object_gear` | clic métallique mécanique compact |
-| Sablier | `object_hourglass` | petit tick de verre + texture très courte de sable |
-
-Important :
-
-Le son suit **l'icône**, pas la signification de la stat.
-
-Si le MJ choisit le cœur pour représenter des munitions, le tracker utilisera quand même le son signature du cœur.
-
----
-
-## 11. Règle pour les 48 icônes
-
-Chaque icône V1 finale reçoit :
-
-- 1 image ;
-- 1 direction sonore ;
-- 1 `soundId` ;
-- 1 fichier audio final.
-
-La direction sonore doit être écrite dans la fiche de l'icône avant génération.
-
-Exemple :
-
-```yaml
-displayName: Shield
-iconId: body_shield
-categoryId: body
-
-visual:
-  subject: stylized fantasy shield
-  material: steel
-  palette: cool gray-blue
-
-audio:
-  concept: short muted metal shield tap
-  durationTarget: 180-300ms
-  character: protective, solid, restrained
-  avoid:
-    - huge impact
-    - sword clash
-    - cinematic boom
-```
-
----
-
-## 12. Template prompt sonore
-
-```text
-Créer un son UI original, court, fantasy RPG, pour l'icône Tactical GM Suite Stats : [ICON NAME].
-
-Le son doit évoquer : [SOUND CONCEPT].
-
-Style :
-feedback d'interface fantasy discret, tactile, propre, sobre, adapté à des utilisations répétées.
-
-Durée :
-environ [TARGET DURATION].
-
-Caractère :
-[CHARACTER / MATERIAL / FEEL].
-
-À éviter :
-voix, musique, ambiance, impact cinématographique, basses excessives, transitoire agressive, son arcade, son cartoon, longue réverbération, sample protégé.
-
-Le même son sera utilisé pour le clic sur l'icône et les changements de valeur. Les petites variations de pitch/lecture selon l'interaction seront produites par l'addon.
-```
-
----
-
-## 13. Événements runtime
-
-Événements logiques recommandés :
+## 9. Événements logiques
 
 ```text
 iconClick
@@ -331,139 +195,113 @@ toggleOn
 toggleOff
 ```
 
-Tous résolvent le son signature de l'icône choisie.
+Le drag d’une barre ne doit pas déclencher des dizaines de sons par seconde. Prévoir un seuil, un cooldown ou jouer uniquement à la fin du geste.
 
-Flux :
-
-```text
-tracker.iconId
-    -> iconLibrary.soundId
-    -> audioRegistry.asset
-    -> variation selon interaction
-```
-
----
-
-## 14. Fallback audio
-
-Si le son spécifique d'une icône manque :
-
-1. le tracker continue de fonctionner ;
-2. aucune erreur utilisateur bloquante ;
-3. interaction silencieuse par défaut.
-
-Recommandation V1 :
-
-> Son spécifique absent = silence.
-
-Cela évite d'attacher un son sans rapport à l'icône.
-
----
-
-## 15. Réglages utilisateur
+## 10. Réglages utilisateur futurs
 
 À prévoir :
 
 ```text
 Stats UI Sounds: On / Off
-Stats UI Sound Volume: 0–100%
+Stats UI Sound Volume: 0–100 %
 ```
 
-Le son ne doit jamais être obligatoire.
+Le défaut doit rester discret.
 
-Respecter les restrictions autoplay des navigateurs.
+Respecter les restrictions autoplay : aucun son avant une vraie interaction utilisateur.
 
-Les sons ne doivent jouer qu'après une vraie interaction utilisateur.
+## 11. Fallback
 
----
+Si le son manque :
 
-## 16. Accessibilité / confort
+```text
+silence
+```
 
-L'audio ne doit jamais être le seul feedback.
+Pas de son générique sans rapport.
 
-Chaque action conserve un feedback visuel.
+L’interaction visuelle continue de fonctionner.
+
+## 12. Accessibilité
+
+L’audio n’est jamais la seule confirmation.
 
 Interdits :
 
-- boucles sonores ;
+- boucle ;
 - battement permanent ;
 - hum magique permanent ;
 - ambiance continue ;
-- sons très forts ;
-- gros impacts métalliques ;
-- fréquences aiguës agressives.
+- gros impact ;
+- aigu agressif ;
+- volume surprenant.
 
----
+## 13. Performance
 
-## 17. Performance
+Éviter :
 
-Avec 48 sons potentiels :
+- précharger 63 WAV lourds ;
+- instancier un nouvel objet audio non borné à chaque clic ;
+- faire se superposer des dizaines d’instances.
 
-- éviter de précharger 48 gros WAV ;
-- préférer lazy-load ou chargement raisonnable ;
-- mettre en cache après premier usage ;
-- compresser correctement les assets finaux.
+Préférer :
 
----
+- format compressé adapté au navigateur ;
+- lazy-load ;
+- cache après premier usage ;
+- petit pool ou voice limiting.
 
-## 18. Règle d'implémentation Codex
+## 14. Directions des huit références initiales
 
-Ne pas hardcoder la logique audio dans chaque renderer.
+| Icône | ID | Direction |
+|---|---|---|
+| Cœur | `body_heart` | battement court, doux, grave |
+| Bouclier | `body_shield` | tap métallique mat |
+| Rune | `arcane_rune` | chime magique cristallin |
+| Épée | `arcane_sword` | résonance de lame courte |
+| Fiole | `resource_vial` | verre + léger liquide |
+| Pièce | `resource_coin` | tintement bref |
+| Engrenage | `object_gear` | clic mécanique compact |
+| Sablier | `object_hourglass` | petit tick + sable très court |
 
-Créer un helper/service réutilisable, conceptuellement :
+## 15. Template de brief
 
 ```text
-playStatIconSound(iconId, interactionType)
+Créer un son UI original, court, fantasy RPG, pour l’icône Tactical GM Suite Stats : [NOM].
+
+Le son doit évoquer : [CONCEPT].
+
+Style :
+feedback d’interface fantasy discret, tactile, propre, sobre et adapté à des utilisations répétées.
+
+Durée :
+environ [DURÉE].
+
+Caractère :
+[MATIÈRE / SENSATION].
+
+À éviter :
+voix, musique, ambiance, impact cinématographique, basses excessives, transitoire agressive, son arcade, son cartoon, longue réverbération, sample protégé.
 ```
 
-Responsabilités :
-
-1. résoudre `iconId` ;
-2. résoudre `soundId` ;
-3. résoudre l'asset ;
-4. appliquer le volume ;
-5. appliquer la petite variation d'interaction ;
-6. gérer cooldown / overlap ;
-7. jouer le son ;
-8. échouer silencieusement si absent.
-
----
-
-## 19. Non-objectifs V1
+## 16. Non-objectifs
 
 Ne pas créer :
 
-- plusieurs fichiers son par icône ;
+- plusieurs sons obligatoires par icône ;
 - musique ;
 - soundscape ;
-- sons basés sur le nom de la stat ;
-- sons basés sur le preset si l'utilisateur change d'icône ;
-- sons persistants.
+- son basé sur le nom du tracker ;
+- son basé sur le preset ;
+- son persistant.
 
-L'audio suit l'**icône sélectionnée**.
+## 17. Documents liés
 
----
+Documentation courante :
 
-## 20. Documents liés
+- `docs/stats/README.md`
+- `docs/features/STATS_V2_SPEC.md`
+- `docs/stats/Prompt/INDEX_48_PROMPTS_ICONES.md`
+- `docs/stats/Prompt/INDEX_EXTRA_PROMPTS_ICONES_V2.md`
 
-Génération visuelle :
-
-`ICON_MASTER_PROMPT_V2.md`
-
-Rendu runtime :
-
-`ICON_RENDERING_IMPLEMENTATION_V1.md`
-
-Audio :
-
-`STAT_AUDIO_FEEDBACK_V1.md`
-
-Ensemble :
-
-```text
-ICON
-  -> 1 image couleur source
-  -> 1 son signature spécifique
-  -> états visuels dérivés côté addon
-  -> variations audio légères côté addon
-```
+Les anciennes références à `ICON_MASTER_PROMPT_V2.md` ou `ICON_RENDERING_IMPLEMENTATION_V1.md` ne correspondent plus à des fichiers présents dans le `main` courant ; ne pas les utiliser comme dépendances documentaires tant qu’ils ne sont pas recréés explicitement.

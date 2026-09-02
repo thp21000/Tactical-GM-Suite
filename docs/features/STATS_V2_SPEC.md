@@ -1,483 +1,717 @@
 # Cahier des charges — Stat Tracker V2
 
-## Objectif général
+> Source de vérité fonctionnelle Stats — mise à jour au 2 septembre 2026.
 
-Le module Stats doit devenir un système de suivi avancé des tokens, inspiré de l’addon Trackers d’Owlbear Rodeo, mais intégré à Tactical GM Suite.
+## 1. Objectif général
 
-Le but n’est pas de créer une fiche de personnage complète. Le but est de permettre au MJ de suivre rapidement des valeurs importantes liées aux tokens : PV, armure, ressources, compteurs, conditions, états, munitions, monnaie, sorts, points d’héroïsme, etc.
+Stats est un système de suivi tactique de valeurs liées aux tokens Owlbear Rodeo.
 
-Chaque token suivi peut recevoir des trackers personnalisés. Ces trackers peuvent venir d’un preset, être ajoutés manuellement, être modifiés à la volée, et plus tard être affichés directement autour du token sur la scène.
+Il ne doit pas devenir une fiche de personnage complète ni un moteur d’automatisation PF2e. Le MJ doit pouvoir créer des trackers libres pour représenter des PV, une CA, des munitions, des charges, de la monnaie, un état narratif ou toute autre information utile.
 
-## Types de tokens suivis
+La règle centrale est :
 
-Un token suivi peut appartenir à l’un de ces types :
+> **Le sens d’un tracker appartient au MJ ; il n’est jamais déduit de son icône.**
 
-* PJ
-* PNJ
-* Ennemi
-* Monture
-* Objet
-* Piège
-* Familier
-* Autre
+Un cœur n’est pas obligatoirement des PV. Un bouclier n’est pas obligatoirement une CA. Un preset peut proposer une association, jamais l’imposer.
 
-Le type sert à appliquer un preset par défaut, mais le MJ doit pouvoir ensuite modifier librement les trackers du token.
+## 2. Entités suivies
 
-## Regroupement de tokens
+Types supportés dans le modèle :
 
-Le système doit permettre de regrouper ou lier plusieurs tokens ensemble.
+- PJ (`pc`)
+- PNJ (`npc`)
+- Ennemi (`enemy`)
+- Monture (`mount`)
+- Objet (`object`)
+- Piège (`trap`)
+- Familier (`familiar`)
+- Autre (`other`)
 
-Exemple : un PJ et sa monture.
+Dans les menus contextuels Owlbear, l’intégration est volontairement limitée aux vrais tokens/images des couches :
 
-Si deux tokens sont liés, sélectionner l’un des deux doit permettre d’afficher le même groupe de suivi. Le bloc de suivi doit pouvoir montrer les deux entités liées, avec leurs trackers respectifs.
+- `CHARACTER`
+- `MOUNT`
+- `PROP`
 
-Cela permet de gérer les cas comme :
+Les maps, murs/dessins, notes, textes, grilles, fog et autres couches ne doivent pas recevoir les menus Stats.
 
-* PJ + monture
-* PJ + familier
-* personnage + bouclier/token objet
-* boss + éléments liés
-* piège + mécanisme associé
+## 3. Modèle de données
 
-Le regroupement ne doit pas fusionner toutes les stats. Chaque token garde ses trackers, mais ils peuvent être consultés ensemble dans un même bloc.
+### 3.1 Token suivi
 
-## Structure générale
+Un `StatTrackedToken` contient notamment :
 
-Le module repose sur plusieurs niveaux :
+- `id` canonique ;
+- `sourceItemId` pour l’instance Owlbear courante ;
+- nom ;
+- type ;
+- trackers ;
+- conditions ;
+- groupe éventuel ;
+- joueur assigné ;
+- notes ;
+- état masqué joueurs ;
+- état suivi/non suivi ;
+- timestamps.
 
-### Token suivi
+### 3.2 Tracker
 
-Un token suivi représente une entité liée à un token Owlbear.
+Un `StatTracker` contient :
 
-Il contient :
+- `id`
+- `name`
+- `visualType`
+- `iconId`
+- `current` optionnel
+- `max` optionnel
+- `value` optionnel
+- `enabled` optionnel
+- `visibility`
+- `canPlayerEdit`
+- `showOnToken`
+- timestamps
 
-* identifiant interne
-* identifiant du token Owlbear
-* nom
-* type : PJ, PNJ, Ennemi, Monture, Objet, Piège, Familier, Autre
-* trackers associés
-* conditions associées
-* visibilité
-* lien éventuel avec un groupe
-* lien éventuel avec un joueur, plus tard
+`skinId` existe encore dans les types pour lire d’anciennes données, mais le choix de style a été supprimé de l’expérience active. Le style est dérivé du renderer et de la couleur d’accent de l’icône.
 
-### Groupe de tokens
+### 3.3 Conditions
 
-Un groupe permet de lier plusieurs tokens ensemble.
+Les conditions sont stockées séparément dans `token.conditions`.
 
-Il contient :
+Une condition active peut posséder :
 
-* identifiant du groupe
-* nom du groupe
-* liste de tokens liés
-* token principal optionnel
-* ordre d’affichage
+- définition/identifiant ;
+- label et icône ;
+- niveau/valeur ;
+- type de durée ;
+- durée/rounds restants ;
+- identifiant de rencontre Initiative ;
+- round de départ / round d’expiration ;
+- source ;
+- note ;
+- visibilité ;
+- métadonnées d’affichage token.
 
-### Tracker
+### 3.4 Presets
 
-Un tracker est une stat ou ressource suivie.
+Un preset associe un type de token à une liste de `StatTrackerInput`.
 
-Il contient :
+Un preset :
 
-* nom
-* type visuel
-* valeur actuelle
-* valeur maximale optionnelle
-* icône
-* visibilité
-* autorisation de modification
-* affichage sur token activé ou non
-* visibilité sur token : public / privé / MJ seulement
-* position sur token, plus tard
-* taille sur token, plus tard
+- préremplit ;
+- n’enferme pas ;
+- ne donne aucune sémantique obligatoire à une icône ;
+- ne doit pas écraser arbitrairement les trackers existants.
 
-### Preset de trackers
+## 4. Persistance et identité
 
-Un preset est une liste de trackers à appliquer automatiquement à un type de token.
+### 4.1 Profil embarqué
 
-Le MJ doit pouvoir créer, modifier et supprimer des presets dans les paramètres du module Stats.
+La configuration durable est écrite dans les métadonnées du token Owlbear sous le lien Stats.
 
-## Types visuels de trackers
+Le profil embarqué doit permettre :
 
-Le système doit gérer cinq types de trackers :
+- fermeture/réouverture de l’addon sans perte ;
+- retrait du Stat Tracker sans destruction de la configuration ;
+- réajout avec restauration ;
+- copie d’un token en conservant sa configuration ;
+- lecture depuis le Dashboard ou le panneau Stats ;
+- stockage des conditions même sans suivi Stats actif.
 
-### 1. Icône seule
+### 4.2 Retirer n’est pas supprimer
 
-Utilisé pour une information présente/absente ou un marqueur simple.
+`Retirer du Stat Tracker` désactive le suivi mais ne signifie pas « effacer le profil ».
 
-Exemples :
+L’état `tracked` est distinct de l’existence du profil embarqué.
 
-* bouclier équipé
-* état spécial
-* marqueur narratif
-* objet important
+### 4.3 Conditions sans Stat Tracker
 
-### 2. Barre à valeur maximale
+Le menu Conditions doit fonctionner indépendamment de l’ajout au Stat Tracker.
 
-Utilisé pour une valeur qui va de 0 à un maximum.
+Si aucun profil Stats n’existe, le système peut créer un profil dormant/condition-only avec :
 
-Exemples :
+```text
+isTracked = false
+trackers = []
+```
 
-* PV
-* PV temporaires
-* bouclier
-* endurance
-* stress
-* magie
-* jauge de sort
+Le premier ajout réel au Stat Tracker doit ensuite pouvoir initialiser normalement les trackers/presets attendus.
 
-Affichage attendu :
+### 4.4 Copies
 
-* icône
-* barre horizontale
-* valeur actuelle
-* valeur maximale
-* couleur selon état si nécessaire
+Plusieurs items Owlbear peuvent représenter des instances d’un même profil.
 
-### 3. Indicateur à valeur modifiable
+Le système doit éviter de transformer chaque copie en entité indépendante sans raison et doit synchroniser les instances liées.
 
-Utilisé pour un compteur modifiable rapidement.
+### 4.5 Nettoyage
 
-Exemples :
+L’objectif produit reste : si la dernière copie physique d’un profil n’existe plus nulle part, aucune donnée centrale inutile ne doit s’accumuler indéfiniment.
 
-* PO
-* munitions
-* points d’héroïsme
-* charges
-* consommables
-* compteurs divers
+Au checkpoint actuel, la persistance dans les métadonnées des items résout une grande partie du problème puisque les métadonnées disparaissent avec l’item. En revanche, un balayage global explicite de toutes les scènes pour purger d’éventuelles références centrales résiduelles n’a pas été identifié comme une garantie démontrée. Ce point reste à tester/valider avant de le déclarer clos.
 
-Affichage attendu :
+## 5. Bibliothèque d’icônes
 
-* icône
-* valeur
-* boutons - / +
-* boutons -5 / +5 si pertinent
-* modification manuelle possible
+### 5.1 Catégories
 
-### 4. Indicateur à valeur non modifiable
+Quatre catégories principales :
 
-Utilisé pour une valeur informative.
+1. Corps & Protection (`body`)
+2. Arcane & Combat (`arcane`)
+3. Ressources & Richesses (`resource`)
+4. Objets & Marques (`object`)
 
-Exemples :
+Les catégories servent uniquement à parcourir la bibliothèque.
 
-* CA
-* CA du bouclier
-* solidité du bouclier
-* niveau
-* DD
-* perception passive
-* valeur calculée
+### 5.2 Identité technique
 
-Affichage attendu :
+Le nom technique est descriptif de l’objet visuel :
 
-* icône
-* nom
-* valeur
-* pas de boutons + / -
+```text
+body_heart
+body_shield
+arcane_rune
+resource_coin
+object_gear
+```
 
-### 5. Toggle / case activable
+Il ne doit pas être nommé `hp`, `ac`, `ammo`, etc.
 
-Utilisé pour un état binaire.
+### 5.3 Assets
 
-Exemples :
+Les PNG sont chargés par glob depuis :
 
-* actif / inactif
-* concentré / non concentré
-* rechargé / non rechargé
-* bouclier levé / non levé
-* stance active / inactive
+```text
+src/features/stats/assets/icons/
+```
 
-Affichage attendu :
+Le registre reconnaît actuellement la bibliothèque V1 de 48 icônes plus 15 ajouts documentés, soit **63 identifiants connus**.
 
-* icône
-* nom
-* état activé/désactivé
-* clic pour basculer si modification autorisée
+La présence effective dans l’UI dépend de la présence du PNG dans les dossiers chargés.
 
-## Bibliothèque d’icônes
+### 5.4 Couleur d’accent
 
-Le module doit utiliser une bibliothèque interne simple d’icônes.
+Chaque icône connue peut avoir une couleur d’accent déclarée.
 
-Chaque icône doit avoir :
+Cette couleur pilote notamment les barres et certains halos.
 
-* id
-* nom
-* catégorie
-* représentation visuelle
-* variantes possibles selon le type de tracker si nécessaire
+Elle ne doit pas être extraite automatiquement depuis le PNG : la palette déclarée garantit une UI stable.
 
-Au départ, la bibliothèque peut utiliser des icônes simples, emojis ou SVG internes. Une version plus avancée avec assets graphiques pourra être faite plus tard.
+### 5.5 Fallback
 
-Le MJ choisit seulement l’icône. Le système applique ensuite l’affichage adapté selon le type visuel du tracker.
+Une icône inconnue/legacy est normalisée vers un alias connu puis, si nécessaire, vers `object_circle` ou le premier asset disponible.
 
-## Presets par défaut
+## 6. Création / modification d’un tracker
 
-### Preset PJ
+La création et la modification se font dans une modale professionnelle intégrée au style OBR.
 
-Trackers recommandés :
+Champs principaux :
 
-* PV
-* PVT
-* Bouclier
-* CA
-* Bouclier CA
-* Bouclier Solidité
-* PV bouclier
-* Munitions
-* PP
-* PO
-* PA
-* PC
-* Sort
-* Point héroïsme
-* Conditions
+- Nom
+- Type visuel
+- paramètres numériques adaptés au type
+- Icône
+- Visibilité
+- Modification joueur autorisée
+- Afficher sur le token
 
-### Preset Ennemi
+Le sélecteur d’icônes utilise des catégories/tabs et des icônes compactes. Le libellé est disponible au survol plutôt que sous chaque asset.
 
-Trackers recommandés :
+Le champ `Style` a été supprimé.
 
-* PV
-* PVT
-* CA
-* Sort
-* Conditions
+## 7. Types visuels actuels
 
-### Preset PNJ
+Le type technique reste limité à cinq valeurs pour compatibilité :
 
-Trackers recommandés :
+```ts
+"icon" | "bar" | "counter" | "readonly" | "toggle"
+```
 
-* PV
-* CA
-* PVT
-* Conditions
+Le comportement UI courant a évolué par rapport aux premières spécifications.
 
-### Autres presets à définir plus tard
+### 7.1 `bar` — Barre à valeur max
 
-Les types suivants devront avoir des presets à définir ensuite :
+Données principales :
 
-* Monture
-* Objet
-* Piège
-* Familier
-* Autre
+```text
+current
+max
+```
 
-## Affichage dans l’addon
+Rendu :
 
-Le module Stats doit afficher les tokens suivis sous forme de blocs verticaux.
+- nom centré au-dessus ;
+- menu `…` en interface principale MJ ;
+- pastille d’icône à gauche ;
+- barre fantasy commune ;
+- valeur courante au centre ;
+- `max X` à droite ;
+- remplissage coloré selon l’accent de l’icône.
 
-Chaque token ou groupe de tokens doit être affiché dans un bloc repliable.
+Texture :
 
-Le MJ peut ouvrir ou fermer chaque bloc selon ses besoins.
+- teinte plus sombre à gauche ;
+- progression lumineuse vers la droite ;
+- bulles pseudo-aléatoires ;
+- aucune bulle à 0 ;
+- densité de bulles croissante avec le ratio `current/max` ;
+- bord du remplissage organique/ondulé lorsqu’il est partiel ;
+- icône progressivement désaturée à mesure que la valeur approche 0.
 
-Dans un bloc de token, on doit voir :
+Interactions :
 
-* nom du token
-* type du token
-* lien éventuel avec un autre token/groupe
-* liste des trackers
-* conditions
-* boutons d’action MJ
+- clic sur la valeur centrale pour édition ;
+- saisie absolue : `12` ;
+- calcul inline : `+3`, `-2`, `*2`, `x2`, `×2`, `/2`, `÷2` ;
+- division par zéro refusée ;
+- valeur bornée entre 0 et max ;
+- clic/drag horizontal sur la barre pour régler rapidement la valeur ;
+- clavier : flèches ±1, Home = 0, End = max.
 
-Pour un groupe de tokens, le bloc doit afficher les entités liées dans le même ensemble.
+### 7.2 `counter` — Indicateur modifiable
+
+Donnée principale :
+
+```text
+value
+```
+
+Rendu :
+
+- nom centré au-dessus ;
+- rail fantasy ;
+- pastille centrale 48 × 48 px avec icône et valeur ;
+- `-5`, `-1` à gauche ;
+- `+1`, `+5` à droite.
+
+Interactions :
+
+- aucune valeur min/max imposée ;
+- valeurs négatives autorisées ;
+- clic sur la valeur centrale pour saisie directe/calcul inline ;
+- pas de drag sur le rail.
+
+La zone numérique centrale doit rester transparente afin de ne pas masquer l’icône.
+
+### 7.3 `readonly` — Indicateur fixe
+
+Le nom technique `readonly` est historique.
+
+Comportement produit actuel :
+
+- pastille 48 × 48 px ;
+- icône ;
+- valeur centrale ;
+- aucun rail ;
+- aucun bouton `+/-` ;
+- valeur modifiable par clic direct ;
+- même calcul inline que les autres champs numériques.
+
+Il s’agit donc d’un **indicateur fixe dans sa présentation**, pas d’une valeur techniquement immuable.
+
+En interface principale et dans le menu rapide, plusieurs indicateurs fixes peuvent être rangés en grille compacte, jusqu’à trois par ligne selon la largeur disponible.
+
+### 7.4 `toggle` — Toggle / case
+
+Rendu :
+
+- pastille 48 × 48 px ;
+- icône uniquement ;
+- aucun chiffre ;
+- aucun rail.
+
+État :
+
+- actif = icône en couleurs ;
+- inactif = icône désaturée/assombrie.
+
+Interaction :
+
+- clic sur la pastille pour basculer si l’utilisateur possède le droit d’édition.
+
+Le toggle peut partager la grille compacte trois colonnes avec les indicateurs fixes.
+
+### 7.5 `icon` — Indicateur à icônes cumulatives
+
+Le type historique `icon` est désormais utilisé comme indicateur de **1 à 6 unités visuelles**.
+
+Configuration :
+
+- valeur actuelle = nombre d’icônes actives ;
+- max = nombre total d’icônes à afficher ;
+- maximum actuel : 6.
+
+Rendu :
+
+- même asset répété ;
+- icône active = couleur ;
+- icône inactive = désaturée.
+
+Comportement cumulatif :
+
+- cliquer une icône inactive active toutes les unités jusqu’à cette position ;
+- cliquer une icône déjà active la désactive ainsi que toutes celles qui suivent.
 
 Exemple :
 
-Bloc : “Archis + Monture”
+```text
+2/6, clic sur la 5e -> 5/6
+5/6, clic sur la 3e -> 2/6
+```
 
-Contenu :
+Pas de drag.
 
-* Archis
+`Afficher sur le token` reste disponible pour ce type.
 
-  * PV
-  * CA
-  * Sorts
-  * Conditions
-* Monture
+## 8. Administration dans l’interface principale
 
-  * PV
-  * CA
-  * Endurance
-  * Conditions
+Pour le MJ, les cartes de tracker possèdent un menu `…` qui regroupe les actions secondaires :
 
-## Actions côté MJ
+- Afficher/Masquer sur le token
+- Modifier
+- Supprimer
 
-Le MJ peut :
+L’objectif est d’éviter les grandes rangées de boutons sous chaque tracker.
 
-* ajouter un token au suivi
-* retirer un token du suivi
-* choisir le type du token
-* changer le preset appliqué
-* ajouter un tracker
-* modifier un tracker
-* supprimer un tracker
-* modifier les valeurs d’un tracker
-* ajouter une condition
-* supprimer une condition
-* créer un groupe de tokens
-* lier deux tokens
-* délier deux tokens
-* choisir si un tracker est visible sur le token
-* choisir si l’affichage est public, privé ou MJ seulement
-* plus tard, placer les trackers autour du token
+Les trackers `readonly` et `toggle` peuvent être disposés en grille trois colonnes afin de réduire la hauteur du panneau.
 
-## Actions côté joueur
+## 9. Presets
 
-Prévu pour une étape ultérieure.
+Les presets existent pour les types de tokens.
 
-Si un token est lié à un joueur connecté :
+Comportement attendu :
 
-* le joueur voit uniquement le bloc qui lui est assigné
-* le joueur peut modifier les trackers autorisés
-* le joueur peut ajouter ou retirer certaines conditions si le MJ l’autorise
-* le MJ conserve toujours les droits complets
+- l’ajout d’un token peut appliquer le preset de son type ;
+- `Appliquer preset` ajoute les trackers manquants ;
+- ne pas écraser automatiquement les trackers existants ;
+- éviter les doublons de nom ;
+- le MJ peut gérer/réinitialiser les presets.
 
-Cette partie est prévue pour Stats V2.3, pas pour la V2.1.
+Les exemples PV/CA/munitions restent des suggestions de preset, jamais des contraintes sémantiques du renderer.
 
-## Conditions
+## 10. Assignation joueur
 
-Les conditions sont un système séparé des trackers, mais visible dans le bloc de suivi du token.
+Le formulaire token utilise la liste des joueurs Owlbear connectés.
 
-Une condition peut avoir :
+Le token conserve :
 
-* nom
-* icône
-* couleur
-* groupe
-* valeur optionnelle
-* description optionnelle
-* visibilité
-* affichage sur token activé ou non
-* position sur token, plus tard
+- `assignedPlayerId`
+- `assignedPlayerName`
 
-Groupes par défaut :
+Un joueur hors ligne déjà enregistré peut rester identifiable dans le formulaire.
 
-* Conditions
-* Buffs
-* Extra
+## 11. Permission de modification joueur
 
-Le MJ pourra créer, modifier et supprimer des conditions dans les paramètres du module Stats.
+Le comportement validé actuel distingue **édition** et **visibilité d’overlay**.
 
-L’ajout rapide de conditions pourra se faire plus tard via clic droit sur un token, avec une liste de conditions disponibles.
+### 11.1 Interface de contrôle
 
-## Affichage sur token
+Pour un joueur :
 
-Prévu pour une étape ultérieure.
+```text
+tracker.canPlayerEdit == true
+ET token assigné à ce joueur
+=> tracker visible et modifiable dans les interfaces Stats de contrôle
+```
 
-Un tracker ou une condition pourra être affiché directement autour du token sur la scène.
+Le tracker n’a pas besoin d’être `public` pour apparaître dans ces interfaces si le MJ a explicitement autorisé sa modification.
 
-L’affichage sur token doit être une version simplifiée :
+Le MJ garde tous les droits.
 
-* icône
-* valeur
-* barre courte si nécessaire
-* aucun contrôle direct côté joueur
-* visibilité publique, privée ou MJ seulement
+### 11.2 Visibilité d’overlay
 
-Le MJ pourra activer un mode de modification pour choisir :
+`visibility` continue de contrôler l’audience de l’affichage sur la scène :
 
-* position
-* taille
-* ordre
-* ancrage autour du token
+- `gm`
+- `private`
+- `public`
 
-Cette partie est prévue pour Stats V2.5.
+Ne pas confondre :
 
-## Découpage en versions
+```text
+canPlayerEdit -> permission de contrôle
+visibility    -> audience d'affichage
+showOnToken   -> intention d'afficher
+```
 
-### Stats V2.1 — Base des trackers personnalisables
+## 12. Interface principale côté joueur
 
-Objectif :
+Le joueur ne doit pas voir une copie simplifiée de toute l’administration MJ.
 
-Mettre en place le système de trackers personnalisables dans l’interface de l’addon.
+Il voit uniquement les tokens qui lui sont assignés et les trackers pour lesquels `Modification joueur autorisée` est activée.
 
-Inclus :
+Il peut utiliser les contrôles du renderer correspondant.
 
-* nouveau modèle de données pour trackers
-* bibliothèque interne simple d’icônes
-* types visuels de trackers
-* ajout d’un tracker à un token suivi
-* modification d’un tracker
-* suppression d’un tracker
-* affichage en blocs verticaux repliables
-* valeurs modifiables selon type de tracker
-* valeurs non modifiables selon type de tracker
-* structure prête pour presets
+Les actions MJ restent masquées.
 
-Non inclus :
+## 13. Sous-menu contextuel Stats
 
-* assignation joueur
-* affichage sur token
-* conditions avancées
-* menu clic droit des conditions
-* placement visuel autour du token
+Le menu clic droit **Stats** est une interface de changement rapide.
 
-### Stats V2.2 — Types de token et presets automatiques
+### MJ
 
-Objectif :
+Le MJ peut ouvrir le menu sur un token éligible et manipuler les trackers.
 
-Appliquer automatiquement des trackers selon le type de token.
+### Joueur
 
-Inclus :
+Le menu n’est visible que si :
 
-* choix du type : PJ, PNJ, Ennemi, Monture, Objet, Piège, Familier, Autre
-* presets de trackers par type
-* changement de preset à la volée
-* ajout/retrait de trackers après application du preset
-* gestion des presets dans Paramètres
+- le token est assigné au joueur courant ;
+- au moins un tracker a `canPlayerEdit = true`.
 
-### Stats V2.3 — Assignation joueur
+À l’intérieur, le joueur ne voit que les trackers qu’il peut modifier.
 
-Objectif :
+### Règle UX
 
-Permettre à un joueur de voir et modifier les trackers autorisés de son propre token.
+Le sous-menu rapide ne doit pas afficher les menus `…` des trackers.
 
-Inclus :
+Il ne doit pas permettre :
 
-* liaison token ↔ joueur connecté
-* visibilité joueur limitée à son bloc
-* droits de modification par tracker
-* MJ conserve tous les droits
+- supprimer un tracker ;
+- modifier sa configuration ;
+- changer `showOnToken`.
 
-### Stats V2.4 — Conditions
+Ces opérations sont réservées à l’interface principale.
 
-Objectif :
+La grille contextuelle adapte les renderers à la largeur Owlbear :
 
-Créer un système complet de conditions.
+- `bar`, `counter`, `icon` sur toute la largeur ;
+- `readonly` et `toggle` jusqu’à trois par ligne.
 
-Inclus :
+## 14. Ajouter / Retirer du Stat Tracker
 
-* bibliothèque de conditions
-* groupes : Conditions, Buffs, Extra
-* ajout/retrait depuis la fiche du token
-* ajout rapide via clic droit sur token
-* conditions à valeur optionnelle
-* visibilité
-* préparation affichage sur token
+Le menu contextuel alterne entre :
 
-### Stats V2.5 — Affichage sur token
+- Ajouter au Stat Tracker
+- Retirer du Stat Tracker
 
-Objectif :
+selon le flag `tracked`.
 
-Afficher certains trackers et conditions directement autour du token.
+Cette action est MJ uniquement.
 
-Inclus :
+Elle doit fonctionner via le background permanent, même si l’addon principal n’a jamais été ouvert dans la session.
 
-* affichage public / privé / MJ seulement
-* version simplifiée sans contrôles
-* mode placement MJ
-* taille, position, ordre
-* synchronisation avec les valeurs de tracker
+## 15. Conditions — architecture fonctionnelle
 
-## Règle importante d’architecture
+Conditions et trackers sont indépendants.
 
-Les valeurs suivies doivent être exploitables par les autres modules de Tactical GM Suite.
+La gestion principale des conditions a été retirée de la fiche Stats pour devenir une interaction contextuelle proche du token.
 
-Exemples futurs :
+### 15.1 Sous-menu Conditions
 
-* Initiative peut lire les PV pour signaler un ennemi vaincu.
-* Combat peut appliquer des dégâts à un tracker PV.
-* Distance peut utiliser certaines valeurs de vitesse ou portée.
-* Conditions peuvent influencer les affichages tactiques.
+Le menu clic droit Conditions :
 
-Il faut donc prévoir une structure de données claire, stable et accessible aux autres modules via des services internes.
+- est enregistré par le background ;
+- est disponible sur les tokens éligibles ;
+- est actuellement MJ uniquement ;
+- utilise un champ de recherche ;
+- utilise une liste compacte à une colonne adaptée à la largeur native OBR ;
+- utilise des icônes logiques dédiées.
+
+### 15.2 Activation
+
+Cliquer une condition inactive ouvre une petite fenêtre de configuration.
+
+Selon la condition, elle peut demander :
+
+- niveau/valeur ;
+- durée ;
+- visibilité.
+
+Une condition active peut être désactivée depuis la liste.
+
+L’édition avancée d’une condition déjà active via un geste secondaire n’est pas documentée comme un comportement stable à ce checkpoint ; ne pas l’inventer.
+
+### 15.3 Affichage de la liste
+
+Lorsqu’un niveau existe, le nom peut être présenté sous forme :
+
+```text
+Blessé +2
+```
+
+La zone secondaire est réservée à la durée lorsqu’elle n’est pas manuelle :
+
+```text
+Rencontre
+Repos
+3 rounds
+```
+
+## 16. Durées et Initiative
+
+Types de durée :
+
+- Manuelle
+- Rounds
+- Rencontre
+- Repos
+
+`Rounds` et `Rencontre` dépendent d’une participation/rencontre Initiative exploitable.
+
+Le menu doit désactiver ou rendre indisponibles ces choix lorsque le token ne peut pas être rattaché à la feuille d’initiative.
+
+Pour les rounds, Stats conserve des informations d’ancrage telles que :
+
+- encounter id ;
+- round de départ ;
+- round d’expiration ;
+- rounds restants.
+
+Le background synchronise l’évolution avec Initiative.
+
+Cette intégration est ciblée : elle n’autorise pas d’autres automatismes de combat sans chantier explicite.
+
+## 17. Affichage des conditions sur token
+
+L’ancien système de grands anneaux a été abandonné.
+
+L’affichage actuel repose sur des petites icônes/badges de condition disposés autour du token suivant une logique radiale/invisible.
+
+Objectifs :
+
+- plusieurs conditions simultanées ;
+- icône reconnaissable ;
+- niveau visible quand nécessaire ;
+- informations de durée accessibles sans alourdir le token ;
+- audience respectant la visibilité.
+
+Le système utilise les assets de conditions et l’intégration Overlay Effect/Owlbear.
+
+## 18. Overlays trackers
+
+Les étapes V2.5 historiques ont préparé successivement :
+
+- modèle d’affichage ;
+- dry-run ;
+- plan de rendu ;
+- SVG local ;
+- adaptateur Owlbear ;
+- rendu réel et visibilité.
+
+L’état courant est allé plus loin : une synchronisation automatique des overlays trackers existe côté MJ lorsque la page Stats est active et la scène prête.
+
+Les mises à jour depuis les métadonnées doivent rester cohérentes avec les copies de tokens et les audiences.
+
+Point de vigilance : les changements effectués depuis l’interface rapide d’un joueur écrivent le profil embarqué mais ne déclenchent pas directement l’écrivain d’overlay MJ dans ce composant. La propagation visuelle immédiate doit être testée en situation multi-client ; ne pas supposer une synchronisation instantanée parfaite sans test terrain.
+
+## 19. Bibliothèque de conditions et effets
+
+Les définitions peuvent porter des effets descriptifs :
+
+- CA ;
+- jets ;
+- perception ;
+- vitesse ;
+- actions ;
+- visibilité ;
+- initiative ;
+- etc.
+
+Modes préparés :
+
+- bonus/malus de statut ;
+- bonus/malus de circonstance ;
+- set ;
+- disable ;
+- information.
+
+Ces effets restent **descriptifs/préparatoires** tant qu’aucun module mécanique n’est explicitement branché.
+
+## 20. Découpage historique Stats V2
+
+### V2.1 — Trackers personnalisables
+
+Implémenté.
+
+### V2.2 — Types et presets
+
+Implémenté, avec presets internes et gestion MJ.
+
+### V2.3 — Assignation joueur
+
+Implémenté et étendu :
+
+- assignation via joueurs Owlbear ;
+- filtrage réel ;
+- permission d’édition ;
+- menu rapide joueur conditionnel.
+
+### V2.4 — Conditions
+
+Implémenté puis fortement refondu :
+
+- catalogue ;
+- niveaux ;
+- durées ;
+- effets descriptifs ;
+- conditions indépendantes du Stat Tracker ;
+- menu contextuel permanent ;
+- affichage sur token ;
+- synchronisation de certaines durées avec Initiative.
+
+### V2.5 — Affichage sur token
+
+Implémenté au-delà de la préparation initiale :
+
+- overlays réels ;
+- audience ;
+- synchronisation automatique des trackers dans le contexte MJ ;
+- badges de conditions ;
+- prise en charge des instances/copies de scène.
+
+## 21. Non-objectifs actuels
+
+Ne pas ajouter sans demande explicite :
+
+- fiche complète PF2e ;
+- calcul automatique de CA/attaques/saves ;
+- moteur de dégâts ;
+- automatisation complète des effets de conditions ;
+- intégration Calendar ;
+- intégration Loot Table ;
+- déduction du sens d’un tracker à partir de son nom ou de son icône ;
+- plusieurs sons ou effets permanents par tracker.
+
+## 22. Audio Stats
+
+Une spécification audio existe dans :
+
+```text
+docs/stats/STAT_AUDIO_FEEDBACK_V1.md
+```
+
+Elle prévoit un son signature par icône.
+
+Aucun service runtime audio (`playStatIconSound`, registry audio, etc.) n’a été identifié dans le code courant lors du checkpoint. L’audio doit donc être documenté comme **prévu**, pas comme implémenté.
+
+## 23. Accessibilité et confort
+
+Les contrôles doivent :
+
+- conserver un feedback visuel sans dépendre de l’audio ;
+- supporter le clavier lorsque raisonnable ;
+- ne pas utiliser des animations permanentes ;
+- respecter `prefers-reduced-motion` ;
+- garder des tailles lisibles dans le popover et les sous-menus ;
+- conserver les scrollbars intégrées au thème.
+
+## 24. Critères de stabilité avant nouvelle grosse étape
+
+Avant d’ouvrir un chantier Stats supplémentaire :
+
+1. typecheck vert ;
+2. build vert ;
+3. test MJ du panneau Stats ;
+4. test clic droit Stats sans ouvrir l’addon ;
+5. test Conditions sans token suivi ;
+6. test copie de token ;
+7. test retrait/réajout avec restauration ;
+8. test joueur assigné avec un seul tracker modifiable ;
+9. test audience des overlays ;
+10. test durée Rounds/Rencontre avec Initiative ;
+11. test multi-scène et suppression de la dernière copie pour clarifier le nettoyage global.
+
+## 25. Règle de compatibilité interne
+
+Les données doivent rester exploitables par les autres modules via des services explicites.
+
+Une intégration future doit utiliser les identifiants et valeurs structurés, et non chercher des mots comme « PV » dans le nom d’un tracker ou supposer qu’un cœur signifie des points de vie.
