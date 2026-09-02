@@ -1,0 +1,552 @@
+/*
+ * Owlbear-integrated visual layer
+ *
+ * This file intentionally comes last in the app stylesheet order. It keeps the
+ * feature layouts and behaviour intact while making the whole popover use the
+ * same visual vocabulary as the Conditions context panel: OBR theme colours,
+ * Overlay Effect surfaces, restrained glass, compact controls and soft borders.
+ */
+
+.app-shell {
+  --tgm-ui-radius-xs: 5px;
+  --tgm-ui-radius-sm: 6px;
+  --tgm-ui-radius-md: 8px;
+  --tgm-ui-radius-lg: 10px;
+  --tgm-ui-glass: color-mix(in srgb, var(--tgm-obr-surface) 86%, transparent);
+  --tgm-ui-glass-soft: color-mix(in srgb, var(--tgm-obr-surface) 72%, transparent);
+  --tgm-ui-glass-strong: color-mix(in srgb, var(--tgm-obr-surface) 94%, transparent);
+  --tgm-ui-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  --tgm-ui-shadow-soft: 0 3px 10px rgb(0 0 0 / 10%);
+
+  color: var(--tgm-obr-text);
+  background: var(--tgm-ui-glass);
+  border: 1px solid var(--tgm-obr-border);
+  border-radius: 10px;
+  box-shadow: var(--tgm-ui-shadow);
+  backdrop-filter: blur(14px) saturate(1.04);
+  -webkit-backdrop-filter: blur(14px) saturate(1.04);
+}
+
+.app-shell,
+.app-shell button,
+.app-shell input,
+.app-shell select,
+.app-shell textarea {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app-body,
+.content {
+  background: transparent;
+}
+
+.content {
+  padding: 10px;
+}
+
+/* Sidebar --------------------------------------------------------------- */
+
+.sidebar,
+.sidebar--open {
+  background: color-mix(in srgb, var(--tgm-obr-surface) 88%, transparent);
+  border-right: 1px solid var(--tgm-obr-border);
+  box-shadow: 6px 0 18px rgb(0 0 0 / 10%);
+  backdrop-filter: blur(14px) saturate(1.04);
+  -webkit-backdrop-filter: blur(14px) saturate(1.04);
+}
+
+.nav-item {
+  border: 0;
+  border-radius: var(--tgm-ui-radius-sm);
+  color: var(--tgm-obr-text-muted);
+  background: transparent;
+  box-shadow: none;
+  transition: background-color 90ms ease, color 90ms ease;
+}
+
+.nav-item:hover {
+  color: var(--tgm-obr-text);
+  background: var(--tgm-obr-overlay);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.nav-item--active,
+.nav-item--active:hover {
+  color: var(--tgm-obr-text);
+  background: var(--tgm-obr-overlay-active);
+  border-color: transparent;
+  box-shadow: inset 2px 0 0 var(--tgm-obr-accent);
+}
+
+/* Shared surfaces ------------------------------------------------------- */
+
+.panel,
+.module-card,
+.compact-card,
+.collapsible-section,
+.empty-state,
+.initiative-participant-card,
+.range-origin-panel,
+.range-target-card,
+.range-preset-list > div,
+.stat-card,
+.stat-summary > div,
+.debug-summary div,
+.debug-module-list div,
+.theme-preview-card {
+  background: var(--tgm-ui-glass-soft);
+  border: 1px solid var(--tgm-obr-border);
+  border-radius: var(--tgm-ui-radius-lg);
+  box-shadow: var(--tgm-ui-shadow-soft);
+}
+
+.panel,
+.collapsible-section,
+.module-card,
+.compact-card,
+.initiative-participant-card,
+.range-origin-panel,
+.range-target-card,
+.stat-card {
+  backdrop-filter: blur(10px) saturate(1.02);
+  -webkit-backdrop-filter: blur(10px) saturate(1.02);
+}
+
+.panel {
+  padding: 12px;
+  margin-bottom: 9px;
+}
+
+.panel h2,
+.module-card h3,
+.range-target-card h3,
+.stat-card h3 {
+  color: var(--tgm-obr-text);
+}
+
+.hero p,
+.module-card p,
+.compact-card p,
+.range-origin-panel p,
+.range-target-card p,
+.stat-header p,
+.stat-card span,
+.stat-notes,
+.initiative-participant-card__header span,
+.initiative-participant-card__notes,
+.muted,
+.brand span,
+.initiative-label,
+.range-label,
+.settings-list dt,
+.debug-summary dt,
+.debug-module-list span {
+  color: var(--tgm-obr-text-muted);
+}
+
+.eyebrow {
+  color: var(--tgm-obr-text-muted) !important;
+  font-weight: 650;
+  letter-spacing: 0.045em;
+}
+
+.collapsible-section__header {
+  border-radius: var(--tgm-ui-radius-lg);
+  color: var(--tgm-obr-text);
+  transition: background-color 90ms ease;
+}
+
+.collapsible-section__header:hover,
+.collapsible-section__header:focus-visible {
+  outline: 0;
+  background: var(--tgm-obr-overlay);
+}
+
+/* Buttons --------------------------------------------------------------- */
+
+.app-shell .button,
+.app-shell button:not(.nav-item):not(.toggle):not(.stat-icon-picker__item):not(.stat-icon-tab) {
+  border: 0;
+  border-radius: var(--tgm-ui-radius-sm);
+  color: var(--tgm-obr-text);
+  background: var(--tgm-obr-overlay);
+  box-shadow: none;
+  transition: background-color 90ms ease, color 90ms ease, opacity 90ms ease;
+}
+
+.app-shell .button:hover,
+.app-shell button:not(.nav-item):not(.toggle):not(.stat-icon-picker__item):not(.stat-icon-tab):hover {
+  border-color: transparent;
+  background: var(--tgm-obr-overlay-hover);
+  box-shadow: none;
+}
+
+.app-shell .button:focus-visible,
+.app-shell button:focus-visible,
+.app-shell input:focus-visible,
+.app-shell select:focus-visible,
+.app-shell textarea:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 1px var(--tgm-obr-accent);
+}
+
+.app-shell button:active:not(:disabled) {
+  background: var(--tgm-obr-overlay-active);
+}
+
+.app-shell button:disabled,
+.app-shell .button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+/* Primary / destructive action variants that already exist in features. */
+.app-shell .is-primary,
+.app-shell .stat-tracker-modal__primary,
+.app-shell button[class*="primary"] {
+  background: var(--tgm-obr-accent);
+  color: var(--tgm-obr-bg);
+  font-weight: 650;
+}
+
+.app-shell .is-primary:hover,
+.app-shell .stat-tracker-modal__primary:hover,
+.app-shell button[class*="primary"]:hover {
+  background: color-mix(in srgb, var(--tgm-obr-accent) 88%, var(--tgm-obr-text) 12%);
+}
+
+/* Form controls --------------------------------------------------------- */
+
+.app-shell input:not([type="checkbox"]):not([type="radio"]),
+.app-shell select,
+.app-shell textarea {
+  min-width: 0;
+  border: 0;
+  border-radius: var(--tgm-ui-radius-sm);
+  outline: 0;
+  color: var(--tgm-obr-text);
+  background: var(--tgm-obr-overlay);
+  box-shadow: none;
+  transition: background-color 90ms ease, box-shadow 90ms ease;
+}
+
+.app-shell input:not([type="checkbox"]):not([type="radio"]):hover,
+.app-shell select:hover,
+.app-shell textarea:hover {
+  background: var(--tgm-obr-overlay-hover);
+}
+
+.app-shell input:not([type="checkbox"]):not([type="radio"]):focus,
+.app-shell select:focus,
+.app-shell textarea:focus {
+  border-color: transparent;
+  background: var(--tgm-obr-overlay-hover);
+  box-shadow: inset 0 0 0 1px var(--tgm-obr-accent);
+}
+
+.app-shell input::placeholder,
+.app-shell textarea::placeholder {
+  color: var(--tgm-obr-text-muted);
+  opacity: 0.9;
+}
+
+.app-shell select {
+  color-scheme: dark;
+}
+
+.app-shell select option,
+.app-shell select optgroup {
+  color: var(--tgm-obr-text);
+  background: var(--tgm-obr-surface);
+}
+
+.app-shell label,
+.app-shell legend {
+  color: var(--tgm-obr-text-muted);
+}
+
+/* Badges / chips -------------------------------------------------------- */
+
+.badge,
+.stat-badges > *,
+[class*="badge"]:not(.stat-condition-badge) {
+  border: 0;
+  background: var(--tgm-obr-overlay);
+  color: var(--tgm-obr-text-muted);
+  box-shadow: none;
+}
+
+.badge--success,
+.state-on {
+  color: var(--tgm-success);
+}
+
+.badge--warning {
+  color: var(--tgm-warning);
+}
+
+.badge--danger,
+.state-off {
+  color: var(--tgm-danger);
+}
+
+/* Toggles --------------------------------------------------------------- */
+
+.toggle {
+  border: 0;
+  background: var(--tgm-obr-overlay-hover);
+  box-shadow: inset 0 0 0 1px var(--tgm-obr-border);
+}
+
+.toggle span {
+  background: var(--tgm-obr-text-muted);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 24%);
+}
+
+.toggle--checked {
+  background: var(--tgm-obr-accent);
+  box-shadow: none;
+}
+
+.toggle--checked span {
+  background: var(--tgm-obr-bg);
+}
+
+/* Lists and editable cards --------------------------------------------- */
+
+.initiative-participant-card:hover,
+.range-target-card:hover,
+.module-card:hover,
+.compact-card:hover,
+.stat-card:hover {
+  border-color: var(--tgm-obr-border);
+  background: color-mix(in srgb, var(--tgm-obr-overlay) 70%, var(--tgm-ui-glass-soft));
+}
+
+.initiative-participant-card--current,
+[class*="--active"].initiative-participant-card,
+.range-target-card--selected,
+.stat-card--selected {
+  border-color: transparent;
+  background: var(--tgm-obr-overlay-active);
+  box-shadow: inset 2px 0 0 var(--tgm-obr-accent);
+}
+
+.settings-list div {
+  border-bottom-color: var(--tgm-obr-border);
+}
+
+.settings-list a,
+.app-shell a {
+  color: var(--tgm-obr-accent);
+}
+
+/* Tables / separators --------------------------------------------------- */
+
+.app-shell hr {
+  border: 0;
+  border-top: 1px solid var(--tgm-obr-border);
+}
+
+.app-shell table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--tgm-obr-text);
+}
+
+.app-shell th,
+.app-shell td {
+  border-bottom: 1px solid var(--tgm-obr-border);
+}
+
+.app-shell th {
+  color: var(--tgm-obr-text-muted);
+  font-weight: 600;
+}
+
+/* Stat Tracker modal ---------------------------------------------------- */
+
+.stat-tracker-modal__backdrop {
+  background: color-mix(in srgb, var(--tgm-obr-bg) 54%, transparent);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.stat-tracker-modal {
+  border: 1px solid var(--tgm-obr-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--tgm-obr-surface) 94%, transparent);
+  box-shadow: 0 16px 44px rgb(0 0 0 / 34%);
+  backdrop-filter: blur(16px) saturate(1.04);
+  -webkit-backdrop-filter: blur(16px) saturate(1.04);
+}
+
+.stat-tracker-modal__header,
+.stat-tracker-modal__footer {
+  border-color: var(--tgm-obr-border);
+  background: transparent;
+}
+
+.stat-tracker-modal__form input,
+.stat-tracker-modal__form select {
+  border: 0;
+  border-radius: var(--tgm-ui-radius-sm);
+  color: var(--tgm-obr-text);
+  background: var(--tgm-obr-overlay);
+}
+
+.stat-tracker-modal__form input:hover,
+.stat-tracker-modal__form select:hover {
+  background: var(--tgm-obr-overlay-hover);
+}
+
+.stat-tracker-modal__form input:focus,
+.stat-tracker-modal__form select:focus {
+  border-color: transparent;
+  background: var(--tgm-obr-overlay-hover);
+  box-shadow: inset 0 0 0 1px var(--tgm-obr-accent);
+}
+
+.stat-tracker-modal__section,
+.stat-icon-browser,
+.stat-setting-row {
+  border: 0;
+  background: var(--tgm-obr-overlay);
+  border-radius: var(--tgm-ui-radius-md);
+  box-shadow: none;
+}
+
+.stat-icon-tabs {
+  border-bottom: 1px solid var(--tgm-obr-border);
+}
+
+.stat-icon-tab {
+  border: 0;
+  color: var(--tgm-obr-text-muted);
+  background: transparent;
+}
+
+.stat-icon-tab:hover {
+  color: var(--tgm-obr-text);
+  background: var(--tgm-obr-overlay);
+}
+
+.stat-icon-tab--active,
+.stat-icon-tab--active:hover {
+  color: var(--tgm-obr-text);
+  background: var(--tgm-obr-overlay-active);
+}
+
+.stat-icon-tab--active::after {
+  background: var(--tgm-obr-accent);
+}
+
+.stat-icon-picker__item {
+  border: 0;
+  border-radius: var(--tgm-ui-radius-sm);
+  background: transparent;
+  transform: none;
+}
+
+.stat-icon-picker__item:hover {
+  border-color: transparent;
+  background: var(--tgm-obr-overlay-hover);
+  transform: none;
+}
+
+.stat-icon-picker__item--active,
+.stat-icon-picker__item--active:hover {
+  border-color: transparent;
+  background: var(--tgm-obr-overlay-active);
+  box-shadow: inset 0 0 0 1px var(--tgm-obr-accent);
+}
+
+.stat-tracker-modal__close,
+.stat-tracker-modal__cancel {
+  color: var(--tgm-obr-text-muted);
+  background: transparent;
+}
+
+.stat-tracker-modal__close:hover,
+.stat-tracker-modal__cancel:hover {
+  color: var(--tgm-obr-text);
+  background: var(--tgm-obr-overlay-hover);
+}
+
+/* Old tracker skin CSS can still exist in stored legacy DOM classes. The
+   visual language is now driven by OBR + the selected icon instead. */
+.stat-tracker-card,
+.stat-tracker-card[class*="--skin-"] {
+  --stat-tracker-accent: var(--tgm-obr-accent);
+  border-color: var(--tgm-obr-border);
+}
+
+.stat-tracker-card__icon {
+  border-color: var(--tgm-obr-border);
+  background: var(--tgm-obr-overlay);
+}
+
+/* Range / Initiative / Stats utility bars ------------------------------- */
+
+.initiative-toolbar,
+.stat-toolbar,
+.range-toolbar,
+.initiative-round-controls,
+.stat-card__actions,
+.stat-form__actions {
+  gap: 6px;
+}
+
+.initiative-round-controls,
+.range-toolbar,
+.stat-toolbar {
+  border-radius: var(--tgm-ui-radius-md);
+}
+
+/* Empty states ---------------------------------------------------------- */
+
+.empty-state {
+  color: var(--tgm-obr-text-muted);
+  background: var(--tgm-obr-overlay);
+  border: 0;
+  box-shadow: none;
+}
+
+/* Scrollbar alignment with the context panel --------------------------- */
+
+.app-shell,
+.app-shell * {
+  scrollbar-color: color-mix(in srgb, var(--tgm-obr-text-muted) 42%, transparent) transparent;
+}
+
+.app-shell *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.app-shell *::-webkit-scrollbar-thumb {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tgm-obr-text-muted) 42%, transparent);
+  background-clip: padding-box;
+  box-shadow: none;
+}
+
+.app-shell *::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--tgm-obr-text-muted) 68%, transparent);
+  background-clip: padding-box;
+}
+
+/* Reduced motion -------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *,
+  .app-shell *::before,
+  .app-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
