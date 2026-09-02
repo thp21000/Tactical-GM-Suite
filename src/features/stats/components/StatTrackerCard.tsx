@@ -88,6 +88,7 @@ function StatMaxValueBar({
     max > 0
       ? Math.max(0, Math.min(100, (displayedCurrent / max) * 100))
       : getTrackerPercent(tracker);
+  const fillRatio = percent / 100;
 
   useEffect(() => {
     if (!editingValue && !dragging) {
@@ -219,6 +220,9 @@ function StatMaxValueBar({
   const style = {
     "--stat-bar-accent": accent,
     "--stat-bar-fill": `${percent}%`,
+    "--stat-bar-fill-ratio": fillRatio,
+    "--stat-bar-bubble-opacity": Math.max(0, Math.min(1, fillRatio * 1.08)),
+    "--stat-bar-icon-grayscale": `${100 - percent}%`,
   } as CSSProperties;
 
   const fillClassName = `stat-max-bar__fill${
