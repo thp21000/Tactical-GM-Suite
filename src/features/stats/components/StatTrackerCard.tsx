@@ -45,10 +45,13 @@ export function StatTrackerCard({
   const visualTypeLabel = STAT_TRACKER_VISUAL_TYPE_LABELS[tracker.visualType];
   const visibilityLabel = getTrackerVisibilityBadgeLabel(tracker);
   const editLabel = getTrackerEditBadgeLabel(token, tracker);
+  const skinId = tracker.skinId ?? "neutral";
 
-  if (editing) {
-    return (
-      <div className="stat-tracker-card">
+  return (
+    <article
+      className={`stat-tracker-card stat-tracker-card--${tracker.visualType} stat-tracker-card--skin-${skinId}`}
+    >
+      {editing ? (
         <StatTrackerForm
           tracker={tracker}
           onCancel={() => setEditing(false)}
@@ -57,15 +60,15 @@ export function StatTrackerCard({
             setEditing(false);
           }}
         />
-      </div>
-    );
-  }
+      ) : null}
 
-  return (
-    <article className={`stat-tracker-card stat-tracker-card--${tracker.visualType}`}>
       <div className="stat-tracker-card__header">
         <span className="stat-tracker-card__icon" aria-hidden>
-          {icon.symbol}
+          {icon.src ? (
+            <img alt="" draggable={false} src={icon.src} />
+          ) : (
+            icon.symbol ?? "◆"
+          )}
         </span>
 
         <div>
@@ -82,7 +85,7 @@ export function StatTrackerCard({
       </div>
 
       {tracker.visualType === "bar" ? (
-        <div className="stat-health">
+        <div className="stat-health stat-tracker-card__bar">
           <div className="stat-health__meta">
             <span>{getTrackerDisplayValue(tracker)}</span>
           </div>
