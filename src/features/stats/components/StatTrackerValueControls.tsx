@@ -193,7 +193,7 @@ function StatFixedOrb({ canEdit, onChange, tracker }: Props) {
   );
 }
 
-function StatToggleOrb({ canEdit, onToggle, tracker }: Props) {
+function StatToggleOrb({ canEdit, onChange, onToggle, tracker }: Props) {
   const icon = getTrackerIcon(tracker.iconId);
   const accent = getTrackerIconAccent(tracker.iconId);
   const enabled = tracker.enabled ?? false;
@@ -213,7 +213,9 @@ function StatToggleOrb({ canEdit, onToggle, tracker }: Props) {
         title={canEdit ? (enabled ? "Cliquer pour désactiver" : "Cliquer pour activer") : enabled ? "Actif" : "Inactif"}
         type="button"
         onClick={() => {
-          if (canEdit) onToggle?.();
+          if (!canEdit) return;
+          if (onToggle) onToggle();
+          else onChange(0);
         }}
       >
         <span className="stat-counter-bar__orb-glass" aria-hidden="true" />
