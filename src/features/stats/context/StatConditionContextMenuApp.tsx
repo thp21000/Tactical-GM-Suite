@@ -77,109 +77,107 @@ function QuickEditor({
   );
 
   return (
-    <div className="stat-condition-context__editor-backdrop">
-      <form
-        className="stat-condition-context__editor"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit({
-            value: needsValue ? Math.max(1, Number(value) || 1) : undefined,
-            durationType,
-            rounds:
-              durationType === "rounds"
-                ? Math.max(1, Number(rounds) || 1)
-                : undefined,
-            visibility,
-          });
-        }}
-      >
-        <div className="stat-condition-context__editor-header">
-          <div>
-            <span className="stat-condition-context__eyebrow">
-              {condition ? "Modifier la condition" : "Ajouter la condition"}
-            </span>
-            <strong>{definition.label}</strong>
-          </div>
-          <button
-            aria-label="Fermer"
-            className="stat-condition-context__icon-button"
-            type="button"
-            onClick={onCancel}
+    <form
+      className="stat-condition-context__editor"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit({
+          value: needsValue ? Math.max(1, Number(value) || 1) : undefined,
+          durationType,
+          rounds:
+            durationType === "rounds"
+              ? Math.max(1, Number(rounds) || 1)
+              : undefined,
+          visibility,
+        });
+      }}
+    >
+      <div className="stat-condition-context__editor-header">
+        <button
+          aria-label="Retour à la liste des conditions"
+          className="stat-condition-context__back-button"
+          type="button"
+          onClick={onCancel}
+        >
+          ‹
+        </button>
+        <div className="stat-condition-context__editor-title">
+          <span className="stat-condition-context__eyebrow">
+            {condition ? "Modifier" : "Ajouter"}
+          </span>
+          <strong>{definition.label}</strong>
+        </div>
+      </div>
+
+      <div className="stat-condition-context__editor-grid">
+        {needsValue ? (
+          <label>
+            <span>Niveau</span>
+            <input
+              min="1"
+              type="number"
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+            />
+          </label>
+        ) : null}
+
+        <label>
+          <span>Durée</span>
+          <select
+            value={durationType}
+            onChange={(event) =>
+              setDurationType(event.target.value as StatConditionDurationType)
+            }
           >
-            ×
-          </button>
-        </div>
+            {DURATION_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
-        <div className="stat-condition-context__editor-grid">
-          {needsValue ? (
-            <label>
-              <span>Niveau</span>
-              <input
-                min="1"
-                type="number"
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-              />
-            </label>
-          ) : null}
-
+        {durationType === "rounds" ? (
           <label>
-            <span>Durée</span>
-            <select
-              value={durationType}
-              onChange={(event) =>
-                setDurationType(event.target.value as StatConditionDurationType)
-              }
-            >
-              {DURATION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <span>Nombre de rounds</span>
+            <input
+              min="1"
+              type="number"
+              value={rounds}
+              onChange={(event) => setRounds(event.target.value)}
+            />
           </label>
+        ) : null}
 
-          {durationType === "rounds" ? (
-            <label>
-              <span>Nombre de rounds</span>
-              <input
-                min="1"
-                type="number"
-                value={rounds}
-                onChange={(event) => setRounds(event.target.value)}
-              />
-            </label>
-          ) : null}
+        <label>
+          <span>Visibilité</span>
+          <select
+            value={visibility}
+            onChange={(event) =>
+              setVisibility(event.target.value as StatTrackerVisibility)
+            }
+          >
+            <option value="public">Public</option>
+            <option value="private">Privé</option>
+            <option value="gm">MJ</option>
+          </select>
+        </label>
+      </div>
 
-          <label>
-            <span>Visibilité</span>
-            <select
-              value={visibility}
-              onChange={(event) =>
-                setVisibility(event.target.value as StatTrackerVisibility)
-              }
-            >
-              <option value="public">Public</option>
-              <option value="private">Privé</option>
-              <option value="gm">MJ</option>
-            </select>
-          </label>
-        </div>
+      <p className="stat-condition-context__hint">
+        Affichée automatiquement sur le token selon sa visibilité.
+      </p>
 
-        <p className="stat-condition-context__hint">
-          Une condition active est automatiquement affichée autour du token.
-        </p>
-
-        <div className="stat-condition-context__editor-actions">
-          <button type="button" onClick={onCancel} disabled={busy}>
-            Annuler
-          </button>
-          <button className="is-primary" type="submit" disabled={busy}>
-            {busy ? "Enregistrement…" : condition ? "Enregistrer" : "Ajouter"}
-          </button>
-        </div>
-      </form>
-    </div>
+      <div className="stat-condition-context__editor-actions">
+        <button type="button" onClick={onCancel} disabled={busy}>
+          Annuler
+        </button>
+        <button className="is-primary" type="submit" disabled={busy}>
+          {busy ? "…" : condition ? "Enregistrer" : "Ajouter"}
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -223,6 +221,7 @@ export function StatConditionContextMenuApp() {
     let unsubscribeTheme: (() => void) | undefined;
     let mounted = true;
 
+    document.body.classList.add("stat-condition-context-host");
     applyThemeVariables(fallbackTgmTheme);
 
     OBR.onReady(() => {
@@ -251,6 +250,7 @@ export function StatConditionContextMenuApp() {
 
     return () => {
       mounted = false;
+      document.body.classList.remove("stat-condition-context-host");
       unsubscribePlayer?.();
       unsubscribeItems?.();
       unsubscribeTheme?.();
@@ -305,6 +305,25 @@ export function StatConditionContextMenuApp() {
   const editorCondition = editorDefinition && token
     ? getActiveTokenCondition(token, editorDefinition.id)
     : undefined;
+
+  if (editorDefinition) {
+    return (
+      <main className="stat-condition-context stat-condition-context--editor">
+        <QuickEditor
+          key={`${editorDefinition.id}:${editorCondition?.updatedAt ?? "new"}`}
+          definition={editorDefinition}
+          condition={editorCondition}
+          busy={busy}
+          onCancel={() => setEditor(null)}
+          onSubmit={(config) => {
+            void mutate((current) =>
+              upsertQuickCondition(current, editorDefinition.id, config),
+            ).then(() => setEditor(null));
+          }}
+        />
+      </main>
+    );
+  }
 
   return (
     <main className="stat-condition-context">
@@ -395,21 +414,6 @@ export function StatConditionContextMenuApp() {
           <p className="stat-condition-context__no-result">Aucune condition trouvée.</p>
         ) : null}
       </div>
-
-      {editorDefinition ? (
-        <QuickEditor
-          key={`${editorDefinition.id}:${editorCondition?.updatedAt ?? "new"}`}
-          definition={editorDefinition}
-          condition={editorCondition}
-          busy={busy}
-          onCancel={() => setEditor(null)}
-          onSubmit={(config) => {
-            void mutate((current) =>
-              upsertQuickCondition(current, editorDefinition.id, config),
-            ).then(() => setEditor(null));
-          }}
-        />
-      ) : null}
     </main>
   );
 }
