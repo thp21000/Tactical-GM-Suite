@@ -3,9 +3,10 @@
   box-sizing: border-box;
   width: 100%;
   height: 100vh;
+  min-width: 0;
   min-height: 360px;
   overflow: hidden;
-  padding: 8px;
+  padding: 10px;
   color: #f3f1f8;
   background: #252839;
   font: 500 13px/1.3 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -29,9 +30,9 @@
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
-  min-height: 38px;
-  margin-bottom: 8px;
-  padding: 0 8px;
+  min-height: 40px;
+  margin-bottom: 9px;
+  padding: 0 9px;
   border: 1px solid #3c4055;
   border-radius: 10px;
   background: #1d2030;
@@ -64,11 +65,11 @@
 
 .stat-condition-context__list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px;
-  max-height: calc(100vh - 62px);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 6px;
+  max-height: calc(100vh - 66px);
   overflow-y: auto;
-  padding: 1px 2px 8px 0;
+  padding: 1px 3px 9px 0;
   scrollbar-width: thin;
   scrollbar-color: #69617f transparent;
 }
@@ -97,7 +98,7 @@
   position: relative;
   min-width: 0;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 9px;
   background: #303345;
   transition: border-color 110ms ease, background-color 110ms ease, transform 110ms ease;
 }
@@ -115,12 +116,12 @@
 
 .stat-condition-context__condition-main {
   display: grid;
-  grid-template-columns: 27px minmax(0, 1fr) auto;
-  gap: 6px;
+  grid-template-columns: 31px minmax(0, 1fr) auto;
+  gap: 7px;
   align-items: center;
   width: 100%;
-  min-height: 45px;
-  padding: 6px 25px 6px 7px;
+  min-height: 48px;
+  padding: 7px 28px 7px 8px;
   border: 0;
   color: inherit;
   background: transparent;
@@ -136,20 +137,21 @@
 
 .stat-condition-context__condition-icon {
   display: grid;
-  width: 27px;
-  height: 27px;
+  width: 31px;
+  height: 31px;
   place-items: center;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 8%);
+  border: 1px solid rgb(255 255 255 / 9%);
   border-radius: 50%;
   background: #202333;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 18%);
   font-size: 17px;
 }
 
 .stat-condition-context__condition-icon img {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 82%;
+  height: 82%;
   object-fit: contain;
 }
 
@@ -162,10 +164,10 @@
 
 .stat-condition-context__condition-value {
   display: grid;
-  min-width: 18px;
-  height: 18px;
+  min-width: 19px;
+  height: 19px;
   place-items: center;
-  padding: 0 4px;
+  padding: 0 5px;
   border-radius: 999px;
   background: #a47af3;
   color: #17131e;
@@ -175,11 +177,11 @@
 
 .stat-condition-context__edit {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 5px;
+  right: 5px;
   display: grid;
-  width: 20px;
-  height: 20px;
+  width: 21px;
+  height: 21px;
   place-items: center;
   border: 0;
   border-radius: 6px;
@@ -221,16 +223,17 @@
   z-index: 10;
   display: grid;
   place-items: center;
-  padding: 9px;
+  padding: 12px;
   background: rgb(15 17 27 / 72%);
   backdrop-filter: blur(2px);
 }
 
 .stat-condition-context__editor {
-  width: min(100%, 270px);
-  max-height: calc(100vh - 18px);
+  width: 100%;
+  max-width: 330px;
+  max-height: calc(100vh - 24px);
   overflow-y: auto;
-  padding: 13px;
+  padding: 15px;
   border: 1px solid #635578;
   border-radius: 13px;
   background: #2b2e40;
@@ -289,7 +292,7 @@
 .stat-condition-context__editor-grid input,
 .stat-condition-context__editor-grid select {
   width: 100%;
-  min-height: 34px;
+  min-height: 36px;
   padding: 6px 9px;
   border: 1px solid #494e65;
   border-radius: 8px;
@@ -313,14 +316,15 @@
 
 .stat-condition-context__editor-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 7px;
   justify-content: flex-end;
   margin-top: 13px;
 }
 
 .stat-condition-context__editor-actions button {
-  min-height: 32px;
-  padding: 5px 10px;
+  min-height: 34px;
+  padding: 6px 12px;
   border: 1px solid #4b4f64;
   border-radius: 8px;
   color: #e7e3ef;
@@ -339,6 +343,20 @@
 .stat-condition-context__editor-actions button:disabled {
   opacity: 0.55;
   cursor: wait;
+}
+
+@media (max-width: 315px) {
+  .stat-condition-context {
+    padding: 8px;
+  }
+
+  .stat-condition-context__list {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-condition-context__condition-main {
+    min-height: 44px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
