@@ -45,12 +45,9 @@ export function StatTrackerCard({
   const visualTypeLabel = STAT_TRACKER_VISUAL_TYPE_LABELS[tracker.visualType];
   const visibilityLabel = getTrackerVisibilityBadgeLabel(tracker);
   const editLabel = getTrackerEditBadgeLabel(token, tracker);
-  const skinId = tracker.skinId ?? "neutral";
 
   return (
-    <article
-      className={`stat-tracker-card stat-tracker-card--${tracker.visualType} stat-tracker-card--skin-${skinId}`}
-    >
+    <article className={`stat-tracker-card stat-tracker-card--${tracker.visualType}`}>
       {editing ? (
         <StatTrackerForm
           tracker={tracker}

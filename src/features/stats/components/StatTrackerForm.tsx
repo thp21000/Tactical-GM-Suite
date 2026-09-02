@@ -13,12 +13,10 @@ import {
 import type {
   StatTracker,
   StatTrackerInput,
-  StatTrackerSkinId,
   StatTrackerVisibility,
   StatTrackerVisualType,
 } from "../statTypes";
 import { StatTrackerIconPicker } from "./StatTrackerIconPicker";
-import { StatTrackerSkinPicker } from "./StatTrackerSkinPicker";
 
 type Props = {
   tracker?: StatTracker;
@@ -38,9 +36,6 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
   );
   const [iconId, setIconId] = useState(
     normalizeTrackerIconId(tracker?.iconId ?? getDefaultTrackerIconId()),
-  );
-  const [skinId, setSkinId] = useState<StatTrackerSkinId>(
-    tracker?.skinId ?? "neutral",
   );
   const [current, setCurrent] = useState(String(tracker?.current ?? 0));
   const [max, setMax] = useState(String(tracker?.max ?? 1));
@@ -70,7 +65,6 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
       name,
       visualType,
       iconId,
-      skinId,
       current: visualType === "bar" ? toNumber(current) : undefined,
       max: visualType === "bar" ? toNumber(max) : undefined,
       value:
@@ -100,7 +94,7 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
         <header className="stat-tracker-modal__header">
           <div>
             <h2 id={titleId}>{tracker ? "Modifier le tracker" : "Ajouter un tracker"}</h2>
-            <p>Configurez son affichage, son style et les droits d’accès.</p>
+            <p>Configurez son affichage et les droits d’accès.</p>
           </div>
 
           <button
@@ -191,17 +185,9 @@ export function StatTrackerForm({ onCancel, onSubmit, tracker }: Props) {
           <section className="stat-tracker-modal__section stat-form__wide">
             <div className="stat-tracker-modal__section-title">
               <strong>Icône</strong>
-              <span>Choisissez une catégorie puis une icône.</span>
+              <span>L’icône choisie porte l’identité visuelle du tracker.</span>
             </div>
             <StatTrackerIconPicker value={iconId} onChange={setIconId} />
-          </section>
-
-          <section className="stat-tracker-modal__section stat-form__wide">
-            <div className="stat-tracker-modal__section-title">
-              <strong>Style</strong>
-              <span>Couleur d’ambiance du tracker, indépendante de l’icône.</span>
-            </div>
-            <StatTrackerSkinPicker value={skinId} onChange={setSkinId} />
           </section>
 
           <section className="stat-tracker-modal__section stat-form__wide">

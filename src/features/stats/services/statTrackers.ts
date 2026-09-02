@@ -26,7 +26,6 @@ export function createTracker(input: StatTrackerInput): StatTracker {
     name: input.name.trim() || "Tracker",
     visualType,
     iconId: normalizeTrackerIconId(input.iconId),
-    skinId: input.skinId ?? "neutral",
     current,
     max,
     value,
@@ -51,10 +50,11 @@ export function updateTracker(tracker: StatTracker, patch: Partial<StatTrackerIn
       patch.iconId !== undefined
         ? normalizeTrackerIconId(patch.iconId)
         : normalizeTrackerIconId(tracker.iconId),
-    skinId: patch.skinId ?? tracker.skinId ?? "neutral",
     max,
     updatedAt: now(),
   };
+
+  delete next.skinId;
 
   if (visualType === "bar") {
     next.current = clamp(patch.current ?? tracker.current ?? max ?? 0, max);

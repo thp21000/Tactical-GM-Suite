@@ -12,6 +12,7 @@ export type StatTrackerVisualType = "icon" | "bar" | "counter" | "readonly" | "t
 
 export type StatTrackerVisibility = "gm" | "private" | "public";
 
+/** @deprecated Conservé uniquement pour lire les anciennes données. */
 export type StatTrackerSkinId =
   | "neutral"
   | "red"
@@ -125,6 +126,7 @@ export type StatTracker = {
   name: string;
   visualType: StatTrackerVisualType;
   iconId: string;
+  /** @deprecated Anciennes sauvegardes uniquement. Le style vient maintenant de l'icône. */
   skinId?: StatTrackerSkinId;
   current?: number;
   max?: number;
@@ -149,12 +151,14 @@ export type StatTrackedToken = {
   assignedPlayerName?: string;
   notes?: string;
   isHiddenFromPlayers: boolean;
-  /**
-   * False means the canonical profile is archived but its full Stats setup is
-   * deliberately kept so re-adding the Owlbear token restores it unchanged.
-   * Older saved profiles have no flag and are treated as tracked.
-   */
+  /** False = profil conservé dans le token Owlbear mais non affiché dans le Stat Tracker. */
   isTracked?: boolean;
+  /**
+   * État runtime uniquement. True signifie que la version courante du profil a
+   * bien été écrite dans les métadonnées du token Owlbear de la scène active.
+   * Cette propriété n'est jamais sérialisée dans le token ni dans la room.
+   */
+  isItemMetadataSynced?: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -173,6 +177,7 @@ export type StatTrackerInput = {
   name: string;
   visualType: StatTrackerVisualType;
   iconId: string;
+  /** @deprecated Ignoré lors de la création/modification. */
   skinId?: StatTrackerSkinId;
   current?: number;
   max?: number;

@@ -10,9 +10,15 @@ type Options = {
   enabled: boolean;
   isGm: boolean;
   tokens: StatTrackedToken[];
+  onSceneItems: (items: Item[]) => void;
 };
 
-export function useStatSceneTokenBindings({ enabled, isGm, tokens }: Options) {
+export function useStatSceneTokenBindings({
+  enabled,
+  isGm,
+  tokens,
+  onSceneItems,
+}: Options) {
   const [items, setItems] = useState<Item[]>([]);
   const [sceneReady, setSceneReady] = useState(false);
 
@@ -20,10 +26,17 @@ export function useStatSceneTokenBindings({ enabled, isGm, tokens }: Options) {
     if (!enabled || !OBR.isAvailable) {
       setItems([]);
       setSceneReady(false);
+      onSceneItems([]);
       return undefined;
     }
 
     let mounted = true;
+
+    const applyItems = (nextItems: Item[]) => {
+      if (!mounted) return;
+      setItems(nextItems);
+      onSceneItems(nextItems);
+    };
 
     const refresh = async () => {
       try {
@@ -31,16 +44,16 @@ export function useStatSceneTokenBindings({ enabled, isGm, tokens }: Options) {
         if (!mounted) return;
         setSceneReady(ready);
         if (!ready) {
-          setItems([]);
+          applyItems([]);
           return;
         }
 
         const nextItems = await OBR.scene.items.getItems();
-        if (mounted) setItems(nextItems);
+        applyItems(nextItems);
       } catch {
         if (mounted) {
           setSceneReady(false);
-          setItems([]);
+          applyItems([]);
         }
       }
     };
@@ -49,7 +62,7 @@ export function useStatSceneTokenBindings({ enabled, isGm, tokens }: Options) {
 
     const unsubscribeItems = OBR.scene.items.onChange((nextItems) => {
       if (!mounted) return;
-      setItems(nextItems);
+      applyItems(nextItems);
       setSceneReady(true);
     });
 
@@ -57,7 +70,7 @@ export function useStatSceneTokenBindings({ enabled, isGm, tokens }: Options) {
       if (!mounted) return;
       setSceneReady(ready);
       if (!ready) {
-        setItems([]);
+        applyItems([]);
         return;
       }
       void refresh();
@@ -68,7 +81,7 @@ export function useStatSceneTokenBindings({ enabled, isGm, tokens }: Options) {
       unsubscribeItems();
       unsubscribeReady();
     };
-  }, [enabled]);
+  }, [enabled, onSceneItems]);
 
   useEffect(() => {
     if (!enabled || !isGm || !sceneReady) return;
