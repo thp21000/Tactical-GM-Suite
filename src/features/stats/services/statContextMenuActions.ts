@@ -8,11 +8,12 @@ import {
   readEmbeddedStatToken,
   readStatTokenLinkMetadata,
 } from "./statTokenSceneLinks";
-import { writeEmbeddedStatToken } from "./statEmbeddedProfileActions";
 import {
-  createOrUpdateTokenConditionOverlay,
-  deleteTokenConditionOverlay,
-} from "./statConditionOverlayObrSync";
+  clearConditionOnlyStatHostMarker,
+  isConditionOnlyStatHost,
+  writeEmbeddedStatToken,
+} from "./statEmbeddedProfileActions";
+import { createOrUpdateTokenConditionOverlay } from "./statConditionOverlayObrSync";
 import {
   createOrUpdateTokenOverlay,
   deleteTokenOverlay,
@@ -41,16 +42,35 @@ async function createTokenForItem(item: Item): Promise<StatTrackedToken> {
 export async function addSceneItemsToStatTracker(items: Item[]): Promise<void> {
   for (const item of items) {
     const embedded = readEmbeddedStatToken(item);
-    const token = embedded
-      ? {
-          ...embedded,
-          sourceItemId: item.id,
-          isTracked: true,
-          updatedAt: now(),
-        }
-      : await createTokenForItem(item);
+    const conditionOnly = isConditionOnlyStatHost(item);
+
+    let token: StatTrackedToken;
+    if (embedded && conditionOnly) {
+      const initialized = await createTokenForItem(item);
+      token = {
+        ...initialized,
+        id: embedded.id,
+        sourceItemId: item.id,
+        conditions: embedded.conditions,
+        createdAt: embedded.createdAt,
+        isTracked: true,
+        updatedAt: now(),
+      };
+    } else if (embedded) {
+      token = {
+        ...embedded,
+        sourceItemId: item.id,
+        isTracked: true,
+        updatedAt: now(),
+      };
+    } else {
+      token = await createTokenForItem(item);
+    }
 
     const stored = await writeEmbeddedStatToken(item, token, true);
+    if (conditionOnly) {
+      await clearConditionOnlyStatHostMarker(item.id).catch(() => undefined);
+    }
     await createOrUpdateTokenOverlay(stored).catch(() => undefined);
     await createOrUpdateTokenConditionOverlay(stored).catch(() => undefined);
   }
@@ -73,6 +93,8 @@ export async function removeSceneItemsFromStatTracker(items: Item[]): Promise<vo
     );
 
     await deleteTokenOverlay(stored).catch(() => undefined);
-    await deleteTokenConditionOverlay(stored).catch(() => undefined);
+    // Les conditions sont indépendantes du Stat Tracker : elles restent
+    // visibles et modifiables même lorsque le token n'est plus suivi.
+    await createOrUpdateTokenConditionOverlay(stored).catch(() => undefined);
   }
 }
