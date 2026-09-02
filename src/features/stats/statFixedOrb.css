@@ -1,4 +1,5 @@
-.stat-tracker-card--readonly {
+.stat-tracker-card--readonly,
+.stat-tracker-card--toggle {
   position: relative;
   overflow: visible;
   padding: 5px 7px 8px;
@@ -7,7 +8,8 @@
   box-shadow: none;
 }
 
-.stat-tracker-card--readonly:hover {
+.stat-tracker-card--readonly:hover,
+.stat-tracker-card--toggle:hover {
   background: color-mix(
     in srgb,
     var(--tgm-obr-overlay, rgba(255, 255, 255, 0.08)) 42%,
@@ -15,7 +17,8 @@
   );
 }
 
-.stat-tracker-card--readonly:has(.stat-max-bar__menu-trigger[aria-expanded="true"]) {
+.stat-tracker-card--readonly:has(.stat-max-bar__menu-trigger[aria-expanded="true"]),
+.stat-tracker-card--toggle:has(.stat-max-bar__menu-trigger[aria-expanded="true"]) {
   z-index: 160;
 }
 
@@ -52,10 +55,7 @@
   box-shadow: none;
 }
 
-/*
- * Toggle : même bulle que l'indicateur fixe, mais sans valeur centrale.
- * L'état est porté uniquement par la saturation de l'icône.
- */
+/* Toggle : même bulle que l'indicateur fixe, sans valeur centrale. */
 .stat-toggle-orb__button {
   appearance: none;
   -webkit-appearance: none;
@@ -134,16 +134,6 @@
 
 .stat-toggle-orb__button:disabled {
   cursor: default;
-}
-
-/*
- * Tant que le toggle utilise la carte générique, on retire les doublons
- * fonctionnels : le texte Actif/Inactif et l'ancien bouton Activer/Désactiver.
- * La pastille devient l'unique contrôle d'état.
- */
-.stat-tracker-card--toggle > .stat-tracker-card__value,
-.stat-tracker-card--toggle > button {
-  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
