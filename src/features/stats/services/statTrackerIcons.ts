@@ -78,6 +78,87 @@ const ICON_LABELS: Record<string, string> = {
   object_stones: "Pierres",
 };
 
+/**
+ * Couleur dominante volontairement déclarée pour chaque asset.
+ * On évite l'extraction automatique depuis le PNG afin de conserver une UI
+ * stable, lisible et cohérente même si une icône contient plusieurs couleurs.
+ */
+const ICON_ACCENTS: Record<string, string> = {
+  body_heart: "#cf4055",
+  body_broken_heart: "#d64658",
+  body_drop: "#bd3349",
+  body_skull: "#c9b994",
+  body_bone: "#d6c8a7",
+  body_heal_cross: "#55bd78",
+  body_shield: "#5389b9",
+  body_cracked_shield: "#687f9b",
+  body_helmet: "#8998ab",
+  body_armor: "#7d8da1",
+  body_lock: "#ad8c58",
+  body_wall: "#7d8793",
+
+  arcane_rune: "#7b61d7",
+  arcane_crystal: "#7165e3",
+  arcane_star: "#d2a63f",
+  arcane_eye: "#d79238",
+  arcane_portal: "#8a54d4",
+  arcane_flame: "#dc6734",
+  arcane_sword: "#8e9eaf",
+  arcane_bow: "#a16a42",
+  arcane_projectile: "#8798aa",
+  arcane_target: "#c34d4d",
+  arcane_explosion: "#db6a32",
+  arcane_lightning: "#3d8ed8",
+  arcane_axe: "#8796a7",
+  arcane_book: "#4f76c8",
+  arcane_fireball: "#e25c2d",
+  arcane_slime: "#34a8c8",
+
+  resource_vial: "#ba4058",
+  resource_pouch: "#9b6746",
+  resource_torch: "#d97832",
+  resource_ration: "#a67a49",
+  resource_apple: "#cf493f",
+  resource_tool: "#8493a1",
+  resource_coin: "#d2a441",
+  resource_platinum: "#aeb9ca",
+  resource_gold: "#d5a63d",
+  resource_silver: "#abb6c5",
+  resource_copper: "#b9693e",
+  resource_gem: "#4aaf8d",
+  resource_gold_ingot: "#d5a13a",
+  resource_iron_ingot: "#778491",
+  resource_copper_ingot: "#b86b43",
+  resource_ruby: "#c9324f",
+  resource_toolbox: "#8c654c",
+  resource_money_bag: "#b87336",
+  resource_chest: "#3d9c62",
+  resource_leaf: "#5a9d45",
+
+  object_gear: "#9a744d",
+  object_key: "#c18f39",
+  object_bomb: "#a9503b",
+  object_hourglass: "#c19748",
+  object_flag: "#b94b55",
+  object_seal: "#b9424d",
+  object_circle: "#7f8797",
+  object_diamond: "#7d71ba",
+  object_square: "#7d8797",
+  object_dot: "#9299a7",
+  object_arrow_up: "#7f8797",
+  object_arrow_down: "#7f8797",
+  object_raven: "#6955a0",
+  object_mask: "#ad8765",
+  object_stones: "#667e94",
+};
+
+const CATEGORY_ACCENTS: Record<StatTrackerIconCategory, string> = {
+  body: "#c95664",
+  arcane: "#7764c8",
+  resource: "#b98443",
+  object: "#7e8797",
+};
+
 const ICON_ORDER = [
   "body_heart",
   "body_broken_heart",
@@ -222,6 +303,12 @@ export function getTrackerIcon(iconId: string): StatTrackerIcon {
       symbol: "◆",
     }
   );
+}
+
+export function getTrackerIconAccent(iconId: string): string {
+  const normalized = normalizeTrackerIconId(iconId);
+  const icon = getTrackerIcon(normalized);
+  return ICON_ACCENTS[normalized] ?? CATEGORY_ACCENTS[icon.category];
 }
 
 export function getTrackerIconsByCategory(
