@@ -1,3 +1,38 @@
+.stat-max-bar__header {
+  position: relative;
+  z-index: 20;
+  display: grid;
+  min-height: 20px;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  align-items: center;
+  margin-bottom: 2px;
+  padding: 0 2px;
+}
+
+.stat-max-bar__header .stat-max-bar__name {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--tgm-obr-text-muted, #b8bac7);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-max-bar__header .stat-max-bar__menu {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.stat-max-bar__header .stat-max-bar__menu-panel {
+  top: calc(100% + 4px);
+  right: 0;
+  bottom: auto;
+}
+
 .stat-max-bar__rail {
   cursor: ew-resize;
   touch-action: none;
@@ -59,42 +94,35 @@
 }
 
 /*
- * Dense liquid bubbles. The pattern repeats across the filled area, so the
- * absolute number of visible bubbles naturally grows with the fill width.
- * A left-to-right mask makes the newly revealed bubbles progressively denser
- * and brighter as the tracker approaches its maximum.
+ * Les bulles sont de vrais éléments positionnés à partir d'un seed stable par
+ * tracker. Il n'y a donc plus de motif CSS répétitif visible. Leur quantité
+ * augmente de façon non linéaire avec current/max : aucune à 0, puis une
+ * densité de plus en plus forte à l'approche du maximum.
  */
-.stat-max-bar__fill::before {
-  content: "";
+.stat-max-bar__bubble-layer {
   position: absolute;
   inset: 0;
+  z-index: 2;
+  overflow: hidden;
   pointer-events: none;
+}
+
+.stat-max-bar__bubble {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
   background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.24) 0 1px, transparent 1.8px) 1px 2px / 11px 10px,
-    radial-gradient(circle, rgba(255, 255, 255, 0.18) 0 1.3px, transparent 2.2px) 6px 7px / 17px 14px,
-    radial-gradient(circle, rgba(255, 255, 255, 0.16) 0 1.6px, transparent 2.6px) 12px 1px / 23px 18px,
-    radial-gradient(circle, rgba(255, 255, 255, 0.14) 0 1px, transparent 1.9px) 3px 10px / 14px 19px,
-    radial-gradient(circle, rgba(255, 255, 255, 0.20) 0 1.9px, transparent 3px) 18px 5px / 31px 22px,
-    radial-gradient(circle, rgba(255, 255, 255, 0.12) 0 0.8px, transparent 1.6px) 8px 4px / 9px 16px;
-  opacity: var(--stat-bar-bubble-opacity, 0);
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 0, 0, 0.12) 12%,
-    rgba(0, 0, 0, 0.34) 30%,
-    rgba(0, 0, 0, 0.68) 54%,
-    #000 78%,
-    #000 100%
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 0, 0, 0.12) 12%,
-    rgba(0, 0, 0, 0.34) 30%,
-    rgba(0, 0, 0, 0.68) 54%,
-    #000 78%,
-    #000 100%
-  );
+    radial-gradient(
+      circle at 35% 30%,
+      rgba(255, 255, 255, 0.66) 0%,
+      rgba(255, 255, 255, 0.34) 26%,
+      rgba(255, 255, 255, 0.12) 58%,
+      transparent 76%
+    );
+  box-shadow:
+    inset 0 0 1px rgba(255, 255, 255, 0.45),
+    0 0 2px rgba(255, 255, 255, 0.16);
+  transform: translate(-50%, -50%);
 }
 
 .stat-max-bar__fill::after {
@@ -103,6 +131,7 @@
   top: 2px;
   right: 0;
   bottom: 2px;
+  z-index: 3;
   width: 8px;
   pointer-events: none;
   border-radius: 48% 64% 56% 42% / 28% 42% 58% 72%;
@@ -127,9 +156,8 @@
 }
 
 /*
- * The selected icon acts like a visual gauge too: fully desaturated at zero,
- * progressively recovering its original colours until it reaches normal
- * saturation at max. This follows the live drag preview as well as saved data.
+ * L'icône sert aussi de jauge : entièrement désaturée à zéro, elle récupère
+ * progressivement ses couleurs jusqu'à sa saturation originale à max.
  */
 .stat-max-bar__icon img {
   filter:
