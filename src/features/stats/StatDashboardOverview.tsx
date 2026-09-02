@@ -23,6 +23,7 @@ export function StatDashboardOverview({ obr }: Props) {
     enabled: obr.isReady,
     isGm,
     tokens: stats.tokens,
+    onSceneItems: stats.hydrateSceneItems,
   });
 
   const sceneTokensByCanonicalId = useMemo(() => {
