@@ -380,6 +380,15 @@
   background: var(--stat-tracker-accent);
 }
 
+.stat-token-display-preview__icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 3px;
+  object-fit: contain;
+  vertical-align: -2px;
+}
+
 @media (max-width: 480px) {
   .stat-tracker-modal__backdrop {
     padding: 7px;
