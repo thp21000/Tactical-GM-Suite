@@ -7,6 +7,7 @@ import "./shared/styles/globals.css";
 import "./shared/styles/scrollbars.css";
 import "./features/stats/statTrackerUi.css";
 import "./features/stats/context/statConditionCustomSelect.css";
+import "./shared/styles/obrIntegratedUi.css";
 
 const view = new URLSearchParams(window.location.search).get("view");
 
