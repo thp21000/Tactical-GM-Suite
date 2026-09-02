@@ -12,24 +12,26 @@ export type StatTrackerVisualType = "icon" | "bar" | "counter" | "readonly" | "t
 
 export type StatTrackerVisibility = "gm" | "private" | "public";
 
-export type StatTrackerIconCategory =
-  | "health"
-  | "armor"
-  | "magic"
-  | "resource"
-  | "money"
-  | "combat"
-  | "status"
-  | "utility"
-  | "other";
+export type StatTrackerSkinId =
+  | "neutral"
+  | "red"
+  | "blue"
+  | "purple"
+  | "gold"
+  | "green"
+  | "orange"
+  | "steel"
+  | "dark";
+
+export type StatTrackerIconCategory = "body" | "arcane" | "resource" | "object";
 
 export type StatTrackerIcon = {
   id: string;
   label: string;
   category: StatTrackerIconCategory;
-  symbol: string;
+  src?: string;
+  symbol?: string;
 };
-
 
 export type StatConditionSeverity = "none" | "value" | "staged";
 
@@ -123,6 +125,7 @@ export type StatTracker = {
   name: string;
   visualType: StatTrackerVisualType;
   iconId: string;
+  skinId?: StatTrackerSkinId;
   current?: number;
   max?: number;
   value?: number;
@@ -164,6 +167,7 @@ export type StatTrackerInput = {
   name: string;
   visualType: StatTrackerVisualType;
   iconId: string;
+  skinId?: StatTrackerSkinId;
   current?: number;
   max?: number;
   value?: number;

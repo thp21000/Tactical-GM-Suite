@@ -1,4 +1,5 @@
 import type { StatTracker, StatTrackerInput } from "../statTypes";
+import { normalizeTrackerIconId } from "./statTrackerIcons";
 
 function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -24,7 +25,8 @@ export function createTracker(input: StatTrackerInput): StatTracker {
     id: createId("tracker"),
     name: input.name.trim() || "Tracker",
     visualType,
-    iconId: input.iconId || "other",
+    iconId: normalizeTrackerIconId(input.iconId),
+    skinId: input.skinId ?? "neutral",
     current,
     max,
     value,
@@ -45,6 +47,11 @@ export function updateTracker(tracker: StatTracker, patch: Partial<StatTrackerIn
     ...patch,
     name: patch.name !== undefined ? patch.name.trim() || "Tracker" : tracker.name,
     visualType,
+    iconId:
+      patch.iconId !== undefined
+        ? normalizeTrackerIconId(patch.iconId)
+        : normalizeTrackerIconId(tracker.iconId),
+    skinId: patch.skinId ?? tracker.skinId ?? "neutral",
     max,
     updatedAt: now(),
   };

@@ -75,6 +75,7 @@ function renderItem(
   options: Required<StatTokenOverlaySvgRenderOptions>,
 ): string {
   const icon = getTrackerIcon(item.iconId);
+  const iconSymbol = icon.symbol ?? "◆";
   const label = item.mode === "icon" ? "" : item.label;
   const textX = item.mode === "icon" ? item.x + item.width / 2 : item.x + ICON_WIDTH + 8;
   const textAnchor = item.mode === "icon" ? "middle" : "start";
@@ -84,7 +85,7 @@ function renderItem(
   return `
   <g aria-label="${escapeSvgText(item.title || item.label)}">
     <rect x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" rx="7" fill="${escapeSvgText(options.backgroundColor)}" stroke="${escapeSvgText(options.borderColor)}" stroke-width="1" opacity="${plan.style.opacity}" />
-    <text x="${item.x + 7}" y="${item.y + Math.round(item.height / 2) + 4}" font-size="${fontSize}" fill="${escapeSvgText(options.textColor)}">${escapeSvgText(icon.symbol)}</text>
+    <text x="${item.x + 7}" y="${item.y + Math.round(item.height / 2) + 4}" font-size="${fontSize}" fill="${escapeSvgText(options.textColor)}">${escapeSvgText(iconSymbol)}</text>
     ${label ? `<text x="${textX}" y="${item.y + Math.round(item.height / 2) + 4}" font-size="${fontSize}" fill="${escapeSvgText(options.textColor)}" text-anchor="${textAnchor}" textLength="${labelMaxWidth}" lengthAdjust="spacingAndGlyphs">${escapeSvgText(label)}</text>` : ""}
     ${renderBar(item, options)}
   </g>`;

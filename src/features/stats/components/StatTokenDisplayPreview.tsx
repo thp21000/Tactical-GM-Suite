@@ -48,7 +48,18 @@ export function StatTokenDisplayPreview({ token, isGm, maxItems = 6 }: Props) {
           return (
             <span key={item.id} title={item.title}>
               <Badge>
-                <span aria-hidden="true">{icon.symbol}</span> {item.label}
+                {icon.src ? (
+                  <img
+                    alt=""
+                    aria-hidden="true"
+                    className="stat-token-display-preview__icon"
+                    draggable={false}
+                    src={icon.src}
+                  />
+                ) : (
+                  <span aria-hidden="true">{icon.symbol ?? "◆"}</span>
+                )}{" "}
+                {item.label}
               </Badge>
             </span>
           );
