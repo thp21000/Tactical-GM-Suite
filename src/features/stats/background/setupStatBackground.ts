@@ -7,7 +7,12 @@ import {
   addSceneItemsToStatTracker,
   removeSceneItemsFromStatTracker,
 } from "../services/statContextMenuActions";
+import { setupStatConditionInitiativeSync } from "../services/statConditionInitiativeSync";
 import { createOrUpdateTokenConditionOverlay } from "../services/statConditionOverlayObrSync";
+import {
+  getStatTokenContextKeyFilters,
+  isSupportedStatTokenItem,
+} from "../services/statTokenEligibility";
 import {
   isStatTokenTrackedItem,
   readEmbeddedStatToken,
@@ -39,10 +44,12 @@ async function syncCurrentSceneConditionBadges(): Promise<void> {
 
 export function setupStatBackground(): () => void {
   let unsubscribeSceneReady: (() => void) | undefined;
+  let unsubscribeInitiativeSync: (() => void) | undefined;
 
   OBR.onReady(() => {
     const iconUrl = `${import.meta.env.BASE_URL}icon.svg`;
     const conditionIconUrl = `${import.meta.env.BASE_URL}condition.svg`;
+    const tokenFilters = getStatTokenContextKeyFilters();
 
     void OBR.contextMenu.create({
       id: STAT_TRACKER_CONTEXT_MENU_ID,
@@ -53,6 +60,7 @@ export function setupStatBackground(): () => void {
           filter: {
             min: 1,
             every: [
+              ...tokenFilters,
               {
                 key: ["metadata", STAT_TOKEN_LINK_METADATA_KEY, "tracked"],
                 value: true,
@@ -67,6 +75,7 @@ export function setupStatBackground(): () => void {
           filter: {
             min: 1,
             every: [
+              ...tokenFilters,
               {
                 key: ["metadata", STAT_TOKEN_LINK_METADATA_KEY, "tracked"],
                 value: true,
@@ -76,10 +85,13 @@ export function setupStatBackground(): () => void {
         },
       ],
       onClick: (menuContext) => {
-        if (menuContext.items.every(isStatTokenTrackedItem)) {
-          void removeSceneItemsFromStatTracker(menuContext.items);
+        const tokens = menuContext.items.filter(isSupportedStatTokenItem);
+        if (tokens.length === 0) return;
+
+        if (tokens.every(isStatTokenTrackedItem)) {
+          void removeSceneItemsFromStatTracker(tokens);
         } else {
-          void addSceneItemsToStatTracker(menuContext.items);
+          void addSceneItemsToStatTracker(tokens);
         }
       },
     });
@@ -94,6 +106,7 @@ export function setupStatBackground(): () => void {
             min: 1,
             max: 1,
             roles: ["GM"],
+            every: tokenFilters,
           },
         },
       ],
@@ -105,6 +118,8 @@ export function setupStatBackground(): () => void {
     });
 
     void syncCurrentSceneConditionBadges();
+    unsubscribeInitiativeSync?.();
+    unsubscribeInitiativeSync = setupStatConditionInitiativeSync();
 
     unsubscribeSceneReady?.();
     unsubscribeSceneReady = OBR.scene.onReadyChange((ready) => {
@@ -114,6 +129,7 @@ export function setupStatBackground(): () => void {
 
   return () => {
     unsubscribeSceneReady?.();
+    unsubscribeInitiativeSync?.();
     void OBR.contextMenu.remove(STAT_TRACKER_CONTEXT_MENU_ID);
     void OBR.contextMenu.remove(STAT_CONDITION_CONTEXT_MENU_ID);
   };
