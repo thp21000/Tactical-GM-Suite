@@ -34,6 +34,8 @@ const fr: LocaleDictionary = {
   "stats.conditions.action.editNamed": "Modifier {name}",
   "stats.conditions.noResult": "Aucune condition trouvée.",
   "stats.conditions.generic.empty": "Aucune condition générique n’est encore définie.",
+  "stats.conditions.legacy.title": "Conditions héritées",
+  "stats.conditions.legacy.help": "Anciennes conditions conservées sur ce token. Elles peuvent être retirées mais ne sont plus proposées à l’ajout.",
   "stats.conditions.value.damage": "Dégâts",
 
   "stats.conditions.catalog.blinded": "Aveuglé",
