@@ -1,3 +1,6 @@
+import { readPreferences } from "../../../core/storage/preferences";
+import { translate } from "../../../i18n";
+import type { TranslateFunction } from "../../../i18n/types";
 import type {
   StatConditionDurationType,
   StatTrackerVisibility,
@@ -5,9 +8,9 @@ import type {
   StatTrackedToken,
 } from "../statTypes";
 import {
-  createTokenCondition,
-  getStatConditionDefinition,
-} from "./statConditions";
+  isSameStatConditionCatalogId,
+  type SystemStatConditionDefinition,
+} from "./statConditionCatalog";
 
 export type StatConditionQuickConfig = {
   value?: number;
@@ -18,23 +21,38 @@ export type StatConditionQuickConfig = {
   initiativeRound?: number;
 };
 
+function createId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function now(): string {
   return new Date().toISOString();
 }
 
-function normalizePositiveInteger(value: number | undefined, fallback = 1): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
-  return Math.max(1, Math.floor(value));
+function getTranslator(t?: TranslateFunction): TranslateFunction {
+  if (t) return t;
+  const { language } = readPreferences();
+  return (key, params) => translate(language, key, params);
+}
+
+function normalizePositiveInteger(
+  value: number | undefined,
+  fallback = 1,
+  max?: number,
+): number {
+  const normalized =
+    typeof value === "number" && Number.isFinite(value)
+      ? Math.max(1, Math.floor(value))
+      : fallback;
+  return typeof max === "number" ? Math.min(max, normalized) : normalized;
 }
 
 function createConfiguredCondition(
-  conditionId: string,
+  definition: SystemStatConditionDefinition,
   config: StatConditionQuickConfig,
   existing?: StatTokenCondition,
-): StatTokenCondition | null {
-  const definition = getStatConditionDefinition(conditionId);
-  if (!definition) return null;
-
+): StatTokenCondition {
+  const timestamp = now();
   const durationType = config.durationType === "manual" ? undefined : config.durationType;
   const rounds = durationType === "rounds" ? normalizePositiveInteger(config.rounds) : undefined;
   const encounterId =
@@ -51,27 +69,32 @@ function createConfiguredCondition(
         ? config.initiativeRound + rounds
         : existing?.initiativeExpiresAtRound
       : undefined;
+  const value =
+    definition.severityType === "none"
+      ? undefined
+      : normalizePositiveInteger(config.value, 1, definition.maxValue);
 
-  const condition = createTokenCondition(conditionId, {
-    value:
-      definition.severityType === "none"
-        ? undefined
-        : normalizePositiveInteger(config.value),
+  return {
+    id: existing?.id ?? createId("stat-condition"),
+    conditionId: definition.id,
+    label: definition.label,
+    shortLabel: definition.shortLabel,
+    iconId: definition.iconId,
+    value,
     durationType,
     durationValue: rounds,
     remainingRounds: rounds,
-    visibility: config.visibility ?? "public",
-    showOnToken: true,
-    tokenDisplayMode: "icon",
-    tokenDisplayPriority: 50,
-  });
-  if (!condition) return null;
-
-  return {
-    ...condition,
     initiativeEncounterId: encounterId,
     initiativeStartRound: initiativeRound,
     initiativeExpiresAtRound: expiresAtRound,
+    source: existing?.source,
+    note: existing?.note,
+    showOnToken: true,
+    tokenDisplayMode: "icon",
+    tokenDisplayPriority: existing?.tokenDisplayPriority ?? 50,
+    visibility: config.visibility ?? existing?.visibility ?? "public",
+    createdAt: existing?.createdAt ?? timestamp,
+    updatedAt: timestamp,
   };
 }
 
@@ -79,34 +102,26 @@ export function getActiveTokenCondition(
   token: Pick<StatTrackedToken, "conditions">,
   conditionId: string,
 ): StatTokenCondition | undefined {
-  return token.conditions.find((condition) => condition.conditionId === conditionId);
+  return token.conditions.find((condition) =>
+    isSameStatConditionCatalogId(condition.conditionId, conditionId),
+  );
 }
 
 export function upsertQuickCondition(
   token: StatTrackedToken,
-  conditionId: string,
+  definition: SystemStatConditionDefinition,
   config: StatConditionQuickConfig,
 ): StatTrackedToken {
-  const existing = getActiveTokenCondition(token, conditionId);
-  const nextCondition = createConfiguredCondition(conditionId, config, existing);
-  if (!nextCondition) return token;
-
-  const condition: StatTokenCondition = existing
-    ? {
-        ...nextCondition,
-        id: existing.id,
-        createdAt: existing.createdAt,
-        updatedAt: now(),
-      }
-    : nextCondition;
+  const existing = getActiveTokenCondition(token, definition.id);
+  const nextCondition = createConfiguredCondition(definition, config, existing);
 
   return {
     ...token,
     conditions: existing
       ? token.conditions.map((current) =>
-          current.conditionId === conditionId ? condition : current,
+          current.id === existing.id ? nextCondition : current,
         )
-      : [...token.conditions, condition],
+      : [...token.conditions, nextCondition],
     updatedAt: now(),
   };
 }
@@ -120,37 +135,62 @@ export function removeQuickCondition(
   return {
     ...token,
     conditions: token.conditions.filter(
-      (condition) => condition.conditionId !== conditionId,
+      (condition) => !isSameStatConditionCatalogId(condition.conditionId, conditionId),
     ),
     updatedAt: now(),
   };
 }
 
+function getRoundText(rounds: number, t?: TranslateFunction): string {
+  const translateText = getTranslator(t);
+  return translateText(
+    rounds === 1
+      ? "stats.conditions.duration.roundOne"
+      : "stats.conditions.duration.roundMany",
+    { count: rounds },
+  );
+}
+
 export function getConditionDurationText(
   condition: StatTokenCondition,
-): string | undefined {
+  t?: TranslateFunction,
+): string {
+  const translateText = getTranslator(t);
   if (condition.durationType === "rounds") {
     const rounds = condition.remainingRounds ?? condition.durationValue ?? 0;
-    return `${rounds} round${rounds > 1 ? "s" : ""}`;
+    return getRoundText(rounds, translateText);
   }
-  if (condition.durationType === "encounter") return "Jusqu’à la fin de la rencontre";
-  if (condition.durationType === "rest") return "Jusqu’au repos";
-  return "Durée manuelle";
+  if (condition.durationType === "encounter") {
+    return translateText("stats.conditions.duration.untilEncounterEnd");
+  }
+  if (condition.durationType === "rest") {
+    return translateText("stats.conditions.duration.untilRest");
+  }
+  return translateText("stats.conditions.duration.manualText");
 }
 
 export function getConditionDurationListText(
   condition: StatTokenCondition,
+  t?: TranslateFunction,
 ): string | undefined {
+  const translateText = getTranslator(t);
   if (condition.durationType === "rounds") {
     const rounds = condition.remainingRounds ?? condition.durationValue ?? 0;
-    return `${rounds} round${rounds > 1 ? "s" : ""}`;
+    return getRoundText(rounds, translateText);
   }
-  if (condition.durationType === "encounter") return "Rencontre";
-  if (condition.durationType === "rest") return "Repos";
+  if (condition.durationType === "encounter") {
+    return translateText("stats.conditions.duration.encounter");
+  }
+  if (condition.durationType === "rest") {
+    return translateText("stats.conditions.duration.rest");
+  }
   return undefined;
 }
 
-export function getConditionDisplayName(condition: StatTokenCondition): string {
+export function getConditionDisplayName(
+  condition: StatTokenCondition,
+  localizedLabel = condition.label,
+): string {
   const value = typeof condition.value === "number" ? ` + ${condition.value}` : "";
-  return `${condition.label}${value}`;
+  return `${localizedLabel}${value}`;
 }

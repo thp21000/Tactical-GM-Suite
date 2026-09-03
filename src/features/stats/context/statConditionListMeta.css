@@ -15,6 +15,32 @@
   white-space: nowrap;
 }
 
+.stat-condition-context__legacy {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--tgm-obr-border, rgba(255, 255, 255, 0.1));
+}
+
+.stat-condition-context__legacy-title,
+.stat-condition-context__legacy-help {
+  margin: 0;
+  padding: 0 3px;
+}
+
+.stat-condition-context__legacy-title {
+  color: var(--tgm-obr-text, #f5f5f7);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.stat-condition-context__legacy-help {
+  color: var(--tgm-obr-text-muted, #b8bac7);
+  font-size: 9.5px;
+  line-height: 1.35;
+}
+
 .stat-condition-context__editor input:disabled {
   cursor: not-allowed;
   opacity: 0.48;

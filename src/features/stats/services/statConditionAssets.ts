@@ -1,58 +1,47 @@
 import type { StatTokenCondition } from "../statTypes";
+import { normalizeStatConditionCatalogId } from "./statConditionCatalog";
 import { getTrackerIcon } from "./statTrackerIcons";
 
-/**
- * Les anciennes images de conditions étaient de grands anneaux prévus pour
- * entourer un token. Les conditions utilisent maintenant de petits badges :
- * on leur associe donc une icône compacte et sémantiquement lisible issue de
- * la bibliothèque Stats.
- */
-const CONDITION_ICON_BY_ID: Record<string, string> = {
-  accelere: "arcane_lightning",
-  amical: "body_heart",
-  aveugle: "arcane_eye",
-  blesse: "body_broken_heart",
-  controle: "arcane_rune",
-  draine: "body_drop",
-  effraye: "body_skull",
-  empoigne: "body_lock",
-  ensorcele: "arcane_star",
-  fatigue: "object_hourglass",
-  immobilise: "body_lock",
-  inconscient: "body_broken_heart",
-  invisible: "arcane_eye",
-  malade: "resource_vial",
-  "marque-du-chasseur": "arcane_target",
-  mort: "body_skull",
-  paralyse: "body_lock",
-  petrifie: "object_stones",
-  sourd: "body_helmet",
-  etourdi: "arcane_star",
+const CONDITION_ASSET_MODULES = import.meta.glob(
+  "../assets/condition/Icon/*.png",
+  {
+    eager: true,
+    import: "default",
+  },
+) as Record<string, string>;
 
-  // Compatibilité des anciennes sauvegardes.
-  "a-terre": "object_arrow_down",
-  agrippe: "body_lock",
-  assourdi: "body_helmet",
-  confus: "arcane_rune",
-  ebloui: "arcane_star",
-  empoisonne: "resource_vial",
+/**
+ * Ces quelques entrées non canoniques restent uniquement pour que les anciennes
+ * sauvegardes gardent un fallback visuel pendant leur migration progressive.
+ */
+const LEGACY_TRACKER_ICON_BY_ID: Record<string, string> = {
+  marque_du_chasseur: "arcane_target",
+  mort: "body_skull",
   enchevetre: "body_lock",
-  fascine: "arcane_eye",
-  fuite: "object_arrow_up",
-  ralenti: "object_hourglass",
-  rapide: "arcane_lightning",
   saisi: "body_lock",
-  stupefie: "arcane_star",
 };
 
-function normalizeConditionId(value: string): string {
+function normalizeRawId(value: string): string {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
+
+function getAssetIdFromPath(path: string): string {
+  const filename = path.split("/").pop() ?? path;
+  const basename = filename.replace(/\.png$/i, "").replace(/^\d+[_-]/, "");
+  return normalizeStatConditionCatalogId(basename);
+}
+
+const CONDITION_ASSET_BY_ID = new Map(
+  Object.entries(CONDITION_ASSET_MODULES).map(([path, src]) => [
+    getAssetIdFromPath(path),
+    src,
+  ]),
+);
 
 /**
  * Owlbear scene images live outside the extension iframe. Vite asset imports
@@ -70,24 +59,19 @@ function toAbsoluteAssetUrl(url: string): string {
   }
 }
 
-function getConditionTrackerIconId(
-  condition: Pick<StatTokenCondition, "conditionId" | "label" | "shortLabel">,
-): string | undefined {
-  return (
-    CONDITION_ICON_BY_ID[normalizeConditionId(condition.conditionId)] ??
-    CONDITION_ICON_BY_ID[normalizeConditionId(condition.label)] ??
-    CONDITION_ICON_BY_ID[normalizeConditionId(condition.shortLabel)]
-  );
-}
-
 export function getConditionAssetUrl(
   condition: Pick<StatTokenCondition, "conditionId" | "label" | "shortLabel">,
 ): string | undefined {
-  const iconId = getConditionTrackerIconId(condition);
-  if (!iconId) return undefined;
+  const canonicalId = normalizeStatConditionCatalogId(condition.conditionId);
+  const canonicalAsset = CONDITION_ASSET_BY_ID.get(canonicalId);
+  if (canonicalAsset) return toAbsoluteAssetUrl(canonicalAsset);
 
-  const src = getTrackerIcon(iconId).src;
-  return src ? toAbsoluteAssetUrl(src) : undefined;
+  const legacyId = normalizeRawId(condition.conditionId);
+  const legacyTrackerIconId = LEGACY_TRACKER_ICON_BY_ID[legacyId];
+  if (!legacyTrackerIconId) return undefined;
+
+  const legacyAsset = getTrackerIcon(legacyTrackerIconId).src;
+  return legacyAsset ? toAbsoluteAssetUrl(legacyAsset) : undefined;
 }
 
 export function hasConditionAsset(
@@ -97,5 +81,5 @@ export function hasConditionAsset(
 }
 
 export function getConditionAssetNames(): string[] {
-  return Object.keys(CONDITION_ICON_BY_ID).sort((a, b) => a.localeCompare(b, "fr"));
+  return [...CONDITION_ASSET_BY_ID.keys()].sort((a, b) => a.localeCompare(b));
 }
