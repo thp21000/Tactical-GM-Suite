@@ -137,25 +137,32 @@ export function getSystemStatConditionDefinitions(
 ): SystemStatConditionDefinition[] {
   if (system === "GENERIC") return [];
 
-  return STAT_CONDITION_CATALOG.filter((entry) => entry.systems.includes(system)).map(
-    (entry) => {
-      const labelKey = entry.labelKeyBySystem?.[system] ?? entry.labelKey;
-      const label = t(labelKey);
+  const definitions: SystemStatConditionDefinition[] = STAT_CONDITION_CATALOG.filter(
+    (entry) => entry.systems.includes(system),
+  ).map((entry) => {
+    const labelKey = entry.labelKeyBySystem?.[system] ?? entry.labelKey;
+    const label = t(labelKey);
 
-      return {
-        id: entry.id,
-        label,
-        shortLabel: label,
-        description: t(`stats.conditions.catalog.${entry.id}.description`),
-        rulesSummary: t(`stats.conditions.catalog.${entry.id}.rules.${system}`),
-        severityType: entry.severity[system] ?? "none",
-        iconId: "object_circle",
-        category: "other",
-        system,
-        maxValue: entry.maxValue?.[system],
-        valueLabelKey: entry.valueLabelKey,
-      };
-    },
+    return {
+      id: entry.id,
+      label,
+      shortLabel: label,
+      description: t(`stats.conditions.catalog.${entry.id}.description`),
+      rulesSummary: t(`stats.conditions.catalog.${entry.id}.rules.${system}`),
+      severityType: entry.severity[system] ?? "none",
+      iconId: "object_circle",
+      category: "other",
+      system,
+      maxValue: entry.maxValue?.[system],
+      valueLabelKey: entry.valueLabelKey,
+    };
+  });
+
+  return definitions.sort((a, b) =>
+    a.label.localeCompare(b.label, undefined, {
+      sensitivity: "base",
+      numeric: true,
+    }),
   );
 }
 

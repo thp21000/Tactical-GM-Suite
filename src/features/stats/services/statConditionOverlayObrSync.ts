@@ -46,6 +46,9 @@ const BADGE_RING_GAP = 1.08;
  * rentrer trop profondément dans le portrait.
  */
 const FIRST_RING_RADIAL_OFFSET_BADGE_RATIO = 0.22;
+/** Correction visuelle fine de la couronne par rapport au centre du token. */
+const RING_CENTER_X_OFFSET_RATIO = -0.03;
+const RING_CENTER_Y_OFFSET_RATIO = -0.025;
 
 type BadgeRole = "icon" | "level";
 type ConditionBadgeMetadata = {
@@ -189,10 +192,12 @@ function getPlacementForIndex(
     tokenRadius +
     badgeDiameter * FIRST_RING_RADIAL_OFFSET_BADGE_RATIO +
     ringIndex * badgeDiameter * BADGE_RING_GAP;
+  const centerX = bounds.center.x + tokenRadius * RING_CENTER_X_OFFSET_RATIO;
+  const centerY = bounds.center.y + tokenRadius * RING_CENTER_Y_OFFSET_RATIO;
 
   return {
-    x: bounds.center.x + Math.cos(angle) * radius,
-    y: bounds.center.y + Math.sin(angle) * radius,
+    x: centerX + Math.cos(angle) * radius,
+    y: centerY + Math.sin(angle) * radius,
   };
 }
 
