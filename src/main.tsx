@@ -1,9 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { AppPreferencesProvider } from "./core/preferences/AppPreferencesProvider";
 import { setupStatBackground } from "./features/stats/background/setupStatBackground";
 import { StatConditionContextMenuApp } from "./features/stats/context/StatConditionContextMenuApp";
 import { StatTrackerContextMenuApp } from "./features/stats/context/StatTrackerContextMenuApp";
+import { I18nProvider } from "./i18n";
 import "./shared/styles/globals.css";
 import "./shared/styles/scrollbars.css";
 import "./features/stats/statTrackerUi.css";
@@ -31,6 +33,10 @@ if (view === "background") {
     );
 
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>{page}</React.StrictMode>,
+    <React.StrictMode>
+      <AppPreferencesProvider>
+        <I18nProvider>{page}</I18nProvider>
+      </AppPreferencesProvider>
+    </React.StrictMode>,
   );
 }
