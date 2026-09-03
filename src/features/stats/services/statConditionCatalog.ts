@@ -21,6 +21,7 @@ export type SystemStatConditionDefinition = StatConditionDefinition & {
   system: ActiveGameSystem;
   maxValue?: number;
   valueLabelKey?: string;
+  rulesSummary: string;
 };
 
 const DND5E = "DND5E" as const;
@@ -48,10 +49,7 @@ function condition(
   };
 }
 
-/**
- * Runtime index derived from docs/stats/CONDITIONS_MASTER_CATALOG_V1.md.
- * Generic deliberately stays empty until a dedicated generic catalogue exists.
- */
+/** Runtime index derived from docs/stats/CONDITIONS_MASTER_CATALOG_V1.md. */
 export const STAT_CONDITION_CATALOG: readonly StatConditionCatalogEntry[] = [
   condition("blinded", BOTH, { DND5E: "none", PF2E: "none" }),
   condition("deafened", BOTH, { DND5E: "none", PF2E: "none" }),
@@ -125,53 +123,12 @@ export const STAT_CONDITION_CATALOG: readonly StatConditionCatalogEntry[] = [
 
 export const GENERIC_STAT_CONDITION_CATALOG: readonly StatConditionCatalogEntry[] = [];
 
-const LEGACY_ID_ALIASES: Record<string, string> = {
-  accelere: "quickened",
-  amical: "friendly",
-  aveugle: "blinded",
-  blesse: "wounded",
-  controle: "controlled",
-  draine: "drained",
-  effraye: "frightened",
-  empoigne: "grappled",
-  ensorcele: "charmed",
-  fatigue: "fatigued",
-  immobilise: "immobilized",
-  inconscient: "unconscious",
-  malade: "sickened",
-  paralyse: "paralyzed",
-  petrifie: "petrified",
-  sourd: "deafened",
-  etourdi: "stunned",
-  a_terre: "prone",
-  agrippe: "grappled",
-  assourdi: "deafened",
-  confus: "confused",
-  ebloui: "dazzled",
-  empoisonne: "poisoned",
-  fascine: "fascinated",
-  fuite: "fleeing",
-  ralenti: "slowed",
-  rapide: "quickened",
-  stupefie: "stupefied",
-};
+const CANONICAL_CONDITION_IDS = new Set(
+  STAT_CONDITION_CATALOG.map((entry) => entry.id),
+);
 
-function normalizeRawId(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-export function normalizeStatConditionCatalogId(value: string): string {
-  const normalized = normalizeRawId(value);
-  return LEGACY_ID_ALIASES[normalized] ?? normalized;
-}
-
-export function isSameStatConditionCatalogId(a: string, b: string): boolean {
-  return normalizeStatConditionCatalogId(a) === normalizeStatConditionCatalogId(b);
+export function isCanonicalStatConditionId(value: unknown): value is string {
+  return typeof value === "string" && CANONICAL_CONDITION_IDS.has(value);
 }
 
 export function getSystemStatConditionDefinitions(
@@ -189,6 +146,8 @@ export function getSystemStatConditionDefinitions(
         id: entry.id,
         label,
         shortLabel: label,
+        description: t(`stats.conditions.catalog.${entry.id}.description`),
+        rulesSummary: t(`stats.conditions.catalog.${entry.id}.rules.${system}`),
         severityType: entry.severity[system] ?? "none",
         iconId: "object_circle",
         category: "other",
@@ -205,8 +164,8 @@ export function getSystemStatConditionDefinition(
   system: GameSystemPreference,
   t: TranslateFunction,
 ): SystemStatConditionDefinition | undefined {
-  const canonicalId = normalizeStatConditionCatalogId(conditionId);
+  if (!isCanonicalStatConditionId(conditionId)) return undefined;
   return getSystemStatConditionDefinitions(system, t).find(
-    (definition) => definition.id === canonicalId,
+    (definition) => definition.id === conditionId,
   );
 }
