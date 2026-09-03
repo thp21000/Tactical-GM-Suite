@@ -1,4 +1,5 @@
 import type { LocaleDictionary } from "../../../i18n/types";
+import conditionContent from "./conditions.en";
 
 const en: LocaleDictionary = {
   "stats.conditions.duration.manual": "Manual",
@@ -34,9 +35,9 @@ const en: LocaleDictionary = {
   "stats.conditions.action.editNamed": "Edit {name}",
   "stats.conditions.noResult": "No condition found.",
   "stats.conditions.generic.empty": "No generic conditions are defined yet.",
-  "stats.conditions.legacy.title": "Legacy conditions",
-  "stats.conditions.legacy.help": "Older conditions kept on this token. They can be removed but are no longer offered when adding a condition.",
   "stats.conditions.value.damage": "Damage",
+  "stats.conditions.hover.description": "Description",
+  "stats.conditions.hover.rulesSummary": "Rules summary",
 
   "stats.conditions.catalog.blinded": "Blinded",
   "stats.conditions.catalog.deafened": "Deafened",
@@ -86,6 +87,7 @@ const en: LocaleDictionary = {
   "stats.conditions.catalog.unfriendly": "Unfriendly",
   "stats.conditions.catalog.unnoticed": "Unnoticed",
   "stats.conditions.catalog.wounded": "Wounded",
+  ...conditionContent,
 };
 
 export default en;
