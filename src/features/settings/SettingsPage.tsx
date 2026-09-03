@@ -1,13 +1,16 @@
 import type { ModuleStateMap } from "../../core/modules/moduleState";
 import type { ObrReadyState } from "../../core/obr/obrReady";
 import type { TgmTheme } from "../../core/theme/obrTheme";
+import { useI18n } from "../../i18n";
 import { CollapsibleSection } from "../../shared/components/CollapsibleSection";
 import { Panel } from "../../shared/components/Panel";
 import { SettingsAboutSection } from "./components/SettingsAboutSection";
 import { SettingsAppearanceSection } from "./components/SettingsAppearanceSection";
 import { SettingsDebugSection } from "./components/SettingsDebugSection";
+import { SettingsGeneralSection } from "./components/SettingsGeneralSection";
 import { SettingsModulesSection } from "./components/SettingsModulesSection";
 import { SettingsStorageSection } from "./components/SettingsStorageSection";
+import "./settingsPreferences.css";
 
 type SettingsPageProps = {
   obr: ObrReadyState;
@@ -18,6 +21,8 @@ type SettingsPageProps = {
 };
 
 export function SettingsPage({ obr, moduleStates, onToggleModule, onReset, theme }: SettingsPageProps) {
+  const { t } = useI18n();
+
   return (
     <div className="stack settings-page">
       <Panel title="Paramètres">
@@ -25,6 +30,14 @@ export function SettingsPage({ obr, moduleStates, onToggleModule, onReset, theme
           Administration centrale de Tactical GM Suite : apparence, modules, debug, stockage et version.
         </p>
       </Panel>
+
+      <CollapsibleSection
+        title={t("settings.general.sectionTitle")}
+        summary={t("settings.general.sectionSummary")}
+        defaultOpen
+      >
+        <SettingsGeneralSection />
+      </CollapsibleSection>
 
       <CollapsibleSection title="Apparence / Thème" summary="Neutral Glass" defaultOpen>
         <SettingsAppearanceSection theme={theme} />
