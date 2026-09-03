@@ -8,7 +8,7 @@ Le projet est développé en React, TypeScript et Vite avec le SDK Owlbear Rodeo
 
 Modules intégrés :
 
-- **Core / Dashboard** : shell de l’extension, navigation, registre des modules, intégration du thème Owlbear et vues de synthèse.
+- **Core / Dashboard** : shell de l’extension, navigation, registre des modules, préférences globales, intégration du thème Owlbear et vues de synthèse.
 - **Initiative Tracker** : participants, ordre d’initiative, rounds, tours, états simples et import depuis Owlbear.
 - **Distance / Déplacement / Portée** : mesures tactiques entre items Owlbear, lecture de la grille, presets de portée et préférences.
 - **Stat Tracker** : suivi avancé de tokens, trackers personnalisables, presets, assignation joueur, permissions réelles, conditions, affichages sur token et contrôles rapides depuis le menu contextuel.
@@ -29,7 +29,7 @@ Le Core possède deux préférences globales persistantes :
 
 La traduction de l’interface historique est progressive. Toute nouvelle chaîne visible ou chaîne reprise dans un chantier doit être fournie simultanément en FR et EN dans les fichiers i18n du module concerné.
 
-Le système actif n’est consommé que par les modules qui en ont besoin. Conditions l’utilise déjà ; le futur module Loot Table devra réutiliser la même préférence globale. Le catalogue Générique reste volontairement vide pour le moment.
+Le système actif n’est consommé que par les modules qui en ont besoin. Conditions l’utilise déjà ; le futur module Loot Table devra réutiliser la même préférence globale. Le catalogue Générique existe dans le modèle mais reste volontairement vide pour le moment.
 
 Voir [`docs/LOCALIZATION_AND_SYSTEMS.md`](docs/LOCALIZATION_AND_SYSTEMS.md).
 
@@ -47,9 +47,8 @@ Le module comprend notamment :
 - cinq types visuels de trackers ;
 - affichage automatique de trackers sélectionnés au-dessus du token ;
 - conditions indépendantes du fait qu’un token soit ou non ajouté au Stat Tracker ;
-- conditions affichées sur la couronne du token sous forme de petits badges/icônes ;
 - durées `Manuelle`, `Rounds`, `Rencontre` et `Repos` ;
-- synchronisation des durées `Rounds` / `Rencontre` avec le module Initiative ;
+- synchronisation des durées `Rounds` / `Rencontre` avec Initiative ;
 - sous-menu **Conditions** permanent dans le clic droit Owlbear ;
 - sous-menu **Stats** de modification rapide permanent dans le clic droit Owlbear ;
 - interface joueur limitée aux trackers explicitement autorisés par le MJ.
@@ -97,9 +96,7 @@ La visibilité d’overlay continue de définir qui voit l’information sur la 
 
 Conditions est un sous-système distinct des trackers.
 
-Un token peut recevoir des conditions même s’il n’est pas ajouté au Stat Tracker. Dans ce cas, un profil embarqué dormant est utilisé uniquement pour conserver les données nécessaires.
-
-Le menu **Conditions** fournit une recherche et une fenêtre d’ajout avec les paramètres applicables : niveau, durée et visibilité. Au survol d’une condition, il affiche sa description et le résumé des règles correspondant au système actuellement sélectionné, dans la langue active.
+Un token peut recevoir des conditions même s’il n’est pas ajouté au Stat Tracker. Le menu **Conditions** fournit une recherche, une liste et une fenêtre d’ajout/édition avec les paramètres applicables : niveau/valeur, durée et visibilité.
 
 Le contenu proposé dépend du système global :
 
@@ -107,21 +104,50 @@ Le contenu proposé dépend du système global :
 - Pathfinder 2e Remaster : 42 conditions ;
 - Générique : catalogue préparé mais vide actuellement.
 
-Le runtime utilise exclusivement les IDs canoniques du nouveau catalogue. Il n’existe plus de catalogue historique ni d’alias de migration pour les anciennes conditions.
+Le runtime utilise exclusivement les IDs canoniques du catalogue V1. Il n’existe plus de catalogue historique ni d’alias de migration pour les anciennes conditions.
 
-Plusieurs conditions peuvent être actives simultanément sur le même token. Chaque ligne active reste visuellement marquée ; cliquer sur une condition active la désactive, tandis que le bouton d’édition permet de modifier uniquement celle-ci.
+La liste est triée alphabétiquement selon le libellé de la langue active. Au survol d’une ligne, une carte s’ancre directement au-dessus de la condition et affiche :
+
+- la **Description** ;
+- le **Résumé règles** correspondant au système sélectionné.
+
+Plusieurs conditions peuvent être actives simultanément sur le même token. Une condition active peut être désactivée depuis la liste ou modifiée via son action d’édition sans toucher aux autres.
+
+### Affichage Conditions sur token
+
+Les conditions actives sont rendues sous forme de médaillons PNG autour du token.
+
+Règles actuelles :
+
+- aucun chiffre de niveau n’est affiché sur le token ; le niveau se consulte/modifie dans le menu ;
+- jusqu’à 12 badges sont placés sur le premier anneau ;
+- la couronne utilise une légère correction visuelle vers la gauche et le haut ;
+- la taille de référence actuelle est `BASE_BADGE_SCALE = 0.2574` pour un token d’une case ;
+- la taille réelle suit proportionnellement le diamètre du token : un token deux fois plus grand produit des badges deux fois plus grands ;
+- le rayon et l’espacement utilisent la même échelle dynamique afin de conserver les proportions visuelles.
+
+Voir [`docs/stats/CONDITIONS_RUNTIME_SYNC.md`](docs/stats/CONDITIONS_RUNTIME_SYNC.md).
 
 ### Séparation affichage Stats / Conditions
 
 Les deux affichages sont indépendants :
 
-- **Stats** lit uniquement `token.trackers` et produit ses propres labels/overlays ;
+- **Stats** lit uniquement `token.trackers` et produit ses propres overlays ;
 - **Conditions** lit uniquement `token.conditions` et produit ses propres badges ;
-- les deux systèmes ont des clés de métadonnées Owlbear, des types et des services de synchronisation séparés.
-
-Les badges Conditions sont dimensionnés à un tiers de leur ancienne taille et le premier anneau est centré directement sur le bord de la couronne du token.
+- les deux systèmes ont des clés de métadonnées Owlbear, des services de synchronisation et des cycles d’update distincts ;
+- modifier une condition ne doit jamais réveiller l’overlay Stats.
 
 Les effets mécaniques décrits dans le catalogue restent informatifs : Tactical GM Suite n’automatise pas actuellement toutes les règles de D&D 5e ou PF2e.
+
+## Préchargement des assets
+
+Le background permanent précharge les PNG dès que le SDK Owlbear est prêt :
+
+1. icônes canoniques Conditions en priorité ;
+2. icônes Stats ensuite ;
+3. concurrence limitée pour ne pas bloquer le démarrage de la room.
+
+L’objectif est de bénéficier du cache navigateur avant l’ouverture des popovers, sous-menus et overlays.
 
 ## Installation Owlbear
 
@@ -158,7 +184,7 @@ Le workflow GitHub Pages exécute le typecheck et le build avant le déploiement
 
 ```text
 src/
-  core/        fondations communes, thème, constantes, wrappers Owlbear
+  core/        fondations communes, préférences, thème, constantes, wrappers Owlbear
   features/    modules fonctionnels
   shared/      composants et styles réellement partagés
   i18n/        registre de traduction commun
@@ -181,7 +207,7 @@ public/
   manifest.json
 ```
 
-Stats possède un entrypoint background permanent et deux vues embarquées utilisées par les menus contextuels Owlbear :
+Stats possède un background permanent et deux vues embarquées utilisées par les menus contextuels Owlbear :
 
 - `?view=stats-conditions`
 - `?view=stats-trackers`
@@ -192,6 +218,8 @@ Stats possède un entrypoint background permanent et deux vues embarquées utili
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) : architecture globale et frontières entre modules.
 - [`docs/LOCALIZATION_AND_SYSTEMS.md`](docs/LOCALIZATION_AND_SYSTEMS.md) : préférences globales de langue/système et règles i18n.
 - [`docs/features/STATS_V2_SPEC.md`](docs/features/STATS_V2_SPEC.md) : cahier des charges et comportement validé du module Stats.
+- [`docs/stats/CONDITIONS_MASTER_CATALOG_V1.md`](docs/stats/CONDITIONS_MASTER_CATALOG_V1.md) : catalogue canonique des conditions.
+- [`docs/stats/CONDITIONS_RUNTIME_SYNC.md`](docs/stats/CONDITIONS_RUNTIME_SYNC.md) : runtime, préchargement, séparation d’overlay et géométrie des badges.
 - [`docs/stats/README.md`](docs/stats/README.md) : index technique/visuel du système Stats.
 - [`src/features/stats/README.md`](src/features/stats/README.md) : carte du code Stats et état d’implémentation.
 

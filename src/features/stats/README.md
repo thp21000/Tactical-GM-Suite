@@ -1,8 +1,8 @@
 # Stats module — carte du code et état d’implémentation
 
-> Mise à jour : 2 septembre 2026.
+> Mise à jour : **4 septembre 2026**.
 
-Le module Stats gère des trackers personnalisables et des conditions attachés aux tokens Owlbear Rodeo.
+Le module Stats gère des trackers personnalisables et le sous-système Conditions attachés aux tokens Owlbear Rodeo.
 
 Il ne doit pas être traité comme une fiche de personnage complète.
 
@@ -12,14 +12,17 @@ Avant toute modification fonctionnelle importante, lire :
 
 ```text
 docs/features/STATS_V2_SPEC.md
-```
-
-Pour le contexte global :
-
-```text
 PROJECT_CONTEXT.md
 docs/ARCHITECTURE.md
+docs/LOCALIZATION_AND_SYSTEMS.md
 docs/stats/README.md
+docs/stats/CONDITIONS_RUNTIME_SYNC.md
+```
+
+Pour le contenu canonique Conditions :
+
+```text
+docs/stats/CONDITIONS_MASTER_CATALOG_V1.md
 ```
 
 ## Principes obligatoires
@@ -28,10 +31,14 @@ docs/stats/README.md
 - une icône ne définit jamais une stat ;
 - les presets sont des raccourcis modifiables ;
 - `skinId` est legacy ;
-- Conditions et Stat Tracker restent indépendants ;
+- Conditions et Stat Tracker restent fonctionnellement indépendants ;
 - les profils durables sont embarqués dans les métadonnées Owlbear ;
 - les actions rapides ne doivent pas dupliquer toute l’administration Stats ;
-- les permissions d’édition joueur sont séparées de la visibilité d’overlay.
+- les permissions d’édition joueur sont séparées de la visibilité d’overlay ;
+- langue et système viennent des préférences globales du Core ;
+- toute nouvelle chaîne utilisateur doit être fournie en FR et EN ;
+- une action Conditions ne doit jamais réveiller l’overlay Stats ;
+- plusieurs conditions doivent pouvoir rester actives simultanément.
 
 ## Structure du module
 
@@ -44,8 +51,8 @@ src/features/stats/
 
   assets/
     icons/
-    conditions/
-    ...
+    condition/
+      Icon/
 
   background/
     setupStatBackground.ts
@@ -70,7 +77,14 @@ src/features/stats/
     useStatTrackerState.ts
     ...
 
+  i18n/
+    fr.ts
+    en.ts
+    conditions.fr.ts
+    conditions.en.ts
+
   services/
+    statAssetPreload.ts
     statPermissions.ts
     statPresets.ts
     statTrackers.ts
@@ -79,11 +93,17 @@ src/features/stats/
     statEmbeddedProfileActions.ts
     statContextMenuActions.ts
     statTokenEligibility.ts
+    statConditionCatalog.ts
+    statConditionAssets.ts
+    statConditionContextActions.ts
     statConditionInitiativeSync.ts
+    statConditionOverlayAutoSync.ts
     statConditionOverlayObrSync.ts
     statTokenOverlayObrSync.ts
     ...
 ```
+
+L’ancien service `statConditions.ts` n’existe plus dans le runtime courant.
 
 ## Entrypoints et surfaces UI
 
@@ -98,8 +118,10 @@ Responsabilités :
 - afficher les groupes/tokens de la scène ;
 - hydrater les instances liées ;
 - appliquer le filtrage du viewer ;
-- lancer la synchronisation automatique des overlays côté MJ ;
+- lancer la synchronisation automatique des overlays trackers côté MJ ;
 - donner accès aux formulaires/presets côté MJ.
+
+La page Stats n’administre plus le moteur Conditions.
 
 ### 2. Sous-menu Conditions
 
@@ -111,7 +133,21 @@ Chargé par :
 ?view=stats-conditions
 ```
 
-Il fonctionne depuis le Context Menu Owlbear enregistré par le background.
+Fonctions actuelles :
+
+- système global D&D5e/PF2e/Générique ;
+- langue globale FR/EN ;
+- recherche ;
+- tri alphabétique selon le label traduit ;
+- activation/désactivation ;
+- édition ciblée d’une condition active ;
+- niveau/valeur selon définition ;
+- durée ;
+- visibilité ;
+- hover Description + Résumé règles ;
+- plusieurs conditions actives simultanément.
+
+Le hover est positionné à partir de la ligne réellement survolée et se place au-dessus lorsque possible.
 
 ### 3. Sous-menu Stats rapide
 
@@ -123,9 +159,11 @@ Chargé par :
 ?view=stats-trackers
 ```
 
-Il réutilise `StatTrackerCard` pour garder le même langage visuel, mais passe `isGm={false}` volontairement afin de masquer les menus d’administration `…`.
+Il réutilise `StatTrackerCard` dans une largeur adaptée au Context Menu.
 
 Le MJ peut y manipuler tous les trackers du token. Le joueur assigné ne voit que ceux avec `canPlayerEdit = true`.
+
+Les menus d’administration `…` restent masqués.
 
 ## Background permanent
 
@@ -142,9 +180,27 @@ Il enregistre :
 
 Il maintient aussi :
 
-- badges/overlays de conditions au changement de scène ;
-- résumé `playerEditable` / `assignedPlayerId` pour filtrer le menu Stats côté joueur ;
+- préchargement des PNG Conditions puis Trackers ;
+- badges Conditions et leur auto-sync de géométrie ;
+- résumé `playerEditable` / `assignedPlayerId` ;
 - synchronisation de durée Conditions ↔ Initiative.
+
+## Préchargement assets
+
+`services/statAssetPreload.ts`
+
+Le préchargement démarre au `OBR.onReady` du background.
+
+Ordre :
+
+```text
+Conditions canoniques
+puis icônes Stats
+```
+
+Concurrence limitée à 4 chargements.
+
+But : réutiliser le cache navigateur lorsque l’utilisateur ouvre ensuite le sous-menu ou crée un overlay.
 
 ## Éligibilité des tokens
 
@@ -156,8 +212,6 @@ Runtime strict :
 item.type === IMAGE
 layer in CHARACTER | MOUNT | PROP
 ```
-
-Les filtres de Context Menu excluent explicitement les autres couches Owlbear.
 
 ## Modèle de données
 
@@ -176,7 +230,7 @@ familiar
 other
 ```
 
-### Types visuels
+### Types visuels trackers
 
 ```text
 icon
@@ -186,24 +240,20 @@ readonly
 toggle
 ```
 
-Ne pas ajouter un sixième type sans chantier explicite : le comportement « unités » a été intégré au type historique `icon`.
+Ne pas ajouter un sixième type sans chantier explicite.
 
 ## Trackers
 
 ### `bar`
 
-Barre à valeur max :
-
 - `current/max` ;
 - drag horizontal ;
 - édition inline math ;
 - bulles pseudo-aléatoires ;
-- désaturation progressive de l’icône ;
+- désaturation progressive ;
 - couleur d’accent de l’icône.
 
 ### `counter`
-
-Indicateur modifiable :
 
 - pastille centrale 48 px ;
 - `-5`, `-1`, `+1`, `+5` ;
@@ -213,13 +263,10 @@ Indicateur modifiable :
 
 ### `readonly`
 
-Indicateur fixe :
-
 - nom technique historique ;
 - pastille 48 px ;
-- pas de rail ;
-- pas de boutons ;
-- valeur tout de même éditable par clic/inline math.
+- pas de rail/boutons ;
+- valeur tout de même éditable.
 
 ### `toggle`
 
@@ -230,16 +277,12 @@ Indicateur fixe :
 
 ### `icon`
 
-Indicateur à icônes cumulatives :
-
 - `current` = actifs ;
 - `max` = nombre affiché ;
 - max courant = 6 ;
 - clic cumulatif.
 
 ## Calcul inline partagé
-
-Le renderer accepte :
 
 ```text
 12
@@ -254,19 +297,17 @@ x2
 
 Le `bar` applique ensuite la borne 0..max.
 
-`counter` et `readonly` ne possèdent pas de borne min/max métier.
-
-## Icônes
+## Icônes Trackers
 
 `services/statTrackerIcons.ts`
 
-Chargement :
+Chargement par glob depuis :
 
-```ts
-import.meta.glob("../assets/icons/**/*.png", ...)
+```text
+src/features/stats/assets/icons/
 ```
 
-Catégories reconnues par dossier :
+Catégories :
 
 ```text
 Corps & Protection -> body
@@ -275,16 +316,9 @@ Ressources & Richesses -> resource
 Objets & Marques -> object
 ```
 
-Le registre contient :
+Le registre contient labels, accents, aliases legacy et fallback.
 
-- labels explicites ;
-- accents explicites ;
-- aliases legacy ;
-- fallback.
-
-Base documentée : 48 icônes + 15 ajouts.
-
-L’ordre explicite `ICON_ORDER` couvre actuellement la base 48 ; les extras sans position explicite retombent après elle selon le tri secondaire. Ne pas supposer que tous les nouveaux assets ont une position manuelle.
+L’icône ne doit jamais imposer le sens du tracker.
 
 ## Presets
 
@@ -295,8 +329,7 @@ Les presets par type de token :
 - proposent des trackers ;
 - s’appliquent à l’ajout ;
 - peuvent être gérés par le MJ ;
-- ne doivent pas écraser les trackers déjà présents ;
-- ne doivent pas transformer le label/icône en règle métier.
+- ne doivent pas écraser arbitrairement les trackers déjà présents.
 
 ## Persistance token
 
@@ -308,21 +341,13 @@ Clé metadata :
 ${EXTENSION_ID}/stats-token-link
 ```
 
-Profil versionné :
-
-```text
-version = 1
-```
-
-Le normalizer doit rester tolérant aux anciennes données.
-
-Le serializer retire `skinId`.
+Le normalizer doit rester tolérant aux données utiles plus anciennes.
 
 ### `statEmbeddedProfileActions.ts`
 
 Fonctions de lecture/écriture du profil embarqué.
 
-Point important : `updateOrCreateEmbeddedConditionToken` permet de conserver des conditions sans activer le suivi Stats.
+`updateOrCreateEmbeddedConditionToken` permet de conserver des Conditions sans activer le suivi Stats.
 
 ## Copies et instances
 
@@ -332,8 +357,6 @@ Le système distingue :
 - `sourceItemId` de l’instance Owlbear.
 
 Les services de scène reconstruisent les instances présentes dans la scène courante et évitent les doublons de profil pour les copies.
-
-Conserver cette séparation lors de toute évolution.
 
 ## Permissions
 
@@ -345,77 +368,104 @@ Tous les trackers sont modifiables.
 
 ### Viewer joueur
 
-Pour les interfaces de contrôle :
-
 ```text
 canPlayerEdit == true
 ET token assigné au viewer
 ```
 
-La visibilité `gm/private/public` ne bloque plus un tracker explicitement autorisé dans l’interface de contrôle.
-
-Elle reste utilisée pour les audiences d’affichage/overlay et les conditions.
-
-### Filtrage de la page principale
-
-`StatTrackerPage` appelle `filterTokensForViewer` avant de construire les groupes visibles.
-
-Un joueur ne doit pas recevoir les trackers non modifiables dans sa vue Stats.
+La visibilité `gm/private/public` reste une dimension séparée.
 
 ## Résumé permission pour Context Menu
 
-Les filtres Owlbear ne peuvent pas rechercher `canPlayerEdit` dans un tableau.
-
-Le lien metadata contient donc un résumé :
+Le lien metadata contient :
 
 ```text
 playerEditable
 assignedPlayerId
 ```
 
-Le background MJ resynchronise ces valeurs.
+Ce résumé sert au filtrage du menu ; le profil complet reste la source métier pour l’écriture.
 
-Ne jamais prendre ce résumé comme source métier principale ; toujours revalider la permission contre le profil au moment de l’écriture.
+## Conditions — catalogue
 
-## Conditions
+`services/statConditionCatalog.ts`
 
-Les conditions ne sont plus administrées depuis la grande fiche token Stats.
+```text
+DND5E   -> 15 conditions
+PF2E    -> 42 conditions
+GENERIC -> 0 condition
+```
 
-Le flux principal est contextuel.
+Le runtime n’a plus d’alias vers les anciennes conditions françaises ou hors catalogue canonique.
 
-Fonctions actuelles :
+## Conditions — assets
 
-- recherche ;
-- activation/désactivation ;
-- niveau selon définition ;
-- visibilité ;
-- durée ;
-- affichage autour du token ;
-- relation avec Initiative pour rounds/rencontre.
+`services/statConditionAssets.ts`
 
-Les effets mécaniques de définition restent descriptifs.
+Les médaillons sont résolus depuis :
+
+```text
+assets/condition/Icon/
+```
+
+Ils ne dépendent ni de la langue ni de l’icône d’un tracker.
+
+## Conditions — actions
+
+`services/statConditionContextActions.ts`
+
+Invariant : l’upsert d’une condition ne doit modifier que la condition concernée et ne jamais désactiver les autres.
 
 ## Durées Initiative
 
 `services/statConditionInitiativeSync.ts`
 
-Utilise les informations de rencontre/round stockées dans la condition pour calculer les durées.
+Utilise les informations de rencontre/round stockées dans la condition pour calculer les durées `Rounds` / `Rencontre`.
 
-Ne pas étendre cette dépendance à d’autres effets d’initiative sans demande explicite.
+Ne pas étendre cette dépendance à d’autres automatismes sans demande explicite.
 
-## Overlays
+## Overlay Conditions
 
-La chaîne historique est conservée dans plusieurs services de préparation/rendu.
+`services/statConditionOverlayObrSync.ts`
 
-L’état courant inclut aussi une synchronisation automatique côté MJ via :
+Paramètres de référence actuels :
 
 ```text
-hooks/useStatTokenOverlayAutoSync.ts
+BASE_BADGE_SCALE = 0.2574
+MAX_BADGES_PER_RING = 12
+BADGE_RING_GAP = 1.08
+FIRST_RING_RADIAL_OFFSET_BADGE_RATIO = 0.22
+RING_CENTER_X_OFFSET_RATIO = -0.03
+RING_CENTER_Y_OFFSET_RATIO = -0.025
 ```
 
-et une synchronisation des conditions depuis le background.
+Échelle dynamique :
 
-La visibilité doit rester audience-aware.
+```text
+badgeScale = BASE_BADGE_SCALE × (tokenDiameter / sceneDpi)
+```
+
+Le rayon utilise la même échelle.
+
+Le niveau n’est pas rendu sur le token. Les anciens rôles `level` ne sont encore lus que pour pouvoir nettoyer d’anciens labels lors d’un sync.
+
+## Auto-sync Conditions
+
+`services/statConditionOverlayAutoSync.ts`
+
+Le background surveille les changements de scale des tokens ayant des Conditions et recalcule la couronne après resize.
+
+Déplacement simple : géré par l’attachement Owlbear.
+
+Resize : resynchronisation géométrique nécessaire.
+
+## Overlay Stats
+
+`hooks/useStatTokenOverlayAutoSync.ts`
+
+Ce hook ne doit écouter que les changements pertinents aux trackers Stats.
+
+Un changement de `token.conditions` ne doit pas créer ou mettre à jour l’overlay Stats.
 
 ## UI / CSS
 
@@ -429,11 +479,12 @@ statCounterBar.css
 statFixedOrb.css
 statIconUnits.css
 context/statTrackerContextMenu.css
+context/statConditionContextMenu.css
 context/statConditionCustomSelect.css
 context/statConditionListMeta.css
 ```
 
-Les styles globaux OBR sont dans :
+Styles globaux :
 
 ```text
 src/shared/styles/obrIntegratedUi.css
@@ -442,36 +493,27 @@ src/shared/styles/scrollbars.css
 
 ## Grille compacte
 
-Dans la liste principale et l’interface rapide :
-
 - `bar` : pleine largeur ;
 - `counter` : pleine largeur ;
 - `icon` : pleine largeur ;
-- `readonly` : compact, jusqu’à 3/ligne ;
-- `toggle` : compact, jusqu’à 3/ligne.
-
-## Actions d’administration
-
-Interface principale MJ : menu `…` sur les trackers.
-
-Interface rapide : aucun `…`.
-
-Ne pas remettre les actions Modifier/Supprimer/ShowOnToken dans le menu rapide sans décision explicite, car son but est la manipulation à la volée.
+- `readonly` : jusqu’à 3/ligne ;
+- `toggle` : jusqu’à 3/ligne.
 
 ## Audio
 
 La spec existe dans `docs/stats/STAT_AUDIO_FEEDBACK_V1.md`.
 
-Aucun service audio runtime n’est actuellement identifié. Ne pas brancher de sons opportunistement lors d’une modification visuelle.
+Aucun service audio runtime n’est considéré comme implémenté.
 
 ## Points techniques à surveiller
 
 1. propagation immédiate d’un changement joueur vers un overlay visible chez d’autres clients ;
 2. garbage collection globale après suppression de la dernière copie d’un token dans toutes les scènes ;
-3. cohérence des audiences entre trackers et conditions ;
-4. migration de profils si `STAT_TOKEN_PROFILE_VERSION` évolue ;
-5. ordre explicite des nouvelles icônes extras si la bibliothèque continue de grandir ;
-6. dette de nommage `readonly` devenue incohérente avec son comportement actuel.
+3. cohérence des audiences `public/private/gm` en multi-client ;
+4. comportement des badges Conditions sur tailles extrêmes de token ;
+5. migration de profils si `STAT_TOKEN_PROFILE_VERSION` évolue ;
+6. ordre explicite des nouvelles icônes extras ;
+7. dette de nommage `readonly`.
 
 ## Validation
 
@@ -482,7 +524,7 @@ npm run typecheck
 npm run build
 ```
 
-Pour Stats, ajouter des tests terrain Owlbear sur :
+Tests terrain recommandés :
 
 - refresh ;
 - changement de scène ;
@@ -491,5 +533,8 @@ Pour Stats, ajouter des tests terrain Owlbear sur :
 - joueur assigné ;
 - menu sans popover ouvert ;
 - conditions sans suivi ;
+- plusieurs conditions simultanées ;
+- resize 0,5 / 1 / 2 / 3 cases ;
 - initiative + rounds ;
-- audiences d’overlay.
+- audiences d’overlay ;
+- vérifier qu’une action Conditions ne réactive jamais Stats.

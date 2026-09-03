@@ -1,6 +1,8 @@
 # Stats — Documentation technique et visuelle
 
-Ce dossier regroupe la documentation de design et de production liée au module Stats.
+> Mise à jour : **4 septembre 2026**.
+
+Ce dossier regroupe la documentation de design et de production liée au module Stats et au sous-système Conditions.
 
 Le cahier des charges fonctionnel principal reste :
 
@@ -8,15 +10,15 @@ Le cahier des charges fonctionnel principal reste :
 docs/features/STATS_V2_SPEC.md
 ```
 
-Ce fichier sert d’index opérationnel pour l’implémentation visuelle actuelle, les assets et les documents de production.
-
 ## 1. État du dossier
 
-Au checkpoint du 2 septembre 2026, `docs/stats/` contient :
+Documents principaux :
 
 ```text
 docs/stats/
   README.md
+  CONDITIONS_MASTER_CATALOG_V1.md
+  CONDITIONS_RUNTIME_SYNC.md
   STAT_AUDIO_FEEDBACK_V1.md
   Prompt/
     INDEX_48_PROMPTS_ICONES.md
@@ -29,9 +31,11 @@ docs/stats/
     object/
 ```
 
-Les anciens documents expérimentaux de design qui ont pu exister dans des états précédents du dépôt ne sont pas présents sur le `main` actuel. Ce README remplace donc les références cassées et décrit le système réellement utilisé.
+`CONDITIONS_MASTER_CATALOG_V1.md` décrit les 46 entrées canoniques et leurs variantes de règles D&D 5e / PF2e.
 
-## 2. Principe visuel fondamental
+`CONDITIONS_RUNTIME_SYNC.md` décrit l’état réellement implémenté du runtime Conditions : cache, overlays, géométrie, resize et séparation avec Stats.
+
+## 2. Principe visuel fondamental des trackers
 
 Le tracker est libre.
 
@@ -65,7 +69,7 @@ Même si ce choix semble atypique, l’addon doit l’accepter.
 
 L’ancien concept de `skinId` a été retiré de l’interface.
 
-Le type existe encore uniquement pour compatibilité des anciennes sauvegardes.
+Le type existe encore uniquement pour compatibilité de lecture interne.
 
 Le rendu actuel est déterminé par :
 
@@ -74,7 +78,7 @@ Le rendu actuel est déterminé par :
 - la couleur d’accent déclarée de cette icône ;
 - le thème Owlbear.
 
-## 4. Bibliothèque d’icônes
+## 4. Bibliothèque d’icônes Trackers
 
 Assets runtime :
 
@@ -97,9 +101,7 @@ import.meta.glob("../assets/icons/**/*.png", {
 
 Les catégories ne portent aucune sémantique de règles ; elles servent uniquement au classement.
 
-## 5. Bibliothèque documentée
-
-Deux jeux de prompts sont conservés.
+## 5. Bibliothèque documentée Trackers
 
 ### Base V1
 
@@ -123,32 +125,7 @@ Total documenté :
 48 + 15 = 63 identifiants
 ```
 
-Le registre TypeScript connaît actuellement ces identifiants et leurs labels/couleurs d’accent. Seuls les PNG réellement présents dans les dossiers d’assets sont chargés dans l’UI.
-
-## 6. Pourquoi les prompts individuels ne sont pas modifiés par les mises à jour projet
-
-Les fichiers :
-
-```text
-Prompt/body/*.md
-Prompt/arcane/*.md
-Prompt/resource/*.md
-Prompt/object/*.md
-```
-
-sont des **payloads de génération mono-icône**, pas des documents de suivi du projet.
-
-Ils doivent rester autonomes et ne contenir que les instructions utiles à la génération.
-
-Ajouter un journal de version, une note de contexte projet ou une longue section technique dans chacun risquerait de dégrader la génération d’image.
-
-Lors d’un checkpoint documentaire :
-
-- auditer les index ;
-- mettre à jour les README du pack ;
-- ne toucher aux prompts individuels que si la direction artistique ou la description de l’icône doit réellement changer.
-
-## 7. Direction artistique des icônes
+## 6. Direction artistique des icônes Trackers
 
 Direction validée :
 
@@ -169,37 +146,25 @@ Direction validée :
 
 L’asset source reste une icône couleur unique. Désaturation, remplissage, sélection et autres états sont produits par l’addon.
 
-## 8. Couleurs d’accent
+## 7. Couleurs d’accent
 
-`services/statTrackerIcons.ts` contient `ICON_ACCENTS`.
+`services/statTrackerIcons.ts` contient les accents déclarés.
 
-Règle :
+Règle : ne pas analyser automatiquement la couleur dominante du PNG.
 
-> ne pas analyser automatiquement la couleur dominante du PNG.
+Une couleur contrôlée est déclarée pour obtenir un rendu cohérent dans les barres.
 
-Une couleur contrôlée est déclarée pour chaque asset connu afin d’obtenir un rendu cohérent dans les barres.
-
-Fallback : accent de catégorie.
-
-## 9. Renderer `bar`
+## 8. Renderer `bar`
 
 Nom UI : **Barre à valeur max**.
-
-Structure :
-
-```text
-Nom                         ...
-[icône] [==== remplissage ====    ] max X
-                    current
-```
 
 Caractéristiques :
 
 - icône à gauche ;
 - couleur basée sur l’accent de l’icône ;
 - gradient sombre → lumineux ;
-- jusqu’à 56 spécifications de bulles pseudo-aléatoires stables par tracker ;
-- nombre de bulles visibles proportionnel au remplissage ;
+- bulles pseudo-aléatoires stables ;
+- densité proportionnelle au remplissage ;
 - bord partiel organique ;
 - désaturation progressive de l’icône vers 0 ;
 - valeur centrale éditable ;
@@ -219,118 +184,175 @@ x2
 ÷2
 ```
 
-## 10. Renderer `counter`
+## 9. Renderer `counter`
 
 Nom UI : **Indicateur modifiable**.
 
-Structure :
-
-```text
-Nom                         ...
-[-5] [-1] [ ORBE 48 px / valeur ] [+1] [+5]
-```
-
-Règles :
-
-- pas de min ;
-- pas de max ;
+- pastille centrale 48 px ;
+- `-5`, `-1`, `+1`, `+5` ;
+- pas de min/max ;
 - négatif accepté ;
 - pas de drag ;
-- valeur éditable/calcul inline ;
-- fond du champ central transparent pour préserver l’icône.
+- valeur éditable/calcul inline.
 
-## 11. Renderer `readonly`
+## 10. Renderer `readonly`
 
 Nom UI : **Indicateur fixe**.
 
 Le nom technique est historique.
 
-Structure :
+- pastille 48 px ;
+- aucun rail ;
+- aucun bouton ;
+- valeur toujours éditable/calculable ;
+- jusqu’à trois par ligne selon la largeur disponible.
 
-```text
-Nom      ...
-[ ORBE 48 px / valeur ]
-```
+## 11. Renderer `toggle`
 
-Pas de rail, pas de boutons.
-
-La valeur reste éditable/calculable directement.
-
-Jusqu’à trois trackers `readonly` peuvent partager une ligne selon la largeur disponible.
-
-## 12. Renderer `toggle`
-
-Structure :
-
-```text
-Nom      ...
-[ ORBE 48 px / icône ]
-```
-
+- pastille 48 px ;
+- aucun chiffre ;
 - actif : couleur ;
 - inactif : désaturé ;
 - clic pour basculer ;
-- aucun chiffre.
+- jusqu’à trois par ligne.
 
-Jusqu’à trois par ligne.
+## 12. Renderer `icon`
 
-## 13. Renderer `icon`
-
-Le type technique `icon` correspond maintenant à l’**indicateur à icônes cumulatives**.
-
-Configuration :
+Le type technique `icon` correspond à l’indicateur à icônes cumulatives.
 
 ```text
 current = unités actives
 max     = nombre d’unités affichées
-```
-
-Contraintes actuelles :
-
-```text
 1 <= max <= 6
 ```
 
-Règles de clic :
+Règles :
 
 ```text
 inactive index N -> active 1..N
 active index N   -> désactive N..fin
 ```
 
-Il n’utilise pas de barre ni de drag.
+## 13. Administration et menu rapide
 
-## 14. Header et administration
-
-Dans l’interface principale, les renderers modernes utilisent :
-
-- nom centré en haut ;
-- `…` en haut à droite.
-
-Le menu `…` contient les actions d’administration nécessaires :
+Dans l’interface principale MJ, le menu `…` contient :
 
 - Afficher/Masquer sur le token ;
 - Modifier ;
 - Supprimer.
 
-Les sous-menus rapides Owlbear masquent volontairement ce `…`.
-
-## 15. Sous-menu rapide Stats
-
-Le Context Menu Stats réutilise les mêmes cartes/renderers mais dans un contexte CSS plus étroit.
+Le Context Menu Stats est volontairement une interface de changement rapide et masque ces actions.
 
 Layout :
 
 - `bar`, `counter`, `icon` : pleine largeur ;
-- `readonly`, `toggle` : grille jusqu’à trois colonnes.
+- `readonly`, `toggle` : jusqu’à trois colonnes.
 
-But :
+## 14. Conditions — catalogue canonique
 
-> changer une valeur en quelques secondes sans ouvrir la fiche du token.
+Assets :
 
-Il ne doit pas devenir une seconde interface d’administration.
+```text
+src/features/stats/assets/condition/Icon/
+```
 
-## 16. Thème Owlbear
+Catalogue runtime :
+
+```text
+src/features/stats/services/statConditionCatalog.ts
+```
+
+Contenu :
+
+```text
+DND5E   -> 15
+PF2E    -> 42
+GENERIC -> 0 actuellement
+```
+
+Le runtime fonctionne uniquement avec les IDs canoniques. L’ancien catalogue historique et ses aliases ont été supprimés.
+
+## 15. Conditions — liste et interaction
+
+Le flux principal reste :
+
+```text
+clic droit token
+→ Conditions
+→ recherche / liste
+→ activation, désactivation ou édition
+```
+
+La liste :
+
+- est triée alphabétiquement selon le libellé de la langue active ;
+- indique les conditions actives ;
+- autorise plusieurs conditions actives simultanément ;
+- ne désactive jamais automatiquement les autres conditions lors d’un ajout ;
+- permet d’éditer une condition active sans modifier les autres.
+
+Au hover, la carte d’information s’ancre à la ligne survolée et affiche :
+
+- Description ;
+- Résumé règles correspondant au système sélectionné.
+
+## 16. Conditions — affichage sur token
+
+Les conditions utilisent des médaillons PNG autour du token.
+
+État actuel :
+
+```text
+BASE_BADGE_SCALE = 0.2574
+MAX_BADGES_PER_RING = 12
+FIRST_RING_RADIAL_OFFSET_BADGE_RATIO = 0.22
+RING_CENTER_X_OFFSET_RATIO = -0.03
+RING_CENTER_Y_OFFSET_RATIO = -0.025
+```
+
+La taille réelle suit proportionnellement la taille du token :
+
+```text
+badgeScale = BASE_BADGE_SCALE × (tokenDiameter / sceneDpi)
+```
+
+Le rayon et l’espacement de la couronne utilisent la même échelle dynamique.
+
+Le niveau/valeur d’une condition n’est plus imprimé sur le token. Il reste consultable et modifiable dans le menu Conditions.
+
+Voir `CONDITIONS_RUNTIME_SYNC.md` pour le détail.
+
+## 17. Séparation Stats / Conditions
+
+Principe non négociable :
+
+```text
+Stats      -> token.trackers   -> overlay Stats
+Conditions -> token.conditions -> badges Conditions
+```
+
+Les deux systèmes :
+
+- possèdent des services de sync distincts ;
+- possèdent des métadonnées Owlbear distinctes ;
+- ne doivent pas se réveiller mutuellement.
+
+Une modification Conditions ne doit donc jamais faire réapparaître l’overlay Stats.
+
+## 18. Préchargement des PNG
+
+Le background lance le préchargement dès que Owlbear est prêt.
+
+Ordre :
+
+1. assets Conditions ;
+2. assets Trackers.
+
+La concurrence est limitée à 4 chargements pour éviter de bloquer le démarrage de la room.
+
+Le but est de chauffer le cache navigateur avant le premier menu/overlay.
+
+## 19. Thème Owlbear
 
 Les interfaces Stats utilisent la couche globale OBR :
 
@@ -340,24 +362,16 @@ src/shared/styles/obrIntegratedUi.css
 
 Les sous-menus récupèrent le thème OBR et appliquent les variables Tactical GM Suite correspondantes.
 
-La valeur Overlay Effect doit être respectée pour garder un aspect cohérent avec les autres extensions Owlbear.
-
-## 17. Scrollbars
-
-Les scrollbars doivent utiliser le style partagé et rester discrètes.
-
-Dans les embeds contextuels, une scrollbar locale très fine est autorisée si la largeur Owlbear l’exige.
-
-## 18. Accessibilité
+## 20. Accessibilité
 
 - ne pas rendre une information compréhensible uniquement grâce à la couleur ;
 - garder une valeur textuelle pour les trackers numériques ;
 - préserver le focus clavier ;
-- `bar` supporte clavier et pointer ;
 - respecter `prefers-reduced-motion` ;
+- le niveau des Conditions reste accessible dans le menu même s’il n’est plus dessiné sur le token ;
 - l’audio futur ne doit jamais être le seul feedback.
 
-## 19. Audio
+## 21. Audio
 
 Voir :
 
@@ -365,35 +379,28 @@ Voir :
 STAT_AUDIO_FEEDBACK_V1.md
 ```
 
-État courant :
+État courant : direction audio définie, mais aucun service runtime audio n’est considéré comme implémenté.
 
-- direction audio définie ;
-- convention 1 son signature par icône ;
-- aucun service runtime audio identifié dans le code au checkpoint ;
-- donc fonctionnalité **prévue**, pas encore implémentée.
+## 22. Documents prompts
 
-## 20. Documents prompts
+Les fichiers mono-icône dans `Prompt/` sont des payloads de génération et ne doivent pas être pollués par le journal du projet.
 
-Utilisation recommandée :
+Méthode recommandée :
 
 ```text
 1 fichier .md mono-icône
-1 nouveau chat idéalement
-"Suis ce prompt et seulement lui."
-1 image finale
+1 sujet
+1 génération
 ```
 
-Cette méthode a été retenue parce que les générations en lot ont produit des planches ou plusieurs variantes du même sujet.
-
-## 21. Références
+## 23. Références
 
 - `docs/features/STATS_V2_SPEC.md`
+- `docs/stats/CONDITIONS_MASTER_CATALOG_V1.md`
+- `docs/stats/CONDITIONS_RUNTIME_SYNC.md`
 - `src/features/stats/README.md`
 - `src/features/stats/services/statTrackerIcons.ts`
-- `src/features/stats/components/StatTrackerCard.tsx`
-- `src/features/stats/statMaxValueBar.css`
-- `src/features/stats/statMaxValueBarLiquid.css`
-- `src/features/stats/statCounterBar.css`
-- `src/features/stats/statFixedOrb.css`
-- `src/features/stats/statIconUnits.css`
-- `src/features/stats/context/statTrackerContextMenu.css`
+- `src/features/stats/services/statConditionCatalog.ts`
+- `src/features/stats/services/statConditionOverlayObrSync.ts`
+- `src/features/stats/services/statConditionOverlayAutoSync.ts`
+- `src/features/stats/services/statAssetPreload.ts`
