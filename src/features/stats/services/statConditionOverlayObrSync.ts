@@ -37,7 +37,8 @@ export type StatConditionOverlaySyncResult = {
 };
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-const BADGE_SCALE = 0.1144;
+/** Taille de référence pour un token occupant une case de grille. */
+const BASE_BADGE_SCALE = 0.1144;
 const MAX_BADGES_PER_RING = 12;
 const BADGE_RING_GAP = 1.08;
 /**
@@ -69,6 +70,7 @@ type OverlayItemsApi = Pick<
 type BadgePlacement = {
   condition: StatTokenCondition;
   position: Vector2;
+  scale: number;
   visibility: StatTrackerVisibility;
 };
 
@@ -171,11 +173,25 @@ function getStartAngle(count: number): number {
   return -90;
 }
 
+/**
+ * Conserve exactement la même proportion icône/token quelle que soit la taille
+ * du token. Un token d'une case garde BASE_BADGE_SCALE ; un token de deux cases
+ * reçoit des badges deux fois plus grands, etc.
+ */
+function getBadgeScale(bounds: BoundingBox, sceneDpi: number): number {
+  const tokenDiameter = Math.max(bounds.width, bounds.height);
+  if (!Number.isFinite(sceneDpi) || sceneDpi <= 0 || !Number.isFinite(tokenDiameter)) {
+    return BASE_BADGE_SCALE;
+  }
+  return BASE_BADGE_SCALE * (tokenDiameter / sceneDpi);
+}
+
 function getPlacementForIndex(
   index: number,
   total: number,
   bounds: BoundingBox,
   sceneDpi: number,
+  badgeScale: number,
 ): Vector2 {
   const ringIndex = Math.floor(index / MAX_BADGES_PER_RING);
   const indexInRing = index % MAX_BADGES_PER_RING;
@@ -186,7 +202,7 @@ function getPlacementForIndex(
   const angleStep = 360 / Math.max(1, ringItemCount);
   const angleDegrees = getStartAngle(ringItemCount) + indexInRing * angleStep;
   const angle = (angleDegrees * Math.PI) / 180;
-  const badgeDiameter = sceneDpi * BADGE_SCALE;
+  const badgeDiameter = sceneDpi * badgeScale;
   const tokenRadius = Math.max(bounds.width, bounds.height) / 2;
   const radius =
     tokenRadius +
@@ -207,9 +223,17 @@ function createPlacements(
   sceneDpi: number,
 ): BadgePlacement[] {
   const conditions = getSortedConditions(token);
+  const badgeScale = getBadgeScale(bounds, sceneDpi);
   return conditions.map((condition, index) => ({
     condition,
-    position: getPlacementForIndex(index, conditions.length, bounds, sceneDpi),
+    position: getPlacementForIndex(
+      index,
+      conditions.length,
+      bounds,
+      sceneDpi,
+      badgeScale,
+    ),
+    scale: badgeScale,
     visibility: condition.visibility ?? "public",
   }));
 }
@@ -247,7 +271,7 @@ function buildConditionBadgeImage(
   placement: BadgePlacement,
   assetUrl: string,
 ): Image {
-  const { condition, position } = placement;
+  const { condition, position, scale } = placement;
   if (!token.sourceItemId) throw new Error("Token Owlbear non lié.");
 
   return buildImage(
@@ -269,7 +293,7 @@ function buildConditionBadgeImage(
     .name(getConditionTooltip(condition))
     .position(position)
     .rotation(0)
-    .scale({ x: BADGE_SCALE, y: BADGE_SCALE })
+    .scale({ x: scale, y: scale })
     .layer("ATTACHMENT")
     .attachedTo(token.sourceItemId)
     .locked(true)

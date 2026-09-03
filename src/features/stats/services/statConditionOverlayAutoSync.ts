@@ -12,7 +12,7 @@ function getScaleSignature(item: Item): string {
 /**
  * Conditions own their own geometry synchronization in the permanent Owlbear
  * background. Position attachment follows token movement automatically; this
- * listener only recalculates the ring radius when the token is resized.
+ * listener recalculates both ring geometry and badge size when the token is resized.
  */
 export function setupStatConditionOverlayAutoSync(): () => void {
   let disposed = false;
