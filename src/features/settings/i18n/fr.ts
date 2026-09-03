@@ -3,6 +3,7 @@ import type { LocaleDictionary } from "../../../i18n/types";
 const fr: LocaleDictionary = {
   "settings.general.sectionTitle": "Langue / Système",
   "settings.general.sectionSummary": "Préférences globales",
+  "settings.general.selected": "Sélectionné",
   "settings.general.language.label": "Langue",
   "settings.general.language.help": "La traduction de l’interface existante sera migrée progressivement. Les nouveaux écrans et les nouvelles fonctions utilisent déjà ce réglage.",
   "settings.general.language.fr": "Français",
