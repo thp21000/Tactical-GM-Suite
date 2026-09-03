@@ -1,4 +1,5 @@
 import type { LocaleDictionary } from "../../../i18n/types";
+import conditionContent from "./conditions.fr";
 
 const fr: LocaleDictionary = {
   "stats.conditions.duration.manual": "Manuelle",
@@ -34,9 +35,9 @@ const fr: LocaleDictionary = {
   "stats.conditions.action.editNamed": "Modifier {name}",
   "stats.conditions.noResult": "Aucune condition trouvée.",
   "stats.conditions.generic.empty": "Aucune condition générique n’est encore définie.",
-  "stats.conditions.legacy.title": "Conditions héritées",
-  "stats.conditions.legacy.help": "Anciennes conditions conservées sur ce token. Elles peuvent être retirées mais ne sont plus proposées à l’ajout.",
   "stats.conditions.value.damage": "Dégâts",
+  "stats.conditions.hover.description": "Description",
+  "stats.conditions.hover.rulesSummary": "Résumé règles",
 
   "stats.conditions.catalog.blinded": "Aveuglé",
   "stats.conditions.catalog.deafened": "Assourdi",
@@ -86,6 +87,7 @@ const fr: LocaleDictionary = {
   "stats.conditions.catalog.unfriendly": "Inamical",
   "stats.conditions.catalog.unnoticed": "Inaperçu",
   "stats.conditions.catalog.wounded": "Blessé",
+  ...conditionContent,
 };
 
 export default fr;
