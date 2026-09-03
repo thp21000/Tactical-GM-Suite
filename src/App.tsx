@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAppPreferences } from "./core/preferences/AppPreferencesProvider";
 import type { AppRoute } from "./core/types/coreTypes";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { DebugPage } from "./features/debug/DebugPage";
@@ -8,7 +9,6 @@ import { RangePage } from "./features/range/RangePage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { StatTrackerPage } from "./features/stats/StatTrackerPage";
 import { AppShell } from "./shared/components/AppShell";
-import { useModulePreferences } from "./shared/hooks/useModulePreferences";
 import { useObrReady } from "./shared/hooks/useObrReady";
 import { useObrTheme } from "./shared/hooks/useObrTheme";
 
@@ -17,7 +17,7 @@ export default function App() {
   const obr = useObrReady();
   const theme = useObrTheme(obr);
   const { moduleStates, setModuleEnabled, resetLocalPreferences } =
-    useModulePreferences();
+    useAppPreferences();
 
   const page = (() => {
     switch (route) {
