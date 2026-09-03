@@ -1,23 +1,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import OBR from "@owlbear-rodeo/sdk";
+import { useAppPreferences } from "../../../core/preferences/AppPreferencesProvider";
 import {
   applyThemeVariables,
   createTgmThemeFromObrTheme,
   fallbackTgmTheme,
 } from "../../../core/theme/obrTheme";
+import { useI18n } from "../../../i18n";
+import type { TranslateFunction } from "../../../i18n/types";
 import type { InitiativeEncounterState } from "../../initiative/initiativeTypes";
 import {
   readInitiativeState,
   subscribeToInitiativeState,
 } from "../../initiative/services/initiativeStorage";
 import type {
-  StatConditionDefinition,
   StatConditionDurationType,
   StatTrackerVisibility,
   StatTokenCondition,
   StatTrackedToken,
 } from "../statTypes";
 import { getConditionAssetUrl } from "../services/statConditionAssets";
+import {
+  getSystemStatConditionDefinitions,
+  type SystemStatConditionDefinition,
+} from "../services/statConditionCatalog";
 import {
   getActiveTokenCondition,
   getConditionDisplayName,
@@ -27,7 +33,6 @@ import {
   type StatConditionQuickConfig,
   upsertQuickCondition,
 } from "../services/statConditionContextActions";
-import { getStatConditionDefinitions } from "../services/statConditions";
 import { updateOrCreateEmbeddedConditionToken } from "../services/statEmbeddedProfileActions";
 import { createOrUpdateTokenConditionOverlay } from "../services/statConditionOverlayObrSync";
 import { isSupportedStatTokenItem } from "../services/statTokenEligibility";
@@ -40,7 +45,7 @@ type EditorState = {
 };
 
 type QuickEditorProps = {
-  definition: StatConditionDefinition;
+  definition: SystemStatConditionDefinition;
   condition?: StatTokenCondition;
   busy: boolean;
   isInInitiative: boolean;
@@ -61,27 +66,9 @@ type CompactSelectProps = {
   value: string;
   options: readonly CompactSelectOption[];
   disabled?: boolean;
+  disabledOptionTitle?: string;
   onChange: (value: string) => void;
 };
-
-const BASE_DURATION_OPTIONS: Array<{
-  value: StatConditionDurationType;
-  label: string;
-}> = [
-  { value: "manual", label: "Manuelle" },
-  { value: "rounds", label: "Rounds" },
-  { value: "encounter", label: "Rencontre" },
-  { value: "rest", label: "Repos" },
-];
-
-const VISIBILITY_OPTIONS: Array<{
-  value: StatTrackerVisibility;
-  label: string;
-}> = [
-  { value: "public", label: "Public" },
-  { value: "private", label: "Privé" },
-  { value: "gm", label: "MJ" },
-];
 
 function normalizeSearch(value: string): string {
   return value
@@ -95,6 +82,7 @@ function CompactSelect({
   value,
   options,
   disabled = false,
+  disabledOptionTitle,
   onChange,
 }: CompactSelectProps) {
   const [open, setOpen] = useState(false);
@@ -160,11 +148,7 @@ function CompactSelect({
                 disabled={option.disabled}
                 key={option.value}
                 role="option"
-                title={
-                  option.disabled
-                    ? "Ajoutez d’abord ce token à l’initiative."
-                    : undefined
-                }
+                title={option.disabled ? disabledOptionTitle : undefined}
                 type="button"
                 onClick={() => {
                   if (option.disabled) return;
@@ -188,6 +172,33 @@ function CompactSelect({
   );
 }
 
+function createDurationOptions(
+  isInInitiative: boolean,
+  t: TranslateFunction,
+): CompactSelectOption[] {
+  const values: StatConditionDurationType[] = [
+    "manual",
+    "rounds",
+    "encounter",
+    "rest",
+  ];
+
+  return values.map((value) => ({
+    value,
+    label: t(`stats.conditions.duration.${value}`),
+    disabled:
+      !isInInitiative && (value === "rounds" || value === "encounter"),
+  }));
+}
+
+function createVisibilityOptions(t: TranslateFunction): CompactSelectOption[] {
+  const values: StatTrackerVisibility[] = ["public", "private", "gm"];
+  return values.map((value) => ({
+    value,
+    label: t(`stats.conditions.visibility.${value}`),
+  }));
+}
+
 function QuickEditor({
   definition,
   condition,
@@ -198,6 +209,7 @@ function QuickEditor({
   onCancel,
   onSubmit,
 }: QuickEditorProps) {
+  const { t } = useI18n();
   const needsValue = definition.severityType !== "none";
   const [value, setValue] = useState(String(condition?.value ?? 1));
   const [durationType, setDurationType] = useState<StatConditionDurationType>(
@@ -209,16 +221,15 @@ function QuickEditor({
   const [visibility, setVisibility] = useState<StatTrackerVisibility>(
     condition?.visibility ?? "public",
   );
-  const durationOptions = useMemo<CompactSelectOption[]>(
-    () =>
-      BASE_DURATION_OPTIONS.map((option) => ({
-        ...option,
-        disabled:
-          !isInInitiative &&
-          (option.value === "rounds" || option.value === "encounter"),
-      })),
-    [isInInitiative],
+  const durationOptions = useMemo(
+    () => createDurationOptions(isInInitiative, t),
+    [isInInitiative, t],
   );
+  const visibilityOptions = useMemo(() => createVisibilityOptions(t), [t]);
+  const valueLabel = definition.valueLabelKey
+    ? t(definition.valueLabelKey)
+    : t("stats.conditions.editor.level");
+  const initiativeRequired = t("stats.conditions.initiative.required");
 
   return (
     <form
@@ -248,7 +259,7 @@ function QuickEditor({
     >
       <div className="stat-condition-context__editor-header">
         <button
-          aria-label="Retour à la liste des conditions"
+          aria-label={t("stats.conditions.editor.back")}
           className="stat-condition-context__back-button"
           type="button"
           onClick={onCancel}
@@ -257,7 +268,9 @@ function QuickEditor({
         </button>
         <div className="stat-condition-context__editor-title">
           <span className="stat-condition-context__eyebrow">
-            {condition ? "Modifier" : "Ajouter"}
+            {condition
+              ? t("stats.conditions.editor.edit")
+              : t("stats.conditions.editor.add")}
           </span>
           <strong>{definition.label}</strong>
         </div>
@@ -266,9 +279,10 @@ function QuickEditor({
       <div className="stat-condition-context__editor-grid">
         {needsValue ? (
           <label>
-            <span>Niveau</span>
+            <span>{valueLabel}</span>
             <input
               min="1"
+              max={definition.maxValue}
               type="number"
               value={value}
               onChange={(event) => setValue(event.target.value)}
@@ -277,10 +291,11 @@ function QuickEditor({
         ) : null}
 
         <label>
-          <span>Durée</span>
+          <span>{t("stats.conditions.editor.duration")}</span>
           <CompactSelect
-            ariaLabel="Durée"
+            ariaLabel={t("stats.conditions.editor.duration")}
             disabled={busy}
+            disabledOptionTitle={initiativeRequired}
             options={durationOptions}
             value={durationType}
             onChange={(nextValue) =>
@@ -291,15 +306,11 @@ function QuickEditor({
 
         {durationType === "rounds" ? (
           <label>
-            <span>Nombre de rounds</span>
+            <span>{t("stats.conditions.editor.roundCount")}</span>
             <input
               disabled={!isInInitiative}
               min="1"
-              title={
-                !isInInitiative
-                  ? "Ajoutez d’abord ce token à l’initiative."
-                  : undefined
-              }
+              title={!isInInitiative ? initiativeRequired : undefined}
               type="number"
               value={rounds}
               onChange={(event) => setRounds(event.target.value)}
@@ -308,11 +319,11 @@ function QuickEditor({
         ) : null}
 
         <label>
-          <span>Visibilité</span>
+          <span>{t("stats.conditions.editor.visibility")}</span>
           <CompactSelect
-            ariaLabel="Visibilité"
+            ariaLabel={t("stats.conditions.editor.visibility")}
             disabled={busy}
-            options={VISIBILITY_OPTIONS}
+            options={visibilityOptions}
             value={visibility}
             onChange={(nextValue) =>
               setVisibility(nextValue as StatTrackerVisibility)
@@ -323,16 +334,20 @@ function QuickEditor({
 
       <p className="stat-condition-context__hint">
         {isInInitiative
-          ? "Affichée automatiquement sur le token selon sa visibilité."
-          : "Rounds et Rencontre deviennent disponibles quand ce token est ajouté à l’initiative."}
+          ? t("stats.conditions.editor.hint.inInitiative")
+          : t("stats.conditions.editor.hint.notInInitiative")}
       </p>
 
       <div className="stat-condition-context__editor-actions">
         <button type="button" onClick={onCancel} disabled={busy}>
-          Annuler
+          {t("stats.conditions.editor.cancel")}
         </button>
         <button className="is-primary" type="submit" disabled={busy}>
-          {busy ? "…" : condition ? "Enregistrer" : "Ajouter"}
+          {busy
+            ? "…"
+            : condition
+              ? t("stats.conditions.editor.save")
+              : t("stats.conditions.editor.add")}
         </button>
       </div>
     </form>
@@ -340,7 +355,12 @@ function QuickEditor({
 }
 
 export function StatConditionContextMenuApp() {
-  const definitions = useMemo(() => getStatConditionDefinitions(), []);
+  const { gameSystem } = useAppPreferences();
+  const { t } = useI18n();
+  const definitions = useMemo(
+    () => getSystemStatConditionDefinitions(gameSystem, t),
+    [gameSystem, t],
+  );
   const [token, setToken] = useState<StatTrackedToken | null>(null);
   const [itemId, setItemId] = useState<string | null>(null);
   const [initiative, setInitiative] = useState<InitiativeEncounterState | null>(null);
@@ -370,9 +390,9 @@ export function StatConditionContextMenuApp() {
       setToken(readEmbeddedStatToken(item) ?? null);
       setError(null);
     } catch {
-      setError("Impossible de lire le token sélectionné.");
+      setError(t("stats.conditions.error.readToken"));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let unsubscribePlayer: (() => void) | undefined;
@@ -428,6 +448,11 @@ export function StatConditionContextMenuApp() {
     };
   }, [refresh]);
 
+  useEffect(() => {
+    setEditor(null);
+    setQuery("");
+  }, [gameSystem]);
+
   const filteredDefinitions = useMemo(() => {
     const needle = normalizeSearch(query.trim());
     if (!needle) return definitions;
@@ -444,7 +469,7 @@ export function StatConditionContextMenuApp() {
       try {
         const updated = await updateOrCreateEmbeddedConditionToken(itemId, update);
         if (!updated) {
-          setError("Le token est introuvable.");
+          setError(t("stats.conditions.error.tokenMissing"));
           return;
         }
         setToken(updated);
@@ -453,19 +478,19 @@ export function StatConditionContextMenuApp() {
         setError(
           cause instanceof Error
             ? cause.message
-            : "Impossible de modifier la condition.",
+            : t("stats.conditions.error.update"),
         );
       } finally {
         setBusy(false);
       }
     },
-    [itemId],
+    [itemId, t],
   );
 
   if (!itemId) {
     return (
       <main className="stat-condition-context stat-condition-context--empty">
-        <p>{error ?? "Sélectionnez un token."}</p>
+        <p>{error ?? t("stats.conditions.empty.selectToken")}</p>
       </main>
     );
   }
@@ -495,7 +520,7 @@ export function StatConditionContextMenuApp() {
           onCancel={() => setEditor(null)}
           onSubmit={(config) => {
             void mutate((current) =>
-              upsertQuickCondition(current, editorDefinition.id, config),
+              upsertQuickCondition(current, editorDefinition, config),
             ).then(() => setEditor(null));
           }}
         />
@@ -509,7 +534,7 @@ export function StatConditionContextMenuApp() {
         <span aria-hidden="true">⌕</span>
         <input
           autoComplete="off"
-          placeholder="Rechercher une condition"
+          placeholder={t("stats.conditions.search.placeholder")}
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -518,7 +543,10 @@ export function StatConditionContextMenuApp() {
 
       {error ? <p className="stat-condition-context__error">{error}</p> : null}
 
-      <div className="stat-condition-context__list" aria-label="Conditions">
+      <div
+        className="stat-condition-context__list"
+        aria-label={t("stats.conditions.list.aria")}
+      >
         {filteredDefinitions.map((definition) => {
           const active = token
             ? getActiveTokenCondition(token, definition.id)
@@ -530,10 +558,10 @@ export function StatConditionContextMenuApp() {
           });
           const fallback = getTrackerIcon(definition.iconId);
           const durationListText = active
-            ? getConditionDurationListText(active)
+            ? getConditionDurationListText(active, t)
             : undefined;
           const title = active
-            ? `${getConditionDisplayName(active)} · ${getConditionDurationText(active)}`
+            ? `${getConditionDisplayName(active, definition.label)} · ${getConditionDurationText(active, t)}`
             : definition.description ?? definition.label;
 
           return (
@@ -582,11 +610,15 @@ export function StatConditionContextMenuApp() {
 
               {active ? (
                 <button
-                  aria-label={`Modifier ${definition.label}`}
+                  aria-label={t("stats.conditions.action.editNamed", {
+                    name: definition.label,
+                  })}
                   className="stat-condition-context__edit"
                   disabled={busy}
                   type="button"
-                  title={`Modifier ${definition.label}`}
+                  title={t("stats.conditions.action.editNamed", {
+                    name: definition.label,
+                  })}
                   onClick={() => setEditor({ conditionId: definition.id })}
                 >
                   ✎
@@ -597,7 +629,11 @@ export function StatConditionContextMenuApp() {
         })}
 
         {filteredDefinitions.length === 0 ? (
-          <p className="stat-condition-context__no-result">Aucune condition trouvée.</p>
+          <p className="stat-condition-context__no-result">
+            {gameSystem === "GENERIC"
+              ? t("stats.conditions.generic.empty")
+              : t("stats.conditions.noResult")}
+          </p>
         ) : null}
       </div>
     </main>
