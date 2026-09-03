@@ -17,27 +17,38 @@ import type {
   StatTrackerVisibility,
 } from "../statTypes";
 import { getConditionAssetUrl } from "./statConditionAssets";
-import {
-  getConditionDisplayName,
-  getConditionDurationText,
-} from "./statConditionContextActions";
-import type { StatOverlayObrSyncResult } from "./statTokenOverlayObrSync";
+import { getConditionDisplayName } from "./statConditionContextActions";
 
 export const STAT_CONDITION_OVERLAY_METADATA_KEY = `${EXTENSION_ID}/stats-condition-overlay`;
 export const STAT_CONDITION_OVERLAY_KIND = "stats-condition-badge";
-const LEGACY_CONDITION_OVERLAY_KIND = "stats-condition-overlay";
+
+export type StatConditionOverlayAction = "create-or-update" | "delete";
+export type StatConditionOverlayStatus =
+  | "created"
+  | "updated"
+  | "deleted"
+  | "not-found"
+  | "not-ready"
+  | "unavailable"
+  | "error";
+
+export type StatConditionOverlaySyncResult = {
+  status: StatConditionOverlayStatus;
+  action: StatConditionOverlayAction;
+  message: string;
+  sourceItemId?: string;
+};
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-const BADGE_SCALE = 0.24;
-const BADGE_RING_GAP = 1.18;
-const MAX_BADGES_PER_RING = 8;
-const LEVEL_LABEL_FONT_SIZE = 10;
-const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
+/** One third of the previous 0.24 size: condition badges are deliberately tiny. */
+const BADGE_SCALE = 0.08;
+const MAX_BADGES_PER_RING = 12;
+const BADGE_RING_GAP = 1.08;
+const LEVEL_LABEL_FONT_SIZE = 7;
 
 type BadgeRole = "icon" | "level";
-
 type ConditionBadgeMetadata = {
-  kind: typeof STAT_CONDITION_OVERLAY_KIND | typeof LEGACY_CONDITION_OVERLAY_KIND;
+  kind: typeof STAT_CONDITION_OVERLAY_KIND;
   tokenId: string;
   sourceItemId: string;
   conditionId: string;
@@ -60,17 +71,12 @@ type BadgePlacement = {
 type DesiredBadgeItem = Image | Label;
 
 function createResult(
-  action: "create-or-update" | "delete",
-  status: StatOverlayObrSyncResult["status"],
+  action: StatConditionOverlayAction,
+  status: StatConditionOverlayStatus,
   message: string,
   token: StatTrackedToken,
-): StatOverlayObrSyncResult {
-  return {
-    action,
-    status,
-    message,
-    sourceItemId: token.sourceItemId,
-  };
+): StatConditionOverlaySyncResult {
+  return { action, status, message, sourceItemId: token.sourceItemId };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -85,12 +91,7 @@ function readMetadata(item: Item): ConditionBadgeMetadata | undefined {
   const value = item.metadata?.[STAT_CONDITION_OVERLAY_METADATA_KEY];
   if (!isRecord(value)) return undefined;
   if (
-    value.kind !== STAT_CONDITION_OVERLAY_KIND &&
-    value.kind !== LEGACY_CONDITION_OVERLAY_KIND
-  ) {
-    return undefined;
-  }
-  if (
+    value.kind !== STAT_CONDITION_OVERLAY_KIND ||
     typeof value.tokenId !== "string" ||
     typeof value.sourceItemId !== "string" ||
     typeof value.conditionId !== "string" ||
@@ -101,7 +102,7 @@ function readMetadata(item: Item): ConditionBadgeMetadata | undefined {
   }
 
   return {
-    kind: value.kind,
+    kind: STAT_CONDITION_OVERLAY_KIND,
     tokenId: value.tokenId,
     sourceItemId: value.sourceItemId,
     conditionId: value.conditionId,
@@ -154,45 +155,35 @@ function getSortedConditions(token: StatTrackedToken): StatTokenCondition[] {
   return [...token.conditions].sort(
     (a, b) =>
       a.createdAt.localeCompare(b.createdAt) ||
-      a.shortLabel.localeCompare(b.shortLabel, "fr"),
+      a.conditionId.localeCompare(b.conditionId),
   );
 }
 
 function getStartAngle(count: number): number {
-  if (count <= 1) return -90;
   if (count === 2) return 0;
-  if (count === 3) return -90;
   if (count === 4) return -45;
   return -90;
-}
-
-function getRingCount(itemCount: number): number {
-  return Math.ceil(itemCount / MAX_BADGES_PER_RING);
 }
 
 function getPlacementForIndex(
   index: number,
   total: number,
-  firstRingIndex: number,
   bounds: BoundingBox,
   sceneDpi: number,
 ): Vector2 {
-  const ringOffset = Math.floor(index / MAX_BADGES_PER_RING);
+  const ringIndex = Math.floor(index / MAX_BADGES_PER_RING);
   const indexInRing = index % MAX_BADGES_PER_RING;
   const ringItemCount = Math.min(
     MAX_BADGES_PER_RING,
-    total - ringOffset * MAX_BADGES_PER_RING,
+    total - ringIndex * MAX_BADGES_PER_RING,
   );
   const angleStep = 360 / Math.max(1, ringItemCount);
   const angleDegrees = getStartAngle(ringItemCount) + indexInRing * angleStep;
   const angle = (angleDegrees * Math.PI) / 180;
   const badgeDiameter = sceneDpi * BADGE_SCALE;
   const tokenRadius = Math.max(bounds.width, bounds.height) / 2;
-  const globalRing = firstRingIndex + ringOffset;
-  const radius =
-    tokenRadius +
-    badgeDiameter * 0.72 +
-    globalRing * badgeDiameter * BADGE_RING_GAP;
+  // First ring is centered exactly on the token rim/crown.
+  const radius = tokenRadius + ringIndex * badgeDiameter * BADGE_RING_GAP;
 
   return {
     x: bounds.center.x + Math.cos(angle) * radius,
@@ -206,39 +197,11 @@ function createPlacements(
   sceneDpi: number,
 ): BadgePlacement[] {
   const conditions = getSortedConditions(token);
-  const publicConditions = conditions.filter(
-    (condition) => (condition.visibility ?? "public") === "public",
-  );
-  const localConditions = conditions.filter(
-    (condition) => (condition.visibility ?? "public") !== "public",
-  );
-  const publicRingCount = getRingCount(publicConditions.length);
-
-  const publicPlacements = publicConditions.map((condition, index) => ({
+  return conditions.map((condition, index) => ({
     condition,
-    position: getPlacementForIndex(
-      index,
-      publicConditions.length,
-      0,
-      bounds,
-      sceneDpi,
-    ),
-    visibility: "public" as const,
+    position: getPlacementForIndex(index, conditions.length, bounds, sceneDpi),
+    visibility: condition.visibility ?? "public",
   }));
-
-  const localPlacements = localConditions.map((condition, index) => ({
-    condition,
-    position: getPlacementForIndex(
-      index,
-      localConditions.length,
-      publicRingCount,
-      bounds,
-      sceneDpi,
-    ),
-    visibility: condition.visibility ?? "gm",
-  }));
-
-  return [...publicPlacements, ...localPlacements];
 }
 
 function createBadgeId(
@@ -267,8 +230,7 @@ function createBadgeMetadata(
 }
 
 function getConditionTooltip(condition: StatTokenCondition): string {
-  const duration = getConditionDurationText(condition);
-  return [getConditionDisplayName(condition), duration].filter(Boolean).join(" · ");
+  return getConditionDisplayName(condition);
 }
 
 function buildConditionBadgeImage(
@@ -278,7 +240,6 @@ function buildConditionBadgeImage(
 ): Image {
   const { condition, position } = placement;
   if (!token.sourceItemId) throw new Error("Token Owlbear non lié.");
-  const tooltip = getConditionTooltip(condition);
 
   return buildImage(
     {
@@ -296,7 +257,7 @@ function buildConditionBadgeImage(
     },
   )
     .id(createBadgeId(token, condition, "icon"))
-    .name(tooltip)
+    .name(getConditionTooltip(condition))
     .position(position)
     .rotation(0)
     .scale({ x: BADGE_SCALE, y: BADGE_SCALE })
@@ -306,11 +267,7 @@ function buildConditionBadgeImage(
     .disableAutoZIndex(true)
     .disableAttachmentBehavior(["COPY", "ROTATION"])
     .metadata({
-      [STAT_CONDITION_OVERLAY_METADATA_KEY]: createBadgeMetadata(
-        token,
-        condition,
-        "icon",
-      ),
+      [STAT_CONDITION_OVERLAY_METADATA_KEY]: createBadgeMetadata(token, condition, "icon"),
     })
     .build();
 }
@@ -323,19 +280,18 @@ function buildConditionLevelLabel(
   const { condition, position } = placement;
   if (!token.sourceItemId || typeof condition.value !== "number") return null;
   const badgeDiameter = sceneDpi * BADGE_SCALE;
-  const tooltip = getConditionTooltip(condition);
 
   return buildLabel()
     .id(createBadgeId(token, condition, "level"))
-    .name(tooltip)
+    .name(getConditionTooltip(condition))
     .plainText(String(condition.value))
     .fontSize(LEVEL_LABEL_FONT_SIZE)
     .fontWeight(800)
-    .padding(2)
+    .padding(1)
     .fillColor("#ffffff")
     .backgroundColor("#242333")
     .backgroundOpacity(0.96)
-    .cornerRadius(8)
+    .cornerRadius(6)
     .position({
       x: position.x + badgeDiameter * 0.28,
       y: position.y + badgeDiameter * 0.28,
@@ -349,11 +305,7 @@ function buildConditionLevelLabel(
     .disableAutoZIndex(true)
     .disableAttachmentBehavior(["COPY", "ROTATION"])
     .metadata({
-      [STAT_CONDITION_OVERLAY_METADATA_KEY]: createBadgeMetadata(
-        token,
-        condition,
-        "level",
-      ),
+      [STAT_CONDITION_OVERLAY_METADATA_KEY]: createBadgeMetadata(token, condition, "level"),
     })
     .build();
 }
@@ -366,7 +318,6 @@ function buildDesiredItems(
   return placements.flatMap((placement) => {
     const assetUrl = getConditionAssetUrl(placement.condition);
     if (!assetUrl) return [];
-
     const image = buildConditionBadgeImage(token, placement, assetUrl);
     const level = buildConditionLevelLabel(token, placement, sceneDpi);
     return level ? [image, level] : [image];
@@ -445,7 +396,6 @@ async function syncApiItems(
 
   let created = 0;
   let updated = 0;
-
   for (const desired of desiredItems) {
     const existing = existingById.get(desired.id);
     if (!existing) {
@@ -453,12 +403,10 @@ async function syncApiItems(
       created += 1;
       continue;
     }
-
     if (await updateExistingItem(api, existing, desired)) {
       updated += 1;
       continue;
     }
-
     await api.deleteItems([existing.id]);
     await api.addItems([desired]);
     created += 1;
@@ -469,17 +417,12 @@ async function syncApiItems(
 
 export async function createOrUpdateTokenConditionOverlay(
   token: StatTrackedToken,
-): Promise<StatOverlayObrSyncResult> {
+): Promise<StatConditionOverlaySyncResult> {
   if (!token.sourceItemId) {
     return createResult("create-or-update", "not-ready", "Token non lié à Owlbear.", token);
   }
   if (!canUseConditionOverlaySync()) {
-    return createResult(
-      "create-or-update",
-      "unavailable",
-      "Affichage des conditions indisponible.",
-      token,
-    );
+    return createResult("create-or-update", "unavailable", "Affichage des conditions indisponible.", token);
   }
   if (!(await canCurrentPlayerManageOverlays())) {
     return createResult("create-or-update", "unavailable", "Action réservée au MJ.", token);
@@ -490,17 +433,17 @@ export async function createOrUpdateTokenConditionOverlay(
       OBR.scene.items.getItemBounds([token.sourceItemId]),
       OBR.scene.grid.getDpi(),
     ]);
-    const placements = createPlacements(token, bounds, sceneDpi);
-    const desired = buildDesiredItems(token, placements, sceneDpi);
-    const publicItems = desired.filter((item) => {
-      const metadata = readMetadata(item);
-      return metadata?.visibility === "public";
-    });
-    const localItems = desired.filter((item) => {
-      const metadata = readMetadata(item);
-      return metadata?.visibility !== "public";
-    });
-
+    const desired = buildDesiredItems(
+      token,
+      createPlacements(token, bounds, sceneDpi),
+      sceneDpi,
+    );
+    const publicItems = desired.filter(
+      (item) => readMetadata(item)?.visibility === "public",
+    );
+    const localItems = desired.filter(
+      (item) => readMetadata(item)?.visibility !== "public",
+    );
     const [publicResult, localResult] = await Promise.all([
       syncApiItems(getAudienceApi("public"), token, publicItems),
       syncApiItems(getAudienceApi("gm"), token, localItems),
@@ -515,26 +458,22 @@ export async function createOrUpdateTokenConditionOverlay(
       return createResult(
         "create-or-update",
         deleted > 0 ? "updated" : "not-ready",
-        deleted > 0
-          ? "Badges de conditions retirés."
-          : "Aucune condition active.",
+        deleted > 0 ? "Badges de conditions retirés." : "Aucune condition active.",
         token,
       );
     }
 
     return createResult(
       "create-or-update",
-      created > 0 ? "created" : updated > 0 || deleted > 0 ? "updated" : "updated",
-      `${conditionCount} condition${conditionCount > 1 ? "s" : ""} affichée${conditionCount > 1 ? "s" : ""} autour du token.`,
+      created > 0 ? "created" : "updated",
+      `${conditionCount} condition${conditionCount > 1 ? "s" : ""} affichée${conditionCount > 1 ? "s" : ""} sur la couronne du token.`,
       token,
     );
   } catch (error) {
     return createResult(
       "create-or-update",
       "error",
-      error instanceof Error
-        ? error.message
-        : "Erreur pendant l’affichage des conditions.",
+      error instanceof Error ? error.message : "Erreur pendant l’affichage des conditions.",
       token,
     );
   }
@@ -542,7 +481,7 @@ export async function createOrUpdateTokenConditionOverlay(
 
 export async function deleteTokenConditionOverlay(
   token: StatTrackedToken,
-): Promise<StatOverlayObrSyncResult> {
+): Promise<StatConditionOverlaySyncResult> {
   if (!token.sourceItemId) {
     return createResult("delete", "not-ready", "Token non lié à Owlbear.", token);
   }
@@ -551,31 +490,29 @@ export async function deleteTokenConditionOverlay(
   }
 
   try {
-    let deleted = 0;
-    for (const visibility of AUDIENCES) {
-      const api = getAudienceApi(visibility);
-      const items = await getExistingItems(api, token);
-      if (items.length === 0) continue;
-      await api.deleteItems(items.map((item) => item.id));
-      deleted += items.length;
-      if (visibility === "private") break;
+    const [publicItems, localItems] = await Promise.all([
+      getExistingItems(OBR.scene.items, token),
+      getExistingItems(OBR.scene.local, token),
+    ]);
+    if (publicItems.length > 0) {
+      await OBR.scene.items.deleteItems(publicItems.map((item) => item.id));
     }
+    if (localItems.length > 0) {
+      await OBR.scene.local.deleteItems(localItems.map((item) => item.id));
+    }
+    const deleted = publicItems.length + localItems.length;
 
     return createResult(
       "delete",
       deleted > 0 ? "deleted" : "not-found",
-      deleted > 0
-        ? "Badges de conditions supprimés."
-        : "Aucun badge de condition trouvé.",
+      deleted > 0 ? "Badges de conditions supprimés." : "Aucun badge de condition trouvé.",
       token,
     );
   } catch (error) {
     return createResult(
       "delete",
       "error",
-      error instanceof Error
-        ? error.message
-        : "Erreur pendant la suppression des conditions.",
+      error instanceof Error ? error.message : "Erreur pendant la suppression des conditions.",
       token,
     );
   }

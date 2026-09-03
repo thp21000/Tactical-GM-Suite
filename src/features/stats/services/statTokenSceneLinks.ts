@@ -8,7 +8,7 @@ import type {
   StatTrackerVisibility,
   StatTrackerVisualType,
 } from "../statTypes";
-import { normalizeTokenConditions } from "./statConditions";
+import { normalizeTokenConditions } from "./statConditionStorage";
 import { normalizeTrackerIconId } from "./statTrackerIcons";
 import { normalizeTokenType } from "./statTokens";
 

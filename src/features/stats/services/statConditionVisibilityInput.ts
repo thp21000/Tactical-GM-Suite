@@ -1,6 +1,18 @@
-import type { StatTrackerVisibility } from "../statTypes";
-import type { StatTokenConditionInput } from "./statConditions";
+import type {
+  StatConditionDurationType,
+  StatConditionTokenDisplayMode,
+  StatTrackerVisibility,
+} from "../statTypes";
 
-export type StatTokenConditionVisibilityInput = StatTokenConditionInput & {
+export type StatTokenConditionVisibilityInput = {
+  value?: number;
+  durationType?: StatConditionDurationType;
+  durationValue?: number;
+  remainingRounds?: number;
+  source?: string;
+  note?: string;
+  showOnToken?: boolean;
+  tokenDisplayMode?: StatConditionTokenDisplayMode;
+  tokenDisplayPriority?: number;
   visibility?: StatTrackerVisibility;
 };

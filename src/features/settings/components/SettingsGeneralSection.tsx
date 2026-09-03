@@ -4,14 +4,27 @@ import type {
 } from "../../../core/config/appOptions";
 import { useAppPreferences } from "../../../core/preferences/AppPreferencesProvider";
 import { useI18n } from "../../../i18n";
+import flagFr from "../assets/flag-fr.svg";
+import flagGb from "../assets/flag-gb.svg";
 
 const LANGUAGE_OPTIONS: Array<{
   id: LanguagePreference;
   labelKey: string;
   shortLabel: string;
+  flag: string;
 }> = [
-  { id: "fr", labelKey: "settings.general.language.fr", shortLabel: "FR" },
-  { id: "en", labelKey: "settings.general.language.en", shortLabel: "EN" },
+  {
+    id: "fr",
+    labelKey: "settings.general.language.fr",
+    shortLabel: "FR",
+    flag: flagFr,
+  },
+  {
+    id: "en",
+    labelKey: "settings.general.language.en",
+    shortLabel: "EN",
+    flag: flagGb,
+  },
 ];
 
 const SYSTEM_OPTIONS: Array<{
@@ -46,8 +59,23 @@ export function SettingsGeneralSection() {
                 type="button"
                 onClick={() => setLanguage(option.id)}
               >
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  className="settings-choice__flag"
+                  src={option.flag}
+                />
                 <span className="settings-choice__code">{option.shortLabel}</span>
                 <span>{t(option.labelKey)}</span>
+                {active ? (
+                  <span
+                    aria-label={t("settings.general.selected")}
+                    className="settings-choice__selected"
+                    title={t("settings.general.selected")}
+                  >
+                    ✓
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -66,12 +94,18 @@ export function SettingsGeneralSection() {
             return (
               <button
                 aria-pressed={active}
-                className={`settings-choice${active ? " settings-choice--active" : ""}`}
+                className={`settings-choice settings-choice--system${active ? " settings-choice--active" : ""}`}
                 key={option.id}
                 type="button"
                 onClick={() => setGameSystem(option.id)}
               >
                 <span>{t(option.labelKey)}</span>
+                <span
+                  aria-hidden={!active}
+                  className={`settings-choice__system-indicator${active ? " is-active" : ""}`}
+                >
+                  {active ? "✓" : ""}
+                </span>
               </button>
             );
           })}

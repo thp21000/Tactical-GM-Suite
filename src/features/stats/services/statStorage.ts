@@ -3,7 +3,7 @@ import { ROOM_METADATA_KEYS, STORAGE_KEYS } from "../../../core/constants/ids";
 import { isObrReady } from "../../../core/obr/obrReady";
 import { readJson, removeItem, writeJson } from "../../../core/storage/localStorage";
 import type { StatTrackedToken, StatTrackerState } from "../statTypes";
-import { normalizeTokenConditions } from "./statConditions";
+import { normalizeTokenConditions } from "./statConditionStorage";
 import { normalizeStatTrackerPresets } from "./statPresets";
 import { createTracker } from "./statTrackers";
 import {
@@ -32,20 +32,7 @@ type LegacyEntity = {
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
-  conditions?: {
-    conditionId?: string;
-    id?: string;
-    label?: string;
-    name?: string;
-    value?: number;
-    durationType?: string;
-    durationValue?: number;
-    remainingRounds?: number;
-    source?: string;
-    note?: string;
-    createdAt?: string;
-    updatedAt?: string;
-  }[];
+  conditions?: unknown[];
   resources?: LegacyResource[];
   notes?: string;
   isHiddenFromPlayers?: boolean;
@@ -69,10 +56,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function cleanOptionalText(value: unknown): string | undefined {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
+  if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
   return trimmed ? trimmed : undefined;
 }
@@ -98,10 +82,7 @@ function prepareTokenForRoomStorage(token: StatTrackedToken): StatTrackedToken {
 
 function prepareStateForRoomStorage(state: StatTrackerState): StatTrackerState {
   const tokens = state.tokens
-    .filter(
-      (token) =>
-        !token.sourceItemId || token.isItemMetadataSynced !== true,
-    )
+    .filter((token) => !token.sourceItemId || token.isItemMetadataSynced !== true)
     .map(prepareTokenForRoomStorage);
 
   const knownTokenIds = new Set(state.tokens.map((token) => token.id));
@@ -183,7 +164,6 @@ function migrateLegacyEntity(entity: LegacyEntity) {
   for (const resource of entity.resources ?? []) {
     const max = typeof resource.max === "number" ? resource.max : undefined;
     const current = typeof resource.current === "number" ? resource.current : max ?? 0;
-
     trackers.push(
       createTracker({
         name: resource.name || "Ressource",
@@ -210,7 +190,6 @@ function migrateLegacyEntity(entity: LegacyEntity) {
 export function normalizeStatTrackerState(value: unknown): StatTrackerState {
   if (isV21State(value)) {
     const fallback = createEmptyStatTrackerState();
-
     return {
       id: typeof value.id === "string" ? value.id : fallback.id,
       tokens: value.tokens.map((token) => ({
@@ -227,9 +206,7 @@ export function normalizeStatTrackerState(value: unknown): StatTrackerState {
         isItemMetadataSynced: token.sourceItemId ? false : undefined,
       })),
       groups: value.groups,
-      presets: normalizeStatTrackerPresets(
-        isRecord(value) ? value.presets : undefined,
-      ),
+      presets: normalizeStatTrackerPresets(isRecord(value) ? value.presets : undefined),
       selectedTokenId: value.selectedTokenId,
       createdAt:
         typeof value.createdAt === "string" ? value.createdAt : fallback.createdAt,
@@ -241,7 +218,6 @@ export function normalizeStatTrackerState(value: unknown): StatTrackerState {
   if (isRecord(value) && Array.isArray((value as LegacyState).entities)) {
     const legacy = value as LegacyState;
     const fallback = createEmptyStatTrackerState();
-
     return {
       ...fallback,
       id: legacy.id ?? fallback.id,
@@ -257,7 +233,6 @@ export function normalizeStatTrackerState(value: unknown): StatTrackerState {
 
 function readStateFromMetadata(metadata: Metadata): StatTrackerState | null {
   const state = (metadata as StatMetadata)[ROOM_METADATA_KEYS.STAT_TRACKER_STATE];
-
   return state ? normalizeStatTrackerState(state) : null;
 }
 
@@ -279,21 +254,17 @@ export async function writeStatTrackerState(state: StatTrackerState): Promise<vo
     });
     return;
   }
-
   writeJson(STORAGE_KEYS.STAT_TRACKER_STATE, state);
 }
 
 export async function resetStatTrackerState(): Promise<StatTrackerState> {
   const state = createEmptyStatTrackerState();
-
   if (isObrReady()) {
     await OBR.room.setMetadata({ [ROOM_METADATA_KEYS.STAT_TRACKER_STATE]: state });
     return state;
   }
-
   removeItem(STORAGE_KEYS.STAT_TRACKER_STATE);
   writeJson(STORAGE_KEYS.STAT_TRACKER_STATE, state);
-
   return state;
 }
 
@@ -301,7 +272,6 @@ export function subscribeToStatTrackerState(
   onChange: (state: StatTrackerState) => void,
 ): () => void {
   if (!isObrReady()) return () => undefined;
-
   return OBR.room.onMetadataChange((metadata) => {
     const state = readStateFromMetadata(metadata);
     if (state) onChange(state);
