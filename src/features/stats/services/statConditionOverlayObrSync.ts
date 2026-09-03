@@ -40,8 +40,8 @@ export type StatConditionOverlaySyncResult = {
 };
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-/** 10% larger than the previous 0.08 badges while remaining compact. */
-const BADGE_SCALE = 0.088;
+/** 30% larger than the previous 0.088 badges. */
+const BADGE_SCALE = 0.1144;
 const MAX_BADGES_PER_RING = 12;
 const BADGE_RING_GAP = 1.08;
 /** Small visual correction based on the token crown observed in Owlbear. */
