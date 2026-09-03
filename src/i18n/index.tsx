@@ -5,6 +5,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import type { LanguagePreference } from "../core/config/appOptions";
 import { useAppPreferences } from "../core/preferences/AppPreferencesProvider";
 import dashboardEn from "../features/dashboard/i18n/en";
 import dashboardFr from "../features/dashboard/i18n/fr";
@@ -27,12 +28,12 @@ import type {
 } from "./types";
 
 type I18nContextValue = {
-  language: "fr" | "en";
-  setLanguage: (language: "fr" | "en") => void;
+  language: LanguagePreference;
+  setLanguage: (language: LanguagePreference) => void;
   t: TranslateFunction;
 };
 
-const dictionaries: Record<"fr" | "en", LocaleDictionary> = {
+const dictionaries: Record<LanguagePreference, LocaleDictionary> = {
   fr: {
     ...dashboardFr,
     ...debugFr,
@@ -65,14 +66,20 @@ function interpolate(template: string, params?: TranslationParams): string {
   });
 }
 
+export function translate(
+  language: LanguagePreference,
+  key: string,
+  params?: TranslationParams,
+): string {
+  const template = dictionaries[language][key] ?? dictionaries.fr[key] ?? key;
+  return interpolate(template, params);
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const { language, setLanguage } = useAppPreferences();
 
   const t = useCallback<TranslateFunction>(
-    (key, params) => {
-      const template = dictionaries[language][key] ?? dictionaries.fr[key] ?? key;
-      return interpolate(template, params);
-    },
+    (key, params) => translate(language, key, params),
     [language],
   );
 
