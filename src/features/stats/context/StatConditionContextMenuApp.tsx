@@ -40,6 +40,13 @@ import { getTrackerIcon } from "../services/statTrackerIcons";
 import "./statConditionContextMenu.css";
 
 type EditorState = { conditionId: string };
+type HoveredConditionState = {
+  conditionId: string;
+  top: number;
+  bottom: number;
+  left: number;
+  width: number;
+};
 type CompactSelectOption = { value: string; label: string; disabled?: boolean };
 
 type CompactSelectProps = {
@@ -320,7 +327,7 @@ export function StatConditionContextMenuApp() {
   const [initiative, setInitiative] = useState<InitiativeEncounterState | null>(null);
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<EditorState | null>(null);
-  const [hoveredConditionId, setHoveredConditionId] = useState<string | null>(null);
+  const [hoveredCondition, setHoveredCondition] = useState<HoveredConditionState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -350,7 +357,7 @@ export function StatConditionContextMenuApp() {
   useEffect(() => {
     setEditor(null);
     setQuery("");
-    setHoveredConditionId(null);
+    setHoveredCondition(null);
   }, [gameSystem]);
 
   useEffect(() => {
@@ -404,8 +411,8 @@ export function StatConditionContextMenuApp() {
   }, [definitions, query]);
 
   const hoveredDefinition = useMemo(
-    () => definitions.find((definition) => definition.id === hoveredConditionId),
-    [definitions, hoveredConditionId],
+    () => definitions.find((definition) => definition.id === hoveredCondition?.conditionId),
+    [definitions, hoveredCondition?.conditionId],
   );
 
   const mutate = useCallback(
@@ -470,6 +477,16 @@ export function StatConditionContextMenuApp() {
     );
   }
 
+  const hoverCardBelow = Boolean(hoveredCondition && hoveredCondition.top < 190);
+  const hoverCardStyle = hoveredCondition
+    ? {
+        left: hoveredCondition.left,
+        width: hoveredCondition.width,
+        top: hoverCardBelow ? hoveredCondition.bottom + 5 : hoveredCondition.top - 5,
+        transform: hoverCardBelow ? "none" : "translateY(-100%)",
+      }
+    : undefined;
+
   return (
     <main className="stat-condition-context">
       <div className="stat-condition-context__search-wrap">
@@ -484,7 +501,11 @@ export function StatConditionContextMenuApp() {
       </div>
 
       {hoveredDefinition ? (
-        <aside className="stat-condition-context__hover-card" aria-live="polite">
+        <aside
+          className="stat-condition-context__hover-card"
+          aria-live="polite"
+          style={hoverCardStyle}
+        >
           <strong>{hoveredDefinition.label}</strong>
           <span>{t("stats.conditions.hover.description")}</span>
           <p>{hoveredDefinition.description}</p>
@@ -514,10 +535,21 @@ export function StatConditionContextMenuApp() {
             <div
               className={`stat-condition-context__condition${active ? " is-active" : ""}`}
               key={definition.id}
-              onMouseEnter={() => setHoveredConditionId(definition.id)}
-              onMouseLeave={() => setHoveredConditionId((current) =>
-                current === definition.id ? null : current,
-              )}
+              onMouseEnter={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                setHoveredCondition({
+                  conditionId: definition.id,
+                  top: rect.top,
+                  bottom: rect.bottom,
+                  left: rect.left,
+                  width: rect.width,
+                });
+              }}
+              onMouseLeave={() =>
+                setHoveredCondition((current) =>
+                  current?.conditionId === definition.id ? null : current,
+                )
+              }
             >
               <button
                 className="stat-condition-context__condition-main"
