@@ -8,6 +8,7 @@ import {
   addSceneItemsToStatTracker,
   removeSceneItemsFromStatTracker,
 } from "../services/statContextMenuActions";
+import { preloadStatPngAssets } from "../services/statAssetPreload";
 import { setupStatConditionInitiativeSync } from "../services/statConditionInitiativeSync";
 import { createOrUpdateTokenConditionOverlay } from "../services/statConditionOverlayObrSync";
 import { createEmbeddedStatTokenMetadata } from "../services/statEmbeddedProfileActions";
@@ -154,6 +155,9 @@ export function setupStatBackground(): () => void {
   let unsubscribeInitiativeSync: (() => void) | undefined;
 
   OBR.onReady(() => {
+    // Start warming the PNG cache immediately, but never delay menu registration.
+    void preloadStatPngAssets();
+
     const iconUrl = `${import.meta.env.BASE_URL}icon.svg`;
     const conditionIconUrl = `${import.meta.env.BASE_URL}condition.svg`;
     const tokenFilters = getStatTokenContextKeyFilters();
