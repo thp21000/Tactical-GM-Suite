@@ -38,7 +38,7 @@ export type StatConditionOverlaySyncResult = {
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
 /** Taille de référence pour un token occupant une case de grille. */
-const BASE_BADGE_SCALE = 0.1144;
+const BASE_BADGE_SCALE = 0.1716;
 const MAX_BADGES_PER_RING = 12;
 const BADGE_RING_GAP = 1.08;
 /**
