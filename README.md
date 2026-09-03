@@ -22,14 +22,14 @@ Calendar et Loot Table ne doivent pas être intégrés tant qu’un chantier exp
 
 ## Langue et système de jeu
 
-Le Core possède désormais deux préférences globales persistantes :
+Le Core possède deux préférences globales persistantes :
 
-- **Langue** : Français (`fr`) ou English (`en`) ;
-- **Système** : D&D 5e (`DND5E`), Pathfinder 2e (`PF2E`) ou Générique (`GENERIC`).
+- **Langue** : Français (`fr`) ou English (`en`), avec drapeau dans le sélecteur ;
+- **Système** : D&D 5e (`DND5E`), Pathfinder 2e (`PF2E`) ou Générique (`GENERIC`), avec indicateur visuel explicite du système actif.
 
-La traduction de l’interface historique est progressive : les anciens écrans peuvent encore être en français. À partir de cette fondation, toute nouvelle chaîne visible ou chaîne reprise dans un chantier doit être fournie simultanément en FR et EN dans les fichiers i18n du module concerné.
+La traduction de l’interface historique est progressive. Toute nouvelle chaîne visible ou chaîne reprise dans un chantier doit être fournie simultanément en FR et EN dans les fichiers i18n du module concerné.
 
-Le système actif n’est consommé que par les modules qui en ont besoin. Conditions l’utilise déjà ; le futur module Loot Table devra réutiliser la même préférence globale. Le catalogue Générique est prévu dans l’architecture mais reste volontairement vide pour le moment.
+Le système actif n’est consommé que par les modules qui en ont besoin. Conditions l’utilise déjà ; le futur module Loot Table devra réutiliser la même préférence globale. Le catalogue Générique reste volontairement vide pour le moment.
 
 Voir [`docs/LOCALIZATION_AND_SYSTEMS.md`](docs/LOCALIZATION_AND_SYSTEMS.md).
 
@@ -47,7 +47,7 @@ Le module comprend notamment :
 - cinq types visuels de trackers ;
 - affichage automatique de trackers sélectionnés au-dessus du token ;
 - conditions indépendantes du fait qu’un token soit ou non ajouté au Stat Tracker ;
-- conditions affichées autour du token sous forme de badges/icônes ;
+- conditions affichées sur la couronne du token sous forme de petits badges/icônes ;
 - durées `Manuelle`, `Rounds`, `Rencontre` et `Repos` ;
 - synchronisation des durées `Rounds` / `Rencontre` avec le module Initiative ;
 - sous-menu **Conditions** permanent dans le clic droit Owlbear ;
@@ -95,11 +95,11 @@ La visibilité d’overlay continue de définir qui voit l’information sur la 
 
 ## Conditions
 
-Les conditions sont un sous-système distinct des trackers.
+Conditions est un sous-système distinct des trackers.
 
 Un token peut recevoir des conditions même s’il n’est pas ajouté au Stat Tracker. Dans ce cas, un profil embarqué dormant est utilisé uniquement pour conserver les données nécessaires.
 
-Le menu **Conditions** fournit une recherche, une liste d’états et une fenêtre d’ajout avec les paramètres applicables : niveau, durée et visibilité. Les conditions actives utilisent les nouvelles icônes canoniques et sont affichées autour du token.
+Le menu **Conditions** fournit une recherche et une fenêtre d’ajout avec les paramètres applicables : niveau, durée et visibilité. Au survol d’une condition, il affiche sa description et le résumé des règles correspondant au système actuellement sélectionné, dans la langue active.
 
 Le contenu proposé dépend du système global :
 
@@ -107,9 +107,21 @@ Le contenu proposé dépend du système global :
 - Pathfinder 2e Remaster : 42 conditions ;
 - Générique : catalogue préparé mais vide actuellement.
 
-Les anciennes conditions non canoniques déjà présentes restent conservées et peuvent être retirées depuis la section Conditions héritées. Elles ne sont plus proposées pour de nouveaux ajouts.
+Le runtime utilise exclusivement les IDs canoniques du nouveau catalogue. Il n’existe plus de catalogue historique ni d’alias de migration pour les anciennes conditions.
 
-Les effets mécaniques décrits dans le catalogue restent des métadonnées préparatoires : Tactical GM Suite n’automatise pas actuellement toutes les règles de D&D 5e ou PF2e.
+Plusieurs conditions peuvent être actives simultanément sur le même token. Chaque ligne active reste visuellement marquée ; cliquer sur une condition active la désactive, tandis que le bouton d’édition permet de modifier uniquement celle-ci.
+
+### Séparation affichage Stats / Conditions
+
+Les deux affichages sont indépendants :
+
+- **Stats** lit uniquement `token.trackers` et produit ses propres labels/overlays ;
+- **Conditions** lit uniquement `token.conditions` et produit ses propres badges ;
+- les deux systèmes ont des clés de métadonnées Owlbear, des types et des services de synchronisation séparés.
+
+Les badges Conditions sont dimensionnés à un tiers de leur ancienne taille et le premier anneau est centré directement sur le bord de la couronne du token.
+
+Les effets mécaniques décrits dans le catalogue restent informatifs : Tactical GM Suite n’automatise pas actuellement toutes les règles de D&D 5e ou PF2e.
 
 ## Installation Owlbear
 
@@ -169,7 +181,7 @@ public/
   manifest.json
 ```
 
-Stats possède en plus un entrypoint background permanent et deux vues embarquées utilisées par les menus contextuels Owlbear :
+Stats possède un entrypoint background permanent et deux vues embarquées utilisées par les menus contextuels Owlbear :
 
 - `?view=stats-conditions`
 - `?view=stats-trackers`
@@ -183,15 +195,6 @@ Stats possède en plus un entrypoint background permanent et deux vues embarqué
 - [`docs/stats/README.md`](docs/stats/README.md) : index technique/visuel du système Stats.
 - [`src/features/stats/README.md`](src/features/stats/README.md) : carte du code Stats et état d’implémentation.
 
-## Versions déclarées
-
-Au point documentaire du **2 septembre 2026** :
-
-- `package.json` : `0.1.0`
-- `public/manifest.json` : `0.2.38`
-
-Le dépôt contient également des commits-jalons nommés **`Version 0.3.00`** puis **`Version 0.3.01`**. Les métadonnées `package.json` et `manifest.json` ne sont donc pas encore harmonisées avec ces noms de jalon ; ne pas déduire automatiquement une version publiée à partir du seul message de commit.
-
 ## Principes du projet
 
 - garder les modules séparés ;
@@ -201,5 +204,6 @@ Le dépôt contient également des commits-jalons nommés **`Version 0.3.00`** p
 - conserver les données Stats lisibles et exploitables par d’autres modules ;
 - les nouveaux textes utilisateur doivent être ajoutés en FR et EN ;
 - les modules dépendants d’un système doivent lire la préférence globale plutôt que créer leur propre réglage ;
-- privilégier des interactions Owlbear courtes, robustes et utilisables en partie ;
+- ne jamais mélanger l’overlay Stats et l’overlay Conditions ;
+- une condition active ne doit jamais désactiver automatiquement une autre condition ;
 - lancer `npm run typecheck` et `npm run build` après toute modification de code.
