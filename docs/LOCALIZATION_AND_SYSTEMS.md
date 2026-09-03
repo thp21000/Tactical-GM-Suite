@@ -4,7 +4,7 @@
 
 ## Objectif
 
-Tactical GM Suite possède désormais deux préférences globales indépendantes :
+Tactical GM Suite possède deux préférences globales indépendantes :
 
 - la langue de l'interface ;
 - le système de jeu actif.
@@ -17,17 +17,17 @@ Identifiants stables :
 
 ```text
 fr
- en
+en
 ```
 
 Valeurs UI :
 
 ```text
 fr -> Français
- en -> English
+en -> English
 ```
 
-La langue est persistée dans les préférences locales de Tactical GM Suite.
+Le sélecteur affiche également le drapeau correspondant. La langue est persistée dans les préférences locales de Tactical GM Suite.
 
 La migration de l'interface historique n'est pas faite en bloc. Les écrans existants peuvent donc encore contenir du français tant qu'un chantier de traduction ne les a pas repris.
 
@@ -48,17 +48,7 @@ Le registre central est :
 src/i18n/index.tsx
 ```
 
-Les fichiers déjà préparés couvrent :
-
-- Dashboard ;
-- Initiative ;
-- Range ;
-- Modules ;
-- Settings ;
-- Stats ;
-- Debug.
-
-Les dictionnaires vides sont volontaires : ils servent de point d'entrée pour la migration progressive et ne signifient pas que le module est déjà traduit.
+Les fichiers déjà préparés couvrent Dashboard, Initiative, Range, Modules, Settings, Stats et Debug.
 
 ## Systèmes supportés
 
@@ -70,76 +60,59 @@ PF2E
 GENERIC
 ```
 
-Le choix est global mais son utilisation est opt-in par module.
+Le choix est global mais son utilisation est opt-in par module. Le système actuellement actif possède un indicateur visuel explicite dans Paramètres.
 
 ### D&D 5e
 
-La base Conditions actuelle cible D&D 5e 2014 / SRD 5.1, conformément à `docs/stats/CONDITIONS_MASTER_CATALOG_V1.md`.
+La base Conditions cible D&D 5e 2014 / SRD 5.1, conformément à `docs/stats/CONDITIONS_MASTER_CATALOG_V1.md`.
 
 ### Pathfinder 2e
 
-La base Conditions actuelle cible Pathfinder 2e Remaster / Player Core, conformément au même catalogue maître.
+La base Conditions cible Pathfinder 2e Remaster / Player Core, conformément au même catalogue maître.
 
 ### Générique
 
-Le système `GENERIC` est un vrai identifiant de préférence et possède son entrée dans l'interface et dans l'architecture de catalogue.
-
-Son catalogue Conditions est volontairement vide pour le moment. Aucun contenu générique ne doit être inventé implicitement.
+Le système `GENERIC` est un vrai identifiant de préférence. Son catalogue Conditions est volontairement vide pour le moment.
 
 ## Préférence par défaut
-
-Pour préserver au mieux le comportement de travail actuel pendant la migration du module Conditions :
 
 ```text
 language   = fr
 gameSystem = PF2E
 ```
 
-Les anciennes préférences qui ne possèdent pas encore `gameSystem` sont normalisées vers `PF2E` sans casser les autres réglages.
-
 ## Stockage et partage entre surfaces Owlbear
 
-La source locale est :
+La source locale est `src/core/storage/preferences.ts` et le provider React global est `src/core/preferences/AppPreferencesProvider.tsx`.
 
-```text
-src/core/storage/preferences.ts
-```
-
-Le provider React global est :
-
-```text
-src/core/preferences/AppPreferencesProvider.tsx
-```
-
-Il enveloppe :
-
-- le popover principal ;
-- le sous-menu Conditions ;
-- le sous-menu Stats rapide.
-
-Les différentes iframes Owlbear utilisent la même clé de stockage et écoutent l'événement `storage`. Une modification dans Paramètres peut donc être récupérée par les autres surfaces sans créer une préférence propre à Stats.
-
-Le background non-React peut lire directement `readPreferences()` lorsqu'il doit appliquer une préférence.
+Il enveloppe le popover principal, le sous-menu Conditions et le sous-menu Stats rapide. Les différentes iframes Owlbear utilisent la même clé de stockage et écoutent l'événement `storage`.
 
 ## Conditions
 
-Conditions est le premier module réellement dépendant du système de jeu.
-
-Le catalogue runtime système-aware est :
+Le catalogue runtime dépendant du système est :
 
 ```text
 src/features/stats/services/statConditionCatalog.ts
 ```
 
-Il est dérivé du catalogue maître documentaire et expose :
+Il expose :
 
 ```text
-DND5E  -> 15 conditions
-PF2E   -> 42 conditions
+DND5E   -> 15 conditions
+PF2E    -> 42 conditions
 GENERIC -> 0 condition actuellement
 ```
 
-Les 11 concepts partagés D&D5e/PF2e gardent un ID canonique commun, mais leur modèle de valeur peut différer selon le système. Par exemple `frightened` et `stunned` n'ont pas la même intensité dans les deux règles.
+Les 11 concepts partagés D&D5e/PF2e gardent un ID canonique commun, mais leur modèle de valeur et leur résumé de règles restent spécifiques au système.
+
+Les descriptions et résumés de règles localisés sont placés dans :
+
+```text
+src/features/stats/i18n/conditions.fr.ts
+src/features/stats/i18n/conditions.en.ts
+```
+
+Le menu Conditions affiche ces informations au survol selon la langue et le système actuellement sélectionnés.
 
 Les assets sont indépendants de la langue et utilisent les IDs canoniques :
 
@@ -147,37 +120,32 @@ Les assets sont indépendants de la langue et utilisent les IDs canoniques :
 src/features/stats/assets/condition/Icon/
 ```
 
-## Compatibilité des anciennes sauvegardes
+### Modèle canonique uniquement
 
-La migration est non destructive.
+Le runtime ne contient plus de catalogue de conditions historique ni d'alias de migration. Le stockage accepte uniquement les IDs canoniques présents dans `statConditionCatalog.ts`.
 
-Les anciens IDs français utilisés par `statConditions.ts` sont reconnus par des aliases vers les nouveaux IDs canoniques. Exemple :
+Chaque condition active est indépendante : ajouter ou modifier une condition ne désactive jamais les autres conditions du token.
 
-```text
-effraye -> frightened
-aveugle -> blinded
-blesse  -> wounded
-```
+### Affichage sur token
 
-Une ancienne condition reste lisible. Lorsqu'elle est modifiée via la nouvelle interface, elle est réécrite sous son ID canonique.
+Conditions et Stats possèdent deux systèmes d'affichage séparés :
 
-Changer de système ne supprime jamais les conditions déjà stockées sur le token. Les conditions qui n'appartiennent pas au système actif sont simplement absentes de la liste de sélection jusqu'à ce que le système correspondant soit de nouveau choisi.
+- Stats produit uniquement les overlays issus de `token.trackers` ;
+- Conditions produit uniquement les badges issus de `token.conditions` ;
+- chaque système possède sa propre clé de métadonnées Owlbear et son propre service de synchronisation.
+
+Les badges Conditions sont petits et centrés sur la couronne du token. Le premier anneau suit directement le bord du token et un second anneau n'est créé que si le nombre de conditions dépasse la capacité du premier.
 
 ## Futur Loot Table
 
 Quand Loot Table sera intégré à Tactical GM Suite, il devra consommer `gameSystem` depuis le Core au lieu de créer son propre sélecteur global.
 
-Il pourra conserver ses données et règles spécifiques par système, mais l'identité du système actif doit rester commune à la suite.
-
-## Non-objectifs de ce chantier
+## Non-objectifs actuels
 
 Ce socle ne signifie pas :
 
 - traduction immédiate de tout l'addon existant ;
-- traduction automatique du contenu historique ;
 - ajout de contenu Conditions générique ;
 - intégration de Loot Table ;
 - ajout de D&D 2024 ;
-- automatisation mécanique des effets de conditions.
-
-Ces évolutions nécessitent des chantiers séparés.
+- automatisation mécanique complète des effets de conditions.
