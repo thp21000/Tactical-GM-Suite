@@ -6,7 +6,7 @@ import type {
 import { getTrackerIcon } from "./statTrackerIcons";
 import { getTrackerDisplayValue } from "./statTrackers";
 
-export type StatTokenDisplayItemSource = "tracker" | "condition";
+export type StatTokenDisplayItemSource = "tracker";
 
 export type StatTokenDisplayItemMode = "badge" | "icon" | "bar" | "value";
 
@@ -32,7 +32,6 @@ function getTrackerDisplayMode(tracker: StatTracker): StatTokenDisplayItemMode {
 
 export function getTrackerTokenDisplayLabel(tracker: StatTracker): string {
   if (tracker.visualType === "icon") return tracker.name;
-
   return `${tracker.name} ${getTrackerDisplayValue(tracker)}`;
 }
 
@@ -69,9 +68,8 @@ export function getTrackerTokenDisplayItem(
 }
 
 /**
- * Text overlays are tracker-only.
- * Conditions use their dedicated PNG ring overlay and must never be mixed into
- * the textual Label shown above the token.
+ * Stats token display is tracker-only by design.
+ * Conditions have their own metadata key, scene items and synchronization service.
  */
 export function getTokenDisplayItems(token: StatTrackedToken): StatTokenDisplayItem[] {
   return token.trackers
@@ -91,8 +89,6 @@ export function getTokenDisplayItemsByVisibility(
   token: StatTrackedToken,
 ): StatTokenDisplayItemsByVisibility {
   const items = getTokenDisplayItems(token);
-
-  // Security boundary: private and GM items are never promoted into public output.
   return {
     public: items.filter((item) => item.visibility === "public"),
     private: items.filter((item) => item.visibility === "private"),
@@ -121,6 +117,5 @@ export function getGmTokenDisplayItems(
 export function getTokenDisplayPreviewSummary(token: StatTrackedToken): string {
   const items = getTokenDisplayItems(token);
   if (items.length === 0) return "Aucun tracker affiché sur token";
-
   return `${items.length} tracker${items.length > 1 ? "s" : ""}`;
 }
