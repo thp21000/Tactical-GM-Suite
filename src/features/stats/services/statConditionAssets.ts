@@ -60,3 +60,8 @@ export function hasConditionAsset(
 export function getConditionAssetNames(): string[] {
   return [...CONDITION_ASSET_BY_ID.keys()].sort((a, b) => a.localeCompare(b));
 }
+
+/** Absolute URLs of the canonical condition PNGs, useful for non-blocking preload. */
+export function getConditionAssetUrls(): string[] {
+  return [...new Set([...CONDITION_ASSET_BY_ID.values()].map(toAbsoluteAssetUrl))];
+}
