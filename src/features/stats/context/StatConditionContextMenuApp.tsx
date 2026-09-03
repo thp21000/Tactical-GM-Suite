@@ -22,6 +22,8 @@ import type {
 import { getConditionAssetUrl } from "../services/statConditionAssets";
 import {
   getSystemStatConditionDefinitions,
+  normalizeStatConditionCatalogId,
+  STAT_CONDITION_CATALOG,
   type SystemStatConditionDefinition,
 } from "../services/statConditionCatalog";
 import {
@@ -461,6 +463,15 @@ export function StatConditionContextMenuApp() {
     );
   }, [definitions, query]);
 
+  const legacyActiveConditions = useMemo(() => {
+    if (!token) return [];
+    const canonicalIds = new Set(STAT_CONDITION_CATALOG.map((entry) => entry.id));
+    return token.conditions.filter(
+      (condition) =>
+        !canonicalIds.has(normalizeStatConditionCatalogId(condition.conditionId)),
+    );
+  }, [token]);
+
   const mutate = useCallback(
     async (update: (current: StatTrackedToken) => StatTrackedToken) => {
       if (!itemId) return;
@@ -634,6 +645,69 @@ export function StatConditionContextMenuApp() {
               ? t("stats.conditions.generic.empty")
               : t("stats.conditions.noResult")}
           </p>
+        ) : null}
+
+        {legacyActiveConditions.length > 0 ? (
+          <div className="stat-condition-context__legacy">
+            <p className="stat-condition-context__legacy-title">
+              {t("stats.conditions.legacy.title")}
+            </p>
+            <p className="stat-condition-context__legacy-help">
+              {t("stats.conditions.legacy.help")}
+            </p>
+
+            {legacyActiveConditions.map((active) => {
+              const assetUrl = getConditionAssetUrl(active);
+              const fallback = getTrackerIcon(active.iconId);
+              const durationListText = getConditionDurationListText(active, t);
+              const title = `${getConditionDisplayName(active)} · ${getConditionDurationText(active, t)}`;
+
+              return (
+                <div
+                  className="stat-condition-context__condition is-active"
+                  key={active.id}
+                  title={title}
+                >
+                  <button
+                    className="stat-condition-context__condition-main"
+                    disabled={busy}
+                    type="button"
+                    onClick={() => {
+                      void mutate((current) =>
+                        removeQuickCondition(current, active.conditionId),
+                      );
+                    }}
+                  >
+                    <span
+                      className="stat-condition-context__condition-icon"
+                      aria-hidden="true"
+                    >
+                      {assetUrl ? (
+                        <img src={assetUrl} alt="" />
+                      ) : fallback.src ? (
+                        <img src={fallback.src} alt="" />
+                      ) : (
+                        fallback.symbol
+                      )}
+                    </span>
+                    <span className="stat-condition-context__condition-label">
+                      {active.label}
+                      {typeof active.value === "number" ? (
+                        <span className="stat-condition-context__condition-level">
+                          {` + ${active.value}`}
+                        </span>
+                      ) : null}
+                    </span>
+                    {durationListText ? (
+                      <span className="stat-condition-context__condition-duration">
+                        {durationListText}
+                      </span>
+                    ) : null}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         ) : null}
       </div>
     </main>
