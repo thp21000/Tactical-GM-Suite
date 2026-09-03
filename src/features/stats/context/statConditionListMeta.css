@@ -16,13 +16,13 @@
 }
 
 .stat-condition-context__hover-card {
-  position: absolute;
-  z-index: 40;
-  top: 48px;
-  left: 7px;
-  right: 7px;
+  position: fixed;
+  z-index: 80;
   display: grid;
   gap: 4px;
+  max-width: calc(100vw - 14px);
+  max-height: calc(100vh - 14px);
+  overflow-y: auto;
   padding: 10px 11px;
   border: 1px solid color-mix(in srgb, var(--tgm-obr-accent, #b995ff) 34%, var(--tgm-obr-border, rgba(255, 255, 255, 0.1)));
   border-radius: 8px;
