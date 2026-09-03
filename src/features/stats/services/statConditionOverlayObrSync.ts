@@ -1,12 +1,9 @@
 import OBR, {
   buildImage,
-  buildLabel,
   isImage,
-  isLabel,
   type BoundingBox,
   type Image,
   type Item,
-  type Label,
   type Vector2,
 } from "@owlbear-rodeo/sdk";
 import { EXTENSION_ID } from "../../../core/constants/ids";
@@ -40,13 +37,15 @@ export type StatConditionOverlaySyncResult = {
 };
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-/** 30% larger than the previous 0.088 badges. */
 const BADGE_SCALE = 0.1144;
 const MAX_BADGES_PER_RING = 12;
 const BADGE_RING_GAP = 1.08;
-/** Small visual correction based on the token crown observed in Owlbear. */
-const RING_CENTER_X_OFFSET_RATIO = -0.035;
-const LEVEL_LABEL_FONT_SIZE = 8;
+/**
+ * Place le centre des médaillons légèrement à l'extérieur du rayon du token.
+ * Cela garde les icônes visuellement posées sur la couronne sans les faire
+ * rentrer trop profondément dans le portrait.
+ */
+const FIRST_RING_RADIAL_OFFSET_BADGE_RATIO = 0.22;
 
 type BadgeRole = "icon" | "level";
 type ConditionBadgeMetadata = {
@@ -70,7 +69,7 @@ type BadgePlacement = {
   visibility: StatTrackerVisibility;
 };
 
-type DesiredBadgeItem = Image | Label;
+type DesiredBadgeItem = Image;
 
 function createResult(
   action: StatConditionOverlayAction,
@@ -109,6 +108,8 @@ function readMetadata(item: Item): ConditionBadgeMetadata | undefined {
     sourceItemId: value.sourceItemId,
     conditionId: value.conditionId,
     visibility: value.visibility,
+    // Keep reading the old level role so a sync can delete stale level labels
+    // already present in a room after this release.
     role: value.role === "level" ? "level" : "icon",
     updatedAt: value.updatedAt,
   };
@@ -184,11 +185,13 @@ function getPlacementForIndex(
   const angle = (angleDegrees * Math.PI) / 180;
   const badgeDiameter = sceneDpi * BADGE_SCALE;
   const tokenRadius = Math.max(bounds.width, bounds.height) / 2;
-  const radius = tokenRadius + ringIndex * badgeDiameter * BADGE_RING_GAP;
-  const centerX = bounds.center.x + tokenRadius * RING_CENTER_X_OFFSET_RATIO;
+  const radius =
+    tokenRadius +
+    badgeDiameter * FIRST_RING_RADIAL_OFFSET_BADGE_RATIO +
+    ringIndex * badgeDiameter * BADGE_RING_GAP;
 
   return {
-    x: centerX + Math.cos(angle) * radius,
+    x: bounds.center.x + Math.cos(angle) * radius,
     y: bounds.center.y + Math.sin(angle) * radius,
   };
 }
@@ -217,7 +220,6 @@ function createBadgeId(
 function createBadgeMetadata(
   token: StatTrackedToken,
   condition: StatTokenCondition,
-  role: BadgeRole,
 ): ConditionBadgeMetadata {
   if (!token.sourceItemId) throw new Error("Token Owlbear non lié.");
   return {
@@ -226,7 +228,7 @@ function createBadgeMetadata(
     sourceItemId: token.sourceItemId,
     conditionId: condition.conditionId,
     visibility: condition.visibility ?? "public",
-    role,
+    role: "icon",
     updatedAt: condition.updatedAt,
   };
 }
@@ -269,45 +271,7 @@ function buildConditionBadgeImage(
     .disableAutoZIndex(true)
     .disableAttachmentBehavior(["COPY", "ROTATION"])
     .metadata({
-      [STAT_CONDITION_OVERLAY_METADATA_KEY]: createBadgeMetadata(token, condition, "icon"),
-    })
-    .build();
-}
-
-function buildConditionLevelLabel(
-  token: StatTrackedToken,
-  placement: BadgePlacement,
-  sceneDpi: number,
-): Label | null {
-  const { condition, position } = placement;
-  if (!token.sourceItemId || typeof condition.value !== "number") return null;
-  const badgeDiameter = sceneDpi * BADGE_SCALE;
-
-  return buildLabel()
-    .id(createBadgeId(token, condition, "level"))
-    .name(getConditionTooltip(condition))
-    .plainText(String(condition.value))
-    .fontSize(LEVEL_LABEL_FONT_SIZE)
-    .fontWeight(800)
-    .padding(1)
-    .fillColor("#ffffff")
-    .backgroundColor("#242333")
-    .backgroundOpacity(0.96)
-    .cornerRadius(6)
-    .position({
-      x: position.x + badgeDiameter * 0.28,
-      y: position.y + badgeDiameter * 0.28,
-    })
-    .rotation(0)
-    .scale({ x: 1, y: 1 })
-    .layer("ATTACHMENT")
-    .attachedTo(token.sourceItemId)
-    .locked(true)
-    .disableHit(true)
-    .disableAutoZIndex(true)
-    .disableAttachmentBehavior(["COPY", "ROTATION"])
-    .metadata({
-      [STAT_CONDITION_OVERLAY_METADATA_KEY]: createBadgeMetadata(token, condition, "level"),
+      [STAT_CONDITION_OVERLAY_METADATA_KEY]: createBadgeMetadata(token, condition),
     })
     .build();
 }
@@ -315,14 +279,11 @@ function buildConditionLevelLabel(
 function buildDesiredItems(
   token: StatTrackedToken,
   placements: BadgePlacement[],
-  sceneDpi: number,
 ): DesiredBadgeItem[] {
   return placements.flatMap((placement) => {
     const assetUrl = getConditionAssetUrl(placement.condition);
     if (!assetUrl) return [];
-    const image = buildConditionBadgeImage(token, placement, assetUrl);
-    const level = buildConditionLevelLabel(token, placement, sceneDpi);
-    return level ? [image, level] : [image];
+    return [buildConditionBadgeImage(token, placement, assetUrl)];
   });
 }
 
@@ -338,48 +299,25 @@ async function updateExistingItem(
   existing: Item,
   desired: DesiredBadgeItem,
 ): Promise<boolean> {
-  if (isImage(existing) && isImage(desired)) {
-    await api.updateItems([existing], (drafts) => {
-      const [draft] = drafts;
-      if (!draft || !isImage(draft)) return;
-      draft.name = desired.name;
-      draft.image = desired.image;
-      draft.grid = desired.grid;
-      draft.position = desired.position;
-      draft.rotation = desired.rotation;
-      draft.scale = desired.scale;
-      draft.layer = desired.layer;
-      draft.attachedTo = desired.attachedTo;
-      draft.locked = desired.locked;
-      draft.disableAutoZIndex = desired.disableAutoZIndex;
-      draft.disableAttachmentBehavior = desired.disableAttachmentBehavior;
-      draft.metadata = desired.metadata;
-    });
-    return true;
-  }
+  if (!isImage(existing) || !isImage(desired)) return false;
 
-  if (isLabel(existing) && isLabel(desired)) {
-    await api.updateItems([existing], (drafts) => {
-      const [draft] = drafts;
-      if (!draft || !isLabel(draft)) return;
-      draft.name = desired.name;
-      draft.position = desired.position;
-      draft.rotation = desired.rotation;
-      draft.scale = desired.scale;
-      draft.layer = desired.layer;
-      draft.attachedTo = desired.attachedTo;
-      draft.locked = desired.locked;
-      draft.disableHit = desired.disableHit;
-      draft.disableAutoZIndex = desired.disableAutoZIndex;
-      draft.disableAttachmentBehavior = desired.disableAttachmentBehavior;
-      draft.text = desired.text;
-      draft.style = desired.style;
-      draft.metadata = desired.metadata;
-    });
-    return true;
-  }
-
-  return false;
+  await api.updateItems([existing], (drafts) => {
+    const [draft] = drafts;
+    if (!draft || !isImage(draft)) return;
+    draft.name = desired.name;
+    draft.image = desired.image;
+    draft.grid = desired.grid;
+    draft.position = desired.position;
+    draft.rotation = desired.rotation;
+    draft.scale = desired.scale;
+    draft.layer = desired.layer;
+    draft.attachedTo = desired.attachedTo;
+    draft.locked = desired.locked;
+    draft.disableAutoZIndex = desired.disableAutoZIndex;
+    draft.disableAttachmentBehavior = desired.disableAttachmentBehavior;
+    draft.metadata = desired.metadata;
+  });
+  return true;
 }
 
 async function syncApiItems(
@@ -438,7 +376,6 @@ export async function createOrUpdateTokenConditionOverlay(
     const desired = buildDesiredItems(
       token,
       createPlacements(token, bounds, sceneDpi),
-      sceneDpi,
     );
     const publicItems = desired.filter(
       (item) => readMetadata(item)?.visibility === "public",
@@ -452,7 +389,6 @@ export async function createOrUpdateTokenConditionOverlay(
     ]);
 
     const created = publicResult.created + localResult.created;
-    const updated = publicResult.updated + localResult.updated;
     const deleted = publicResult.deleted + localResult.deleted;
     const conditionCount = token.conditions.length;
 
