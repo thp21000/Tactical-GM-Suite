@@ -1,3 +1,5 @@
+import { readPreferences } from "../../../core/storage/preferences";
+import { translate } from "../../../i18n";
 import type { TranslateFunction } from "../../../i18n/types";
 import type {
   StatConditionDurationType,
@@ -25,6 +27,12 @@ function createId(prefix: string): string {
 
 function now(): string {
   return new Date().toISOString();
+}
+
+function getTranslator(t?: TranslateFunction): TranslateFunction {
+  if (t) return t;
+  const { language } = readPreferences();
+  return (key, params) => translate(language, key, params);
 }
 
 function normalizePositiveInteger(
@@ -133,8 +141,9 @@ export function removeQuickCondition(
   };
 }
 
-function getRoundText(rounds: number, t: TranslateFunction): string {
-  return t(
+function getRoundText(rounds: number, t?: TranslateFunction): string {
+  const translateText = getTranslator(t);
+  return translateText(
     rounds === 1
       ? "stats.conditions.duration.roundOne"
       : "stats.conditions.duration.roundMany",
@@ -144,34 +153,36 @@ function getRoundText(rounds: number, t: TranslateFunction): string {
 
 export function getConditionDurationText(
   condition: StatTokenCondition,
-  t: TranslateFunction,
+  t?: TranslateFunction,
 ): string {
+  const translateText = getTranslator(t);
   if (condition.durationType === "rounds") {
     const rounds = condition.remainingRounds ?? condition.durationValue ?? 0;
-    return getRoundText(rounds, t);
+    return getRoundText(rounds, translateText);
   }
   if (condition.durationType === "encounter") {
-    return t("stats.conditions.duration.untilEncounterEnd");
+    return translateText("stats.conditions.duration.untilEncounterEnd");
   }
   if (condition.durationType === "rest") {
-    return t("stats.conditions.duration.untilRest");
+    return translateText("stats.conditions.duration.untilRest");
   }
-  return t("stats.conditions.duration.manualText");
+  return translateText("stats.conditions.duration.manualText");
 }
 
 export function getConditionDurationListText(
   condition: StatTokenCondition,
-  t: TranslateFunction,
+  t?: TranslateFunction,
 ): string | undefined {
+  const translateText = getTranslator(t);
   if (condition.durationType === "rounds") {
     const rounds = condition.remainingRounds ?? condition.durationValue ?? 0;
-    return getRoundText(rounds, t);
+    return getRoundText(rounds, translateText);
   }
   if (condition.durationType === "encounter") {
-    return t("stats.conditions.duration.encounter");
+    return translateText("stats.conditions.duration.encounter");
   }
   if (condition.durationType === "rest") {
-    return t("stats.conditions.duration.rest");
+    return translateText("stats.conditions.duration.rest");
   }
   return undefined;
 }
