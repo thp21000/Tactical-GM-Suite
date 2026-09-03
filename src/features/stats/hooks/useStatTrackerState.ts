@@ -9,14 +9,6 @@ import type {
   StatTrackerState,
 } from "../statTypes";
 import {
-  addConditionToToken as appendConditionToToken,
-  clearTokenConditionDuration as clearConditionDurationFromToken,
-  decrementTokenConditionDuration as decrementDurationFromToken,
-  removeConditionFromToken as deleteConditionFromToken,
-  type StatTokenConditionInput,
-  updateTokenCondition as patchConditionOnToken,
-} from "../services/statConditions";
-import {
   addTrackerToPreset,
   createTrackersFromPreset,
   getMissingPresetTrackerInputs,
@@ -209,11 +201,6 @@ export function useStatTrackerState(isObrReady: boolean) {
       const nextTokens = current.tokens.filter((token) => {
         if (!token.sourceItemId) return true;
         if (embeddedById.has(token.id)) return false;
-
-        // Profiles already confirmed in item metadata belong to the previous
-        // scene once no matching item exists in the current scene, so they can
-        // leave the room cache safely. Unsynced legacy profiles are retained
-        // until a scene containing them is opened and migrated.
         return token.isItemMetadataSynced !== true;
       });
 
@@ -390,49 +377,6 @@ export function useStatTrackerState(isObrReady: boolean) {
     [mapToken],
   );
 
-  const addConditionToToken = useCallback(
-    (tokenId: string, conditionId: string, value?: number) => {
-      mapToken(tokenId, (token) => appendConditionToToken(token, conditionId, value));
-    },
-    [mapToken],
-  );
-
-  const removeConditionFromToken = useCallback(
-    (tokenId: string, tokenConditionId: string) => {
-      mapToken(tokenId, (token) =>
-        deleteConditionFromToken(token, tokenConditionId),
-      );
-    },
-    [mapToken],
-  );
-
-  const updateConditionOnToken = useCallback(
-    (tokenId: string, tokenConditionId: string, input: StatTokenConditionInput) => {
-      mapToken(tokenId, (token) =>
-        patchConditionOnToken(token, tokenConditionId, input),
-      );
-    },
-    [mapToken],
-  );
-
-  const decrementConditionDuration = useCallback(
-    (tokenId: string, tokenConditionId: string) => {
-      mapToken(tokenId, (token) =>
-        decrementDurationFromToken(token, tokenConditionId),
-      );
-    },
-    [mapToken],
-  );
-
-  const clearConditionDuration = useCallback(
-    (tokenId: string, tokenConditionId: string) => {
-      mapToken(tokenId, (token) =>
-        clearConditionDurationFromToken(token, tokenConditionId),
-      );
-    },
-    [mapToken],
-  );
-
   const applyPresetToToken = useCallback(
     (tokenId: string) => {
       setState((current) => {
@@ -601,20 +545,16 @@ export function useStatTrackerState(isObrReady: boolean) {
   }, [groups, trackedTokens]);
 
   return {
-    addConditionToToken,
     addItems,
     addToken,
     addTracker,
     addTrackerToPreset: addTrackerToPresetForType,
     applyPresetToToken,
     changeTrackerValue,
-    clearConditionDuration,
-    decrementConditionDuration,
     displayGroups,
     groups,
     hydrateSceneItems,
     presets,
-    removeConditionFromToken,
     removeItems,
     removeToken,
     removeTracker,
@@ -627,7 +567,6 @@ export function useStatTrackerState(isObrReady: boolean) {
     summary,
     toggleTracker,
     tokens,
-    updateConditionOnToken,
     updateToken,
     updateTracker,
   };
