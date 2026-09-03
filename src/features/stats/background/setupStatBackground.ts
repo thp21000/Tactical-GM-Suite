@@ -8,7 +8,9 @@ import {
   addSceneItemsToStatTracker,
   removeSceneItemsFromStatTracker,
 } from "../services/statContextMenuActions";
+import { preloadStatPngAssets } from "../services/statAssetPreload";
 import { setupStatConditionInitiativeSync } from "../services/statConditionInitiativeSync";
+import { setupStatConditionOverlayAutoSync } from "../services/statConditionOverlayAutoSync";
 import { createOrUpdateTokenConditionOverlay } from "../services/statConditionOverlayObrSync";
 import { createEmbeddedStatTokenMetadata } from "../services/statEmbeddedProfileActions";
 import {
@@ -152,8 +154,12 @@ async function registerStatsQuickContextMenu(
 export function setupStatBackground(): () => void {
   let unsubscribeSceneReady: (() => void) | undefined;
   let unsubscribeInitiativeSync: (() => void) | undefined;
+  let unsubscribeConditionOverlaySync: (() => void) | undefined;
 
   OBR.onReady(() => {
+    // Start warming the PNG cache immediately, but never delay menu registration.
+    void preloadStatPngAssets();
+
     const iconUrl = `${import.meta.env.BASE_URL}icon.svg`;
     const conditionIconUrl = `${import.meta.env.BASE_URL}condition.svg`;
     const tokenFilters = getStatTokenContextKeyFilters();
@@ -230,8 +236,12 @@ export function setupStatBackground(): () => void {
 
     void syncCurrentSceneConditionBadges();
     void syncCurrentScenePlayerEditMetadata();
+
     unsubscribeInitiativeSync?.();
     unsubscribeInitiativeSync = setupStatConditionInitiativeSync();
+
+    unsubscribeConditionOverlaySync?.();
+    unsubscribeConditionOverlaySync = setupStatConditionOverlayAutoSync();
 
     unsubscribeSceneReady?.();
     unsubscribeSceneReady = OBR.scene.onReadyChange((ready) => {
@@ -244,6 +254,7 @@ export function setupStatBackground(): () => void {
   return () => {
     unsubscribeSceneReady?.();
     unsubscribeInitiativeSync?.();
+    unsubscribeConditionOverlaySync?.();
     void OBR.contextMenu.remove(STAT_TRACKER_CONTEXT_MENU_ID);
     void OBR.contextMenu.remove(STAT_STATS_CONTEXT_MENU_ID);
     void OBR.contextMenu.remove(STAT_CONDITION_CONTEXT_MENU_ID);

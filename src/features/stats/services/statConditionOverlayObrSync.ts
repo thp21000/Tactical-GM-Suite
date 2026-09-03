@@ -40,11 +40,13 @@ export type StatConditionOverlaySyncResult = {
 };
 
 const CONDITION_IMAGE_LOGICAL_SIZE = 1024;
-/** One third of the previous 0.24 size: condition badges are deliberately tiny. */
-const BADGE_SCALE = 0.08;
+/** 10% larger than the previous 0.08 badges while remaining compact. */
+const BADGE_SCALE = 0.088;
 const MAX_BADGES_PER_RING = 12;
 const BADGE_RING_GAP = 1.08;
-const LEVEL_LABEL_FONT_SIZE = 7;
+/** Small visual correction based on the token crown observed in Owlbear. */
+const RING_CENTER_X_OFFSET_RATIO = -0.035;
+const LEVEL_LABEL_FONT_SIZE = 8;
 
 type BadgeRole = "icon" | "level";
 type ConditionBadgeMetadata = {
@@ -182,11 +184,11 @@ function getPlacementForIndex(
   const angle = (angleDegrees * Math.PI) / 180;
   const badgeDiameter = sceneDpi * BADGE_SCALE;
   const tokenRadius = Math.max(bounds.width, bounds.height) / 2;
-  // First ring is centered exactly on the token rim/crown.
   const radius = tokenRadius + ringIndex * badgeDiameter * BADGE_RING_GAP;
+  const centerX = bounds.center.x + tokenRadius * RING_CENTER_X_OFFSET_RATIO;
 
   return {
-    x: bounds.center.x + Math.cos(angle) * radius,
+    x: centerX + Math.cos(angle) * radius,
     y: bounds.center.y + Math.sin(angle) * radius,
   };
 }
