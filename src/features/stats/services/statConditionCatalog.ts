@@ -137,8 +137,8 @@ export function getSystemStatConditionDefinitions(
 ): SystemStatConditionDefinition[] {
   if (system === "GENERIC") return [];
 
-  const definitions = STAT_CONDITION_CATALOG.filter((entry) =>
-    entry.systems.includes(system),
+  const definitions: SystemStatConditionDefinition[] = STAT_CONDITION_CATALOG.filter(
+    (entry) => entry.systems.includes(system),
   ).map((entry) => {
     const labelKey = entry.labelKeyBySystem?.[system] ?? entry.labelKey;
     const label = t(labelKey);
