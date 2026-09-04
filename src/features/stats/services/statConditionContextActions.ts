@@ -146,22 +146,27 @@ export function getConditionDurationListText(
   condition: StatTokenCondition,
   t: TranslateFunction,
 ): string | undefined {
+  const automatic = (condition.derivedFrom?.length ?? 0) > 0
+    ? t("stats.conditions.automatic.badge")
+    : undefined;
+  let duration: string | undefined;
+
   if (condition.durationType === "rounds") {
     const rounds = condition.remainingRounds ?? condition.durationValue ?? 0;
-    return t(
+    duration = t(
       rounds === 1
         ? "stats.conditions.duration.roundOne"
         : "stats.conditions.duration.roundMany",
       { count: rounds },
     );
+  } else if (condition.durationType === "encounter") {
+    duration = t("stats.conditions.duration.encounter");
+  } else if (condition.durationType === "rest") {
+    duration = t("stats.conditions.duration.rest");
   }
-  if (condition.durationType === "encounter") {
-    return t("stats.conditions.duration.encounter");
-  }
-  if (condition.durationType === "rest") {
-    return t("stats.conditions.duration.rest");
-  }
-  return undefined;
+
+  if (automatic && duration) return `${automatic} · ${duration}`;
+  return automatic ?? duration;
 }
 
 export function getConditionDisplayName(
