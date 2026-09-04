@@ -4,15 +4,11 @@ import {
   isSupportedTacticalTokenItem,
 } from "../../core/tokens/tokenEligibility";
 import { ensureCoreAssignmentForStatToken } from "./tokenPlayerAssignmentIntegration";
-import {
-  TOKEN_TOOLS_CONTEXT_MENU_ID,
-  TOKEN_TOOLS_POPOVER_ID,
-} from "./tokenToolsConstants";
+import { TOKEN_TOOLS_CONTEXT_MENU_ID } from "./tokenToolsConstants";
 
-function getTokenToolsUrl(itemId: string): string {
+function getTokenToolsUrl(): string {
   const url = new URL(import.meta.env.BASE_URL, window.location.origin);
   url.searchParams.set("view", "token-tools");
-  url.searchParams.set("itemId", itemId);
   return url.href;
 }
 
@@ -59,26 +55,11 @@ export function setupTokenToolsBackground(): () => void {
           },
         },
       ],
-      onClick: (context, elementId) => {
-        const [item] = context.items;
-        if (!item) return;
-
-        void OBR.popover
-          .close(TOKEN_TOOLS_POPOVER_ID)
-          .catch(() => undefined)
-          .finally(() => {
-            void OBR.popover.open({
-              id: TOKEN_TOOLS_POPOVER_ID,
-              url: getTokenToolsUrl(item.id),
-              width: 270,
-              height: 104,
-              anchorElementId: elementId,
-              anchorReference: "ELEMENT",
-              anchorOrigin: { horizontal: "RIGHT", vertical: "CENTER" },
-              transformOrigin: { horizontal: "LEFT", vertical: "CENTER" },
-            });
-          });
+      embed: {
+        url: getTokenToolsUrl(),
+        height: 220,
       },
+      onClick: () => undefined,
     });
 
     void syncCurrentSceneAssignments();
@@ -98,6 +79,5 @@ export function setupTokenToolsBackground(): () => void {
     unsubscribeItems?.();
     unsubscribeSceneReady?.();
     void OBR.contextMenu.remove(TOKEN_TOOLS_CONTEXT_MENU_ID);
-    void OBR.popover.close(TOKEN_TOOLS_POPOVER_ID).catch(() => undefined);
   };
 }
