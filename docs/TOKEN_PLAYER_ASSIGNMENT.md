@@ -48,9 +48,9 @@ L'état « lié à personne » est lui aussi persisté explicitement. Cela évit
 
 ## Interface
 
-Owlbear Rodeo ne fournit pas de sous-menu contextuel natif imbriqué aux extensions. Tactical GM Suite utilise donc un item Context Menu `Tactical GM Suite` qui ouvre un petit popover ancré à cet item.
+L'item Context Menu `Tactical GM Suite` utilise désormais un `ContextMenuEmbed`, comme les sous-menus `Conditions` et `Stats`.
 
-Ce popover est volontairement un menu d'actions compact, pas une interface de module.
+Le sous-menu s'ouvre donc au survol de `Tactical GM Suite` dans le menu contextuel Owlbear et reprend le même langage visuel que les autres interfaces contextuelles de l'extension.
 
 Actions V1 :
 
@@ -60,6 +60,8 @@ Lié à personne / Lié à <nom du joueur>
 ```
 
 La seconde ligne ouvre la liste des joueurs `PLAYER` présents dans la room ainsi qu'une option pour supprimer l'assignation.
+
+Le sous-menu reste volontairement une interface d'actions rapides : aucune configuration de module complète ne doit y être déplacée.
 
 ## Intégration Stats
 
@@ -81,6 +83,8 @@ Lorsqu'un token lié à un joueur est ajouté au Stat Tracker pour la première 
 ## Conditions sans Stat Tracker
 
 Un token non suivi par Stats peut être assigné à un joueur puis recevoir des Conditions. Le profil dormant utilisé pour stocker les Conditions reprend alors l'assignation Core.
+
+L'accès des joueurs au sous-menu `Conditions` est un réglage de room séparé, administré par le MJ dans les paramètres Stats. Il est désactivé par défaut. Lorsqu'il est activé, le Context Menu `Conditions` est également enregistré pour les clients `PLAYER`.
 
 ## Migration
 
