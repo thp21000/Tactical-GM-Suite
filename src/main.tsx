@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { AppPreferencesProvider } from "./core/preferences/AppPreferencesProvider";
 import { setupStatBackground } from "./features/stats/background/setupStatBackground";
-import { StatConditionContextMenuApp } from "./features/stats/context/StatConditionContextMenuApp";
+import { StatConditionContextAccessGate } from "./features/stats/context/StatConditionContextAccessGate";
 import { StatTrackerContextMenuApp } from "./features/stats/context/StatTrackerContextMenuApp";
 import { setupTokenToolsBackground } from "./features/token-tools/setupTokenToolsBackground";
 import { TokenToolsPopoverApp } from "./features/token-tools/TokenToolsPopoverApp";
@@ -28,7 +28,7 @@ if (view === "background") {
 } else {
   const page =
     view === "stats-conditions" ? (
-      <StatConditionContextMenuApp />
+      <StatConditionContextAccessGate />
     ) : view === "stats-trackers" ? (
       <StatTrackerContextMenuApp />
     ) : view === "token-tools" ? (
