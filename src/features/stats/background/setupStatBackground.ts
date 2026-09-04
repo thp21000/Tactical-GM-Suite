@@ -144,18 +144,31 @@ async function registerStatsQuickContextMenu(
   });
 }
 
+/**
+ * Enregistre le menu Conditions uniquement lorsque son état d'accès change.
+ *
+ * `OBR.room.onMetadataChange` est global à toute la room : Initiative et d'autres
+ * modules peuvent donc le déclencher très souvent. Supprimer/recréer un Context
+ * Menu à chaque événement force Owlbear à reconstruire le menu clic droit et
+ * fait clignoter les `ContextMenuEmbed` voisins. La signature évite toute écriture
+ * Context Menu tant que rôle + autorisation restent identiques.
+ */
 async function syncConditionContextMenu(
   conditionIconUrl: string,
   tokenFilters: ReturnType<typeof getStatTokenContextKeyFilters>,
-): Promise<void> {
+  previousSignature: string | undefined,
+): Promise<string> {
   const [role, roomSettings] = await Promise.all([
     OBR.player.getRole(),
     getStatRoomSettings(),
   ]);
   const allowed = role === "GM" || roomSettings.allowPlayerConditions;
+  const signature = `${role}:${allowed ? "allowed" : "blocked"}`;
+
+  if (signature === previousSignature) return signature;
 
   await OBR.contextMenu.remove(STAT_CONDITION_CONTEXT_MENU_ID).catch(() => undefined);
-  if (!allowed) return;
+  if (!allowed) return signature;
 
   await OBR.contextMenu.create({
     id: STAT_CONDITION_CONTEXT_MENU_ID,
@@ -177,6 +190,8 @@ async function syncConditionContextMenu(
     },
     onClick: () => undefined,
   });
+
+  return signature;
 }
 
 export function setupStatBackground(): () => void {
@@ -184,6 +199,8 @@ export function setupStatBackground(): () => void {
   let unsubscribeInitiativeSync: (() => void) | undefined;
   let unsubscribeConditionOverlaySync: (() => void) | undefined;
   let unsubscribeRoomSettings: (() => void) | undefined;
+  let conditionMenuSignature: string | undefined;
+  let conditionMenuSyncQueue: Promise<void> = Promise.resolve();
 
   OBR.onReady(() => {
     // Start warming the PNG cache immediately, but never delay menu registration.
@@ -193,13 +210,25 @@ export function setupStatBackground(): () => void {
     const conditionIconUrl = `${import.meta.env.BASE_URL}condition.svg`;
     const tokenFilters = getStatTokenContextKeyFilters();
 
+    const requestConditionMenuSync = () => {
+      conditionMenuSyncQueue = conditionMenuSyncQueue
+        .then(async () => {
+          conditionMenuSignature = await syncConditionContextMenu(
+            conditionIconUrl,
+            tokenFilters,
+            conditionMenuSignature,
+          );
+        })
+        .catch(() => undefined);
+    };
+
     // Ajouter/Retirer du Stat Tracker vit désormais dans le menu Tactical GM Suite.
     void registerStatsQuickContextMenu(iconUrl, tokenFilters).catch(() => undefined);
-    void syncConditionContextMenu(conditionIconUrl, tokenFilters).catch(() => undefined);
+    requestConditionMenuSync();
 
     unsubscribeRoomSettings?.();
     unsubscribeRoomSettings = subscribeToStatRoomSettings(() => {
-      void syncConditionContextMenu(conditionIconUrl, tokenFilters).catch(() => undefined);
+      requestConditionMenuSync();
     });
 
     void syncCurrentSceneConditionBadges();
@@ -224,6 +253,7 @@ export function setupStatBackground(): () => void {
     unsubscribeInitiativeSync?.();
     unsubscribeConditionOverlaySync?.();
     unsubscribeRoomSettings?.();
+    conditionMenuSignature = undefined;
     void OBR.contextMenu.remove(STAT_STATS_CONTEXT_MENU_ID);
     void OBR.contextMenu.remove(STAT_CONDITION_CONTEXT_MENU_ID);
   };

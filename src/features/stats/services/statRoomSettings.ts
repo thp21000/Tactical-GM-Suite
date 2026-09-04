@@ -63,11 +63,22 @@ export async function setStatRoomSettings(
   return next;
 }
 
+/**
+ * `OBR.room.onMetadataChange` se déclenche pour les métadonnées de tous les
+ * modules. On ne propage donc un événement Stats que si la valeur qui nous
+ * intéresse change réellement.
+ */
 export function subscribeToStatRoomSettings(
   listener: (settings: StatRoomSettings) => void,
 ): () => void {
   if (!OBR.isAvailable) return () => undefined;
+
+  let previousAllowPlayerConditions: boolean | undefined;
+
   return OBR.room.onMetadataChange((metadata) => {
-    listener(readStatRoomSettings(metadata));
+    const next = readStatRoomSettings(metadata);
+    if (previousAllowPlayerConditions === next.allowPlayerConditions) return;
+    previousAllowPlayerConditions = next.allowPlayerConditions;
+    listener(next);
   });
 }
