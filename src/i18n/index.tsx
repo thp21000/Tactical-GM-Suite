@@ -21,6 +21,8 @@ import settingsEn from "../features/settings/i18n/en";
 import settingsFr from "../features/settings/i18n/fr";
 import statsEn from "../features/stats/i18n/en";
 import statsFr from "../features/stats/i18n/fr";
+import tokenToolsEn from "../features/token-tools/i18n/en";
+import tokenToolsFr from "../features/token-tools/i18n/fr";
 import type {
   LocaleDictionary,
   TranslateFunction,
@@ -42,6 +44,7 @@ const dictionaries: Record<LanguagePreference, LocaleDictionary> = {
     ...rangeFr,
     ...settingsFr,
     ...statsFr,
+    ...tokenToolsFr,
   },
   en: {
     ...dashboardEn,
@@ -51,6 +54,7 @@ const dictionaries: Record<LanguagePreference, LocaleDictionary> = {
     ...rangeEn,
     ...settingsEn,
     ...statsEn,
+    ...tokenToolsEn,
   },
 };
 

@@ -1,25 +1,17 @@
 import OBR from "@owlbear-rodeo/sdk";
+import { TOKEN_PLAYER_ASSIGNMENT_METADATA_KEY } from "../../../core/tokens/tokenPlayerAssignment";
 import {
   STAT_CONDITION_CONTEXT_MENU_ID,
   STAT_STATS_CONTEXT_MENU_ID,
-  STAT_TRACKER_CONTEXT_MENU_ID,
 } from "../statConstants";
-import {
-  addSceneItemsToStatTracker,
-  removeSceneItemsFromStatTracker,
-} from "../services/statContextMenuActions";
 import { preloadStatPngAssets } from "../services/statAssetPreload";
 import { setupStatConditionInitiativeSync } from "../services/statConditionInitiativeSync";
 import { setupStatConditionOverlayAutoSync } from "../services/statConditionOverlayAutoSync";
 import { createOrUpdateTokenConditionOverlay } from "../services/statConditionOverlayObrSync";
 import { createEmbeddedStatTokenMetadata } from "../services/statEmbeddedProfileActions";
-import {
-  getStatTokenContextKeyFilters,
-  isSupportedStatTokenItem,
-} from "../services/statTokenEligibility";
+import { getStatTokenContextKeyFilters } from "../services/statTokenEligibility";
 import {
   hasPlayerEditableTrackers,
-  isStatTokenTrackedItem,
   readEmbeddedStatToken,
   readStatTokenLinkMetadata,
   STAT_TOKEN_LINK_METADATA_KEY,
@@ -49,9 +41,9 @@ async function syncCurrentSceneConditionBadges(): Promise<void> {
 }
 
 /**
- * Les filtres de ContextMenu Owlbear ne savent pas parcourir un tableau de
- * trackers. On maintient donc deux résumés indexables au niveau du lien token :
- * playerEditable + assignedPlayerId. Le profil complet reste la source de vérité.
+ * Les filtres du Context Menu ne savent pas parcourir le tableau de trackers.
+ * Stats conserve donc uniquement le résumé indexable playerEditable.
+ * L'assignation joueur est désormais une métadonnée Core séparée.
  */
 async function syncCurrentScenePlayerEditMetadata(): Promise<void> {
   try {
@@ -63,10 +55,7 @@ async function syncCurrentScenePlayerEditMetadata(): Promise<void> {
       const token = readEmbeddedStatToken(item);
       if (!token) return false;
       const link = readStatTokenLinkMetadata(item);
-      return (
-        link?.playerEditable !== hasPlayerEditableTrackers(token) ||
-        link?.assignedPlayerId !== token.assignedPlayerId
-      );
+      return link?.playerEditable !== hasPlayerEditableTrackers(token);
     });
 
     if (targets.length === 0) return;
@@ -136,7 +125,7 @@ async function registerStatsQuickContextMenu(
               value: true,
             },
             {
-              key: ["metadata", STAT_TOKEN_LINK_METADATA_KEY, "assignedPlayerId"],
+              key: ["metadata", TOKEN_PLAYER_ASSIGNMENT_METADATA_KEY, "playerId"],
               value: playerId,
             },
           ],
@@ -164,53 +153,7 @@ export function setupStatBackground(): () => void {
     const conditionIconUrl = `${import.meta.env.BASE_URL}condition.svg`;
     const tokenFilters = getStatTokenContextKeyFilters();
 
-    void OBR.contextMenu.create({
-      id: STAT_TRACKER_CONTEXT_MENU_ID,
-      icons: [
-        {
-          icon: iconUrl,
-          label: "Ajouter au Stat Tracker",
-          filter: {
-            min: 1,
-            roles: ["GM"],
-            every: [
-              ...tokenFilters,
-              {
-                key: ["metadata", STAT_TOKEN_LINK_METADATA_KEY, "tracked"],
-                value: true,
-                operator: "!=",
-              },
-            ],
-          },
-        },
-        {
-          icon: iconUrl,
-          label: "Retirer du Stat Tracker",
-          filter: {
-            min: 1,
-            roles: ["GM"],
-            every: [
-              ...tokenFilters,
-              {
-                key: ["metadata", STAT_TOKEN_LINK_METADATA_KEY, "tracked"],
-                value: true,
-              },
-            ],
-          },
-        },
-      ],
-      onClick: (menuContext) => {
-        const tokens = menuContext.items.filter(isSupportedStatTokenItem);
-        if (tokens.length === 0) return;
-
-        if (tokens.every(isStatTokenTrackedItem)) {
-          void removeSceneItemsFromStatTracker(tokens);
-        } else {
-          void addSceneItemsToStatTracker(tokens);
-        }
-      },
-    });
-
+    // Ajouter/Retirer du Stat Tracker vit désormais dans le menu Tactical GM Suite.
     void registerStatsQuickContextMenu(iconUrl, tokenFilters).catch(() => undefined);
 
     void OBR.contextMenu.create({
@@ -255,7 +198,6 @@ export function setupStatBackground(): () => void {
     unsubscribeSceneReady?.();
     unsubscribeInitiativeSync?.();
     unsubscribeConditionOverlaySync?.();
-    void OBR.contextMenu.remove(STAT_TRACKER_CONTEXT_MENU_ID);
     void OBR.contextMenu.remove(STAT_STATS_CONTEXT_MENU_ID);
     void OBR.contextMenu.remove(STAT_CONDITION_CONTEXT_MENU_ID);
   };

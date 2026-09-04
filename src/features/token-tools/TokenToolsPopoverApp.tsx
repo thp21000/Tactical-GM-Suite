@@ -1,0 +1,258 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import OBR, { type Item, type Player } from "@owlbear-rodeo/sdk";
+import { ArrowLeft, Check, ChevronRight, Minus, Plus, UserRound } from "lucide-react";
+import {
+  applyThemeVariables,
+  createTgmThemeFromObrTheme,
+  fallbackTgmTheme,
+} from "../../core/theme/obrTheme";
+import { readTokenPlayerAssignment } from "../../core/tokens/tokenPlayerAssignment";
+import { useI18n } from "../../i18n";
+import {
+  addSceneItemsToStatTracker,
+  removeSceneItemsFromStatTracker,
+} from "../stats/services/statContextMenuActions";
+import {
+  isStatTokenTrackedItem,
+  readEmbeddedStatToken,
+} from "../stats/services/statTokenSceneLinks";
+import {
+  assignTacticalTokenToPlayer,
+  ensureCoreAssignmentForStatToken,
+} from "./tokenPlayerAssignmentIntegration";
+import { TOKEN_TOOLS_POPOVER_ID } from "./tokenToolsConstants";
+import "./tokenToolsPopover.css";
+
+type ViewMode = "actions" | "players";
+
+function normalizeRoomPlayers(players: Player[], locale: string): Player[] {
+  const byId = new Map<string, Player>();
+  for (const player of players) {
+    if (player.role !== "PLAYER") continue;
+    byId.set(player.id, player);
+  }
+  return [...byId.values()].sort((left, right) =>
+    left.name.localeCompare(right.name, locale, { sensitivity: "base" }),
+  );
+}
+
+export function TokenToolsPopoverApp() {
+  const { language, t } = useI18n();
+  const itemId = new URLSearchParams(window.location.search).get("itemId");
+  const [item, setItem] = useState<Item | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [mode, setMode] = useState<ViewMode>("actions");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refreshItem = useCallback(async () => {
+    if (!itemId) {
+      setItem(null);
+      setError(t("tokenTools.error.token"));
+      return;
+    }
+    try {
+      let [nextItem] = await OBR.scene.items.getItems([itemId]);
+      if (!nextItem) {
+        setItem(null);
+        setError(t("tokenTools.error.token"));
+        return;
+      }
+
+      // Migration douce de l'ancien lien Stats vers la métadonnée Core.
+      if (!readTokenPlayerAssignment(nextItem) && readEmbeddedStatToken(nextItem)) {
+        await ensureCoreAssignmentForStatToken(nextItem);
+        [nextItem] = await OBR.scene.items.getItems([itemId]);
+      }
+
+      if (!nextItem) {
+        setItem(null);
+        setError(t("tokenTools.error.token"));
+        return;
+      }
+      setItem(nextItem);
+      setError(null);
+    } catch {
+      setError(t("tokenTools.error.token"));
+    }
+  }, [itemId, t]);
+
+  useEffect(() => {
+    let mounted = true;
+    let unsubscribeItems: (() => void) | undefined;
+    let unsubscribeParty: (() => void) | undefined;
+    let unsubscribeTheme: (() => void) | undefined;
+
+    document.body.classList.add("token-tools-host");
+    applyThemeVariables(fallbackTgmTheme);
+
+    OBR.onReady(() => {
+      if (!mounted) return;
+      void OBR.theme.getTheme().then((theme) => {
+        if (mounted) applyThemeVariables(createTgmThemeFromObrTheme(theme));
+      }).catch(() => applyThemeVariables(fallbackTgmTheme));
+      unsubscribeTheme = OBR.theme.onChange((theme) => {
+        applyThemeVariables(createTgmThemeFromObrTheme(theme));
+      });
+
+      void refreshItem();
+      void OBR.party.getPlayers().then((roomPlayers) => {
+        if (mounted) setPlayers(normalizeRoomPlayers(roomPlayers, language));
+      }).catch(() => {
+        if (mounted) setPlayers([]);
+      });
+
+      unsubscribeItems = OBR.scene.items.onChange(() => void refreshItem());
+      unsubscribeParty = OBR.party.onChange((roomPlayers) => {
+        if (mounted) setPlayers(normalizeRoomPlayers(roomPlayers, language));
+      });
+    });
+
+    return () => {
+      mounted = false;
+      document.body.classList.remove("token-tools-host");
+      unsubscribeItems?.();
+      unsubscribeParty?.();
+      unsubscribeTheme?.();
+    };
+  }, [language, refreshItem]);
+
+  useEffect(() => {
+    const playerRows = Math.max(1, players.length + 1);
+    const targetHeight = mode === "actions" ? 104 : Math.min(300, 48 + playerRows * 38);
+    if (OBR.isAvailable) {
+      void OBR.popover.setHeight(TOKEN_TOOLS_POPOVER_ID, targetHeight).catch(() => undefined);
+    }
+  }, [mode, players.length]);
+
+  const assignment = item ? readTokenPlayerAssignment(item) : undefined;
+  const tracked = item ? isStatTokenTrackedItem(item) : false;
+  const selectedPlayer = useMemo(
+    () => players.find((player) => player.id === assignment?.playerId),
+    [assignment?.playerId, players],
+  );
+  const assignmentName = assignment?.playerId
+    ? assignment.playerName ?? selectedPlayer?.name ?? assignment.playerId
+    : undefined;
+
+  const run = useCallback(async (action: () => Promise<void>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await action();
+      await refreshItem();
+    } catch {
+      setError(t("tokenTools.error.update"));
+    } finally {
+      setBusy(false);
+    }
+  }, [refreshItem, t]);
+
+  if (!item) {
+    return (
+      <main className="token-tools token-tools--empty">
+        <p>{error ?? t("tokenTools.loading")}</p>
+      </main>
+    );
+  }
+
+  if (mode === "players") {
+    const currentIsOffline = Boolean(
+      assignment?.playerId && !players.some((player) => player.id === assignment.playerId),
+    );
+
+    return (
+      <main className="token-tools">
+        <button className="token-tools__back" type="button" onClick={() => setMode("actions")}>
+          <ArrowLeft size={15} aria-hidden="true" />
+          <span>{t("tokenTools.back")}</span>
+        </button>
+
+        <div className="token-tools__list token-tools__list--players">
+          <button
+            className="token-tools__row"
+            disabled={busy}
+            type="button"
+            onClick={() => void run(async () => {
+              await assignTacticalTokenToPlayer(item.id);
+              setMode("actions");
+            })}
+          >
+            <UserRound size={16} aria-hidden="true" />
+            <span>{t("tokenTools.assignment.none")}</span>
+            {!assignment?.playerId ? <Check size={15} aria-hidden="true" /> : <span />}
+          </button>
+
+          {currentIsOffline ? (
+            <div className="token-tools__row is-muted" aria-disabled="true">
+              <UserRound size={16} aria-hidden="true" />
+              <span>{t("tokenTools.assignment.offline", { name: assignmentName ?? assignment?.playerId ?? "—" })}</span>
+              <Check size={15} aria-hidden="true" />
+            </div>
+          ) : null}
+
+          {players.map((player) => (
+            <button
+              className="token-tools__row"
+              disabled={busy}
+              key={player.id}
+              type="button"
+              onClick={() => void run(async () => {
+                await assignTacticalTokenToPlayer(item.id, player);
+                setMode("actions");
+              })}
+            >
+              <UserRound size={16} aria-hidden="true" />
+              <span>{player.name}</span>
+              {assignment?.playerId === player.id ? <Check size={15} aria-hidden="true" /> : <span />}
+            </button>
+          ))}
+
+          {players.length === 0 && !currentIsOffline ? (
+            <p className="token-tools__empty-note">{t("tokenTools.assignment.noPlayers")}</p>
+          ) : null}
+        </div>
+        {error ? <p className="token-tools__error">{error}</p> : null}
+      </main>
+    );
+  }
+
+  return (
+    <main className="token-tools">
+      <div className="token-tools__list">
+        <button
+          className="token-tools__row"
+          disabled={busy}
+          type="button"
+          onClick={() => void run(async () => {
+            if (tracked) {
+              await removeSceneItemsFromStatTracker([item]);
+            } else {
+              await addSceneItemsToStatTracker([item]);
+            }
+          })}
+        >
+          {tracked ? <Minus size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+          <span>{t(tracked ? "tokenTools.stat.remove" : "tokenTools.stat.add")}</span>
+          <span />
+        </button>
+
+        <button
+          className="token-tools__row"
+          disabled={busy}
+          type="button"
+          onClick={() => setMode("players")}
+        >
+          <UserRound size={16} aria-hidden="true" />
+          <span>
+            {assignmentName
+              ? t("tokenTools.assignment.linked", { name: assignmentName })
+              : t("tokenTools.assignment.none")}
+          </span>
+          <ChevronRight size={15} aria-hidden="true" />
+        </button>
+      </div>
+      {error ? <p className="token-tools__error">{error}</p> : null}
+    </main>
+  );
+}
