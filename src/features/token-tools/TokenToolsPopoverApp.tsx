@@ -6,11 +6,7 @@ import {
   createTgmThemeFromObrTheme,
   fallbackTgmTheme,
 } from "../../core/theme/obrTheme";
-import {
-  readTokenPlayerAssignment,
-  writeTokenPlayerAssignment,
-  type TokenPlayerAssignment,
-} from "../../core/tokens/tokenPlayerAssignment";
+import { readTokenPlayerAssignment } from "../../core/tokens/tokenPlayerAssignment";
 import { useI18n } from "../../i18n";
 import {
   addSceneItemsToStatTracker,
@@ -20,6 +16,10 @@ import {
   isStatTokenTrackedItem,
   readEmbeddedStatToken,
 } from "../stats/services/statTokenSceneLinks";
+import {
+  assignTacticalTokenToPlayer,
+  ensureCoreAssignmentForStatToken,
+} from "./tokenPlayerAssignmentIntegration";
 import { TOKEN_TOOLS_POPOVER_ID } from "./tokenToolsConstants";
 import "./tokenToolsPopover.css";
 
@@ -34,17 +34,6 @@ function normalizeRoomPlayers(players: Player[], locale: string): Player[] {
   return [...byId.values()].sort((left, right) =>
     left.name.localeCompare(right.name, locale, { sensitivity: "base" }),
   );
-}
-
-function getLegacyAssignment(item: Item): TokenPlayerAssignment | undefined {
-  const token = readEmbeddedStatToken(item);
-  if (!token?.assignedPlayerId) return undefined;
-  return {
-    version: 1,
-    playerId: token.assignedPlayerId,
-    playerName: token.assignedPlayerName,
-    updatedAt: token.updatedAt,
-  };
 }
 
 export function TokenToolsPopoverApp() {
@@ -63,7 +52,19 @@ export function TokenToolsPopoverApp() {
       return;
     }
     try {
-      const [nextItem] = await OBR.scene.items.getItems([itemId]);
+      let [nextItem] = await OBR.scene.items.getItems([itemId]);
+      if (!nextItem) {
+        setItem(null);
+        setError(t("tokenTools.error.token"));
+        return;
+      }
+
+      // Migration douce de l'ancien lien Stats vers la métadonnée Core.
+      if (!readTokenPlayerAssignment(nextItem) && readEmbeddedStatToken(nextItem)) {
+        await ensureCoreAssignmentForStatToken(nextItem);
+        [nextItem] = await OBR.scene.items.getItems([itemId]);
+      }
+
       if (!nextItem) {
         setItem(null);
         setError(t("tokenTools.error.token"));
@@ -124,10 +125,7 @@ export function TokenToolsPopoverApp() {
     }
   }, [mode, players.length]);
 
-  const explicitAssignment = item ? readTokenPlayerAssignment(item) : undefined;
-  const assignment = item
-    ? explicitAssignment ?? getLegacyAssignment(item)
-    : undefined;
+  const assignment = item ? readTokenPlayerAssignment(item) : undefined;
   const tracked = item ? isStatTokenTrackedItem(item) : false;
   const selectedPlayer = useMemo(
     () => players.find((player) => player.id === assignment?.playerId),
@@ -176,7 +174,7 @@ export function TokenToolsPopoverApp() {
             disabled={busy}
             type="button"
             onClick={() => void run(async () => {
-              await writeTokenPlayerAssignment(item.id);
+              await assignTacticalTokenToPlayer(item.id);
               setMode("actions");
             })}
           >
@@ -200,7 +198,7 @@ export function TokenToolsPopoverApp() {
               key={player.id}
               type="button"
               onClick={() => void run(async () => {
-                await writeTokenPlayerAssignment(item.id, player);
+                await assignTacticalTokenToPlayer(item.id, player);
                 setMode("actions");
               })}
             >
