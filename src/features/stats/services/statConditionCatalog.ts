@@ -25,10 +25,7 @@ type StatConditionCatalogEntry = {
 };
 
 export type SystemStatConditionImplication = StatConditionImplication & {
-  target: Pick<
-    SystemStatConditionDefinition,
-    "id" | "label" | "shortLabel" | "severityType" | "iconId" | "category" | "maxValue" | "valueLabelKey"
-  >;
+  target: SystemStatConditionDefinition;
 };
 
 export type SystemStatConditionDefinition = StatConditionDefinition & {
@@ -217,50 +214,58 @@ export function getSystemStatConditionDefinitions(
   if (system === "GENERIC") return [];
 
   const entries = STAT_CONDITION_CATALOG.filter((entry) => entry.systems.includes(system));
-  const baseDefinitions = entries.map((entry) => {
-    const labelKey = entry.labelKeyBySystem?.[system] ?? entry.labelKey;
-    const label = t(labelKey);
-
-    return {
-      id: entry.id,
-      label,
-      shortLabel: label,
-      description: t(`stats.conditions.catalog.${entry.id}.description`),
-      rulesSummary: t(`stats.conditions.catalog.${entry.id}.rules.${system}`),
-      severityType: entry.severity[system] ?? "none",
-      iconId: "object_circle",
-      category: "other" as const,
-      system,
-      maxValue: entry.maxValue?.[system],
-      valueLabelKey: entry.valueLabelKey,
-    };
-  });
-  const definitionById = new Map(baseDefinitions.map((definition) => [definition.id, definition]));
-
-  const definitions: SystemStatConditionDefinition[] = baseDefinitions.map((definition) => {
-    const entry = entries.find((candidate) => candidate.id === definition.id);
-    const implications: SystemStatConditionImplication[] = [];
-
-    for (const implication of entry?.implications?.[system] ?? []) {
-      const target = definitionById.get(implication.conditionId);
-      if (!target) continue;
-      implications.push({
-        ...implication,
-        target: {
-          id: target.id,
-          label: target.label,
-          shortLabel: target.shortLabel,
-          severityType: target.severityType,
-          iconId: target.iconId,
-          category: target.category,
-          maxValue: target.maxValue,
-          valueLabelKey: target.valueLabelKey,
+  const entryById = new Map(entries.map((entry) => [entry.id, entry]));
+  const baseById = new Map(
+    entries.map((entry) => {
+      const labelKey = entry.labelKeyBySystem?.[system] ?? entry.labelKey;
+      const label = t(labelKey);
+      return [
+        entry.id,
+        {
+          id: entry.id,
+          label,
+          shortLabel: label,
+          description: t(`stats.conditions.catalog.${entry.id}.description`),
+          rulesSummary: t(`stats.conditions.catalog.${entry.id}.rules.${system}`),
+          severityType: entry.severity[system] ?? "none",
+          iconId: "object_circle",
+          category: "other" as const,
+          system,
+          maxValue: entry.maxValue?.[system],
+          valueLabelKey: entry.valueLabelKey,
         },
-      });
+      ] as const;
+    }),
+  );
+
+  const build = (
+    id: string,
+    path: ReadonlySet<string> = new Set(),
+  ): SystemStatConditionDefinition | undefined => {
+    const base = baseById.get(id);
+    const entry = entryById.get(id);
+    if (!base || !entry) return undefined;
+
+    if (path.has(id)) {
+      return { ...base, implications: [] };
     }
 
-    return { ...definition, implications };
-  });
+    const nextPath = new Set(path);
+    nextPath.add(id);
+    const implications: SystemStatConditionImplication[] = [];
+
+    for (const implication of entry.implications?.[system] ?? []) {
+      const target = build(implication.conditionId, nextPath);
+      if (!target) continue;
+      implications.push({ ...implication, target });
+    }
+
+    return { ...base, implications };
+  };
+
+  const definitions = entries
+    .map((entry) => build(entry.id))
+    .filter((definition): definition is SystemStatConditionDefinition => Boolean(definition));
 
   return definitions.sort((a, b) =>
     a.label.localeCompare(b.label, undefined, {
