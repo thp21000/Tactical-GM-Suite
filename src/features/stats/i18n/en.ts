@@ -40,6 +40,7 @@ const en: LocaleDictionary = {
   "stats.conditions.value.damage": "Damage",
   "stats.conditions.hover.description": "Description",
   "stats.conditions.hover.rulesSummary": "Rules summary",
+  "stats.conditions.automatic.badge": "AUTO",
 
   "stats.settings.show": "Stats settings",
   "stats.settings.hide": "Hide settings",
