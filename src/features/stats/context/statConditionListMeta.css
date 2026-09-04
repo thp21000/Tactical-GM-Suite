@@ -29,6 +29,21 @@
   background: color-mix(in srgb, var(--tgm-obr-bg, #202230) 94%, black 6%);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
   pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+}
+
+/*
+ * La fiche d'aide ne doit apparaître que lorsque la souris est réellement sur
+ * l'icône ou le libellé de la condition. Le reste de la ligne reste cliquable
+ * sans déclencher le hover informatif.
+ */
+.stat-condition-context:has(.stat-condition-context__condition-icon:hover)
+  .stat-condition-context__hover-card,
+.stat-condition-context:has(.stat-condition-context__condition-label:hover)
+  .stat-condition-context__hover-card {
+  visibility: visible;
+  opacity: 1;
 }
 
 .stat-condition-context__hover-card strong {

@@ -167,7 +167,11 @@
 }
 
 @media (max-width: 430px) {
-  .stat-tracker-list {
+  /*
+   * La page Stats principale peut se compacter à deux colonnes, mais le
+   * sous-menu contextuel Owlbear conserve volontairement ses trois colonnes.
+   */
+  .stat-tracker-list:not(.stat-tracker-context__list) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -182,7 +186,8 @@
 }
 
 @media (max-width: 340px) {
-  .stat-tracker-list {
+  /* Le menu contextuel reste à trois colonnes même dans l'embed étroit OBR. */
+  .stat-tracker-list:not(.stat-tracker-context__list) {
     grid-template-columns: 1fr;
   }
 }
