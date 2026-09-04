@@ -1,5 +1,6 @@
 import OBR, { type Item } from "@owlbear-rodeo/sdk";
 import { EXTENSION_ID } from "../../../core/constants/ids";
+import { readTokenPlayerAssignment } from "../../../core/tokens/tokenPlayerAssignment";
 import type { StatTrackedToken, StatTracker } from "../statTypes";
 import { createTrackedToken } from "./statTokens";
 import {
@@ -123,11 +124,14 @@ export async function updateOrCreateEmbeddedConditionToken(
     return writeEmbeddedStatToken(item, updated, updated.isTracked !== false);
   }
 
+  const assignment = readTokenPlayerAssignment(item);
   const host: StatTrackedToken = {
     ...createTrackedToken({
       sourceItemId: item.id,
       name: item.name || "Token",
       tokenType: "enemy",
+      assignedPlayerId: assignment?.playerId,
+      assignedPlayerName: assignment?.playerName,
     }),
     trackers: [],
     conditions: [],
