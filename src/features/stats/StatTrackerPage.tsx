@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import type { ObrReadyState } from "../../core/obr/obrReady";
+import { useI18n } from "../../i18n";
 import { Panel } from "../../shared/components/Panel";
 import { StatPresetManager } from "./components/StatPresetManager";
+import { StatRoomSettingsPanel } from "./components/StatRoomSettingsPanel";
 import { StatTokenForm } from "./components/StatTokenForm";
 import { StatTrackedTokenBlock } from "./components/StatTrackedTokenBlock";
 import { StatTrackerEmptyState } from "./components/StatTrackerEmptyState";
@@ -18,8 +20,10 @@ type Props = {
 };
 
 export function StatTrackerPage({ obr }: Props) {
+  const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [presetPanelOpen, setPresetPanelOpen] = useState(false);
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
   const stats = useStatTrackerState(obr.isReady);
   const { isGm, viewer } = useStatPermissionViewer(obr.isReady);
 
@@ -79,6 +83,15 @@ export function StatTrackerPage({ obr }: Props) {
             >
               {presetPanelOpen ? "Masquer les presets" : "Gérer les presets"}
             </button>
+            <button
+              className="button"
+              type="button"
+              onClick={() => setSettingsPanelOpen((current) => !current)}
+            >
+              {settingsPanelOpen
+                ? t("stats.settings.hide")
+                : t("stats.settings.show")}
+            </button>
           </div>
 
           {formOpen ? (
@@ -89,6 +102,12 @@ export function StatTrackerPage({ obr }: Props) {
               }}
             />
           ) : null}
+        </Panel>
+      ) : null}
+
+      {isGm && settingsPanelOpen ? (
+        <Panel title={t("stats.settings.title")}>
+          <StatRoomSettingsPanel enabled={obr.isReady} />
         </Panel>
       ) : null}
 
