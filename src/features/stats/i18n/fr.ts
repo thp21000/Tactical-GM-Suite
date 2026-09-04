@@ -29,6 +29,7 @@ const fr: LocaleDictionary = {
   "stats.conditions.error.readToken": "Impossible de lire le token sélectionné.",
   "stats.conditions.error.tokenMissing": "Le token est introuvable.",
   "stats.conditions.error.update": "Impossible de modifier la condition.",
+  "stats.conditions.error.playerAccessDenied": "Le MJ n’autorise pas l’accès joueur au menu Conditions.",
   "stats.conditions.empty.selectToken": "Sélectionnez un token.",
   "stats.conditions.search.placeholder": "Rechercher une condition",
   "stats.conditions.list.aria": "Conditions",
@@ -38,6 +39,15 @@ const fr: LocaleDictionary = {
   "stats.conditions.value.damage": "Dégâts",
   "stats.conditions.hover.description": "Description",
   "stats.conditions.hover.rulesSummary": "Résumé règles",
+
+  "stats.settings.show": "Paramètres Stats",
+  "stats.settings.hide": "Masquer les paramètres",
+  "stats.settings.title": "Paramètres Stats",
+  "stats.settings.permissions.title": "Permissions joueurs",
+  "stats.settings.permissions.summary": "Réglages partagés pour toute la room.",
+  "stats.settings.playerConditions.label": "Autoriser le menu Conditions aux joueurs",
+  "stats.settings.playerConditions.help": "Quand cette option est active, les joueurs peuvent ouvrir Conditions au clic droit et ajouter, modifier ou retirer des conditions sur les tokens éligibles.",
+  "stats.settings.error": "Impossible de mettre à jour les paramètres Stats de la room.",
 
   "stats.conditions.catalog.blinded": "Aveuglé",
   "stats.conditions.catalog.deafened": "Assourdi",
