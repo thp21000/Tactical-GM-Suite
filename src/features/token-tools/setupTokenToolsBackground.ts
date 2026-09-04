@@ -30,13 +30,12 @@ async function syncCurrentSceneAssignments(): Promise<void> {
     if (!(await OBR.scene.isReady())) return;
     await syncAssignmentsForItems(await OBR.scene.items.getItems());
   } catch {
-    // Une scène en transition sera resynchronisée au prochain événement ready/items.
+    // Une scène en transition sera resynchronisée au prochain événement ready.
   }
 }
 
 export function setupTokenToolsBackground(): () => void {
   let unsubscribeSceneReady: (() => void) | undefined;
-  let unsubscribeItems: (() => void) | undefined;
 
   OBR.onReady(() => {
     const iconUrl = `${import.meta.env.BASE_URL}icon.svg`;
@@ -62,12 +61,11 @@ export function setupTokenToolsBackground(): () => void {
       onClick: () => undefined,
     });
 
+    // L'ancienne assignation Stats -> Core est une migration de scène, pas une
+    // synchronisation continue. Écouter chaque changement d'item ici provoquait
+    // des écritures/rafraîchissements parasites pendant qu'un ContextMenuEmbed
+    // était ouvert, ce qui pouvait faire disparaître puis réapparaître le sous-menu.
     void syncCurrentSceneAssignments();
-
-    unsubscribeItems?.();
-    unsubscribeItems = OBR.scene.items.onChange((items) => {
-      void syncAssignmentsForItems(items);
-    });
 
     unsubscribeSceneReady?.();
     unsubscribeSceneReady = OBR.scene.onReadyChange((ready) => {
@@ -76,7 +74,6 @@ export function setupTokenToolsBackground(): () => void {
   });
 
   return () => {
-    unsubscribeItems?.();
     unsubscribeSceneReady?.();
     void OBR.contextMenu.remove(TOKEN_TOOLS_CONTEXT_MENU_ID);
   };
