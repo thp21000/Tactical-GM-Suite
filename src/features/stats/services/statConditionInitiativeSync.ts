@@ -5,6 +5,7 @@ import {
   subscribeToInitiativeState,
 } from "../../initiative/services/initiativeStorage";
 import type { StatTokenCondition, StatTrackedToken } from "../statTypes";
+import { reconcileDerivedConditionList } from "./statConditionDerivations";
 import { writeEmbeddedStatToken } from "./statEmbeddedProfileActions";
 import { createOrUpdateTokenConditionOverlay } from "./statConditionOverlayObrSync";
 import { readEmbeddedStatToken } from "./statTokenSceneLinks";
@@ -122,11 +123,13 @@ function reconcileToken(
     conditions.push(next);
   }
 
+  const reconciledConditions = reconcileDerivedConditionList(conditions);
+  if (reconciledConditions !== conditions) changed = true;
   if (!changed) return null;
 
   return {
     ...token,
-    conditions,
+    conditions: reconciledConditions,
     updatedAt: now(),
   };
 }
