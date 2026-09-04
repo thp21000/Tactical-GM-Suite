@@ -6,6 +6,10 @@ import type {
   StatTrackedToken,
 } from "../statTypes";
 import type { SystemStatConditionDefinition } from "./statConditionCatalog";
+import {
+  applyStatConditionImplications,
+  removeExplicitConditionAndReconcile,
+} from "./statConditionDerivations";
 
 export type StatConditionQuickConfig = {
   value?: number;
@@ -71,10 +75,12 @@ function createConfiguredCondition(
     initiativeEncounterId: encounterId,
     initiativeStartRound: initiativeRound,
     initiativeExpiresAtRound: expiresAtRound,
-    visibility: config.visibility ?? "public",
+    visibility: config.visibility ?? existing?.visibility ?? "public",
     showOnToken: true,
     tokenDisplayMode: "icon",
     tokenDisplayPriority: 50,
+    isExplicit: true,
+    derivedFrom: existing?.derivedFrom,
     createdAt: existing?.createdAt ?? timestamp,
     updatedAt: timestamp,
   };
@@ -94,8 +100,7 @@ export function upsertQuickCondition(
 ): StatTrackedToken {
   const existing = getActiveTokenCondition(token, definition.id);
   const condition = createConfiguredCondition(definition, config, existing);
-
-  return {
+  const next: StatTrackedToken = {
     ...token,
     conditions: existing
       ? token.conditions.map((current) =>
@@ -104,20 +109,15 @@ export function upsertQuickCondition(
       : [...token.conditions, condition],
     updatedAt: now(),
   };
+
+  return applyStatConditionImplications(next, definition, !existing);
 }
 
 export function removeQuickCondition(
   token: StatTrackedToken,
   conditionId: string,
 ): StatTrackedToken {
-  const existing = getActiveTokenCondition(token, conditionId);
-  if (!existing) return token;
-
-  return {
-    ...token,
-    conditions: token.conditions.filter((condition) => condition.id !== existing.id),
-    updatedAt: now(),
-  };
+  return removeExplicitConditionAndReconcile(token, conditionId);
 }
 
 export function getConditionDurationText(
