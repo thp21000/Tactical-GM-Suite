@@ -136,19 +136,12 @@ function activateImplications(
   sourceDefinition: SystemStatConditionDefinition,
   includeOnApply: boolean,
 ): StatTrackedToken {
-  const definitionById = new Map<string, SystemStatConditionDefinition>();
   const stack: Array<{
     definition: SystemStatConditionDefinition;
     includeOnApply: boolean;
   }> = [{ definition: sourceDefinition, includeOnApply }];
   let conditions = token.conditions;
   const expanded = new Set<string>();
-
-  // The target payloads include enough data to create a derived condition. A
-  // newly-created target can only recurse when its full definition has already
-  // been registered by another implication source. The source itself is always
-  // registered here; callers can additionally seed definitions below.
-  definitionById.set(sourceDefinition.id, sourceDefinition);
 
   while (stack.length > 0) {
     const current = stack.shift();
@@ -185,17 +178,18 @@ function activateImplications(
               index === existingIndex ? updated : condition,
             );
           }
+          // Repair any while-active implications of an already-active child,
+          // but never replay its on-apply rules.
+          stack.push({ definition: implication.target, includeOnApply: false });
         }
         continue;
       }
 
       const created = createDerivedCondition(implication, sourceCondition);
       conditions = [...conditions, created];
-
-      const fullDefinition = definitionById.get(created.conditionId);
-      if (fullDefinition) {
-        stack.push({ definition: fullDefinition, includeOnApply: true });
-      }
+      // A newly derived condition is a genuine activation, so its own direct
+      // and on-apply implications must be evaluated too.
+      stack.push({ definition: implication.target, includeOnApply: true });
     }
   }
 
