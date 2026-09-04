@@ -29,31 +29,38 @@ export function readTokenPlayerAssignment(
     return undefined;
   }
 
-  return {
+  const assignment: TokenPlayerAssignment = {
     version: TOKEN_PLAYER_ASSIGNMENT_VERSION,
-    playerId: cleanOptionalText(value.playerId),
-    playerName: cleanOptionalText(value.playerName),
     updatedAt:
       typeof value.updatedAt === "string" ? value.updatedAt : new Date().toISOString(),
   };
+  const playerId = cleanOptionalText(value.playerId);
+  const playerName = cleanOptionalText(value.playerName);
+  if (playerId) assignment.playerId = playerId;
+  if (playerName) assignment.playerName = playerName;
+  return assignment;
 }
 
 export function createTokenPlayerAssignment(
   player?: Pick<Player, "id" | "name">,
 ): TokenPlayerAssignment {
-  return {
+  const assignment: TokenPlayerAssignment = {
     version: TOKEN_PLAYER_ASSIGNMENT_VERSION,
-    playerId: cleanOptionalText(player?.id),
-    playerName: cleanOptionalText(player?.name),
     updatedAt: new Date().toISOString(),
   };
+  const playerId = cleanOptionalText(player?.id);
+  const playerName = cleanOptionalText(player?.name);
+  if (playerId) assignment.playerId = playerId;
+  if (playerName) assignment.playerName = playerName;
+  return assignment;
 }
 
 /**
  * Écrit l'assignation directement sur le token Owlbear.
  *
- * Même l'état « aucune personne » est persisté explicitement afin qu'un ancien
- * snapshot d'un module ne puisse pas réintroduire une assignation supprimée.
+ * Même l'état « aucune personne » est persisté explicitement via version +
+ * updatedAt, sans propriétés undefined, afin qu'un ancien snapshot de module
+ * ne puisse pas réintroduire une assignation supprimée.
  */
 export async function writeTokenPlayerAssignment(
   itemId: string,
