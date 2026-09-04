@@ -1,4 +1,5 @@
 import type { Item } from "@owlbear-rodeo/sdk";
+import { readTokenPlayerAssignment } from "../../../core/tokens/tokenPlayerAssignment";
 import type { StatTrackedToken } from "../statTypes";
 import { createTrackersFromPreset } from "./statPresets";
 import { readStatTrackerState } from "./statStorage";
@@ -25,10 +26,13 @@ function now(): string {
 
 async function createTokenForItem(item: Item): Promise<StatTrackedToken> {
   const state = await readStatTrackerState();
+  const assignment = readTokenPlayerAssignment(item);
   const token = createTrackedToken({
     sourceItemId: item.id,
     name: item.name || "Token",
     tokenType: "enemy",
+    assignedPlayerId: assignment?.playerId,
+    assignedPlayerName: assignment?.playerName,
   });
   const existingLink = readStatTokenLinkMetadata(item);
   if (existingLink?.tokenId) token.id = existingLink.tokenId;
@@ -57,9 +61,12 @@ export async function addSceneItemsToStatTracker(items: Item[]): Promise<void> {
         updatedAt: now(),
       };
     } else if (embedded) {
+      const assignment = readTokenPlayerAssignment(item);
       token = {
         ...embedded,
         sourceItemId: item.id,
+        assignedPlayerId: assignment?.playerId ?? embedded.assignedPlayerId,
+        assignedPlayerName: assignment?.playerName ?? embedded.assignedPlayerName,
         isTracked: true,
         updatedAt: now(),
       };
