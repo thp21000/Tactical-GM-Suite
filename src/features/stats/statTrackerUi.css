@@ -389,6 +389,104 @@
   vertical-align: -2px;
 }
 
+.stat-room-settings {
+  display: grid;
+  gap: 10px;
+}
+
+.stat-room-settings__header,
+.stat-room-settings__copy {
+  display: grid;
+  gap: 3px;
+}
+
+.stat-room-settings__header > strong,
+.stat-room-settings__copy > strong {
+  color: var(--tgm-text);
+  font-size: var(--tgm-font-sm);
+}
+
+.stat-room-settings__header > span,
+.stat-room-settings__copy > span {
+  color: var(--tgm-text-muted);
+  font-size: var(--tgm-font-xs);
+  line-height: 1.4;
+}
+
+.stat-room-settings__toggle-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  gap: 14px;
+  align-items: center;
+  padding: 11px 12px;
+  border: 1px solid var(--tgm-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--tgm-panel) 78%, transparent);
+  cursor: pointer;
+}
+
+.stat-room-settings__toggle-row:hover {
+  border-color: color-mix(in srgb, var(--tgm-accent) 34%, var(--tgm-border));
+  background: color-mix(in srgb, var(--tgm-accent) 5%, var(--tgm-panel));
+}
+
+.stat-room-settings__toggle-row > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stat-room-settings__switch {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 22px;
+  border: 1px solid color-mix(in srgb, var(--tgm-text-muted) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tgm-text-muted) 18%, transparent);
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.stat-room-settings__switch > span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--tgm-text-muted);
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.stat-room-settings__toggle-row > input:checked + .stat-room-settings__switch {
+  border-color: color-mix(in srgb, var(--tgm-accent) 72%, white 8%);
+  background: color-mix(in srgb, var(--tgm-accent) 60%, transparent);
+}
+
+.stat-room-settings__toggle-row > input:checked + .stat-room-settings__switch > span {
+  background: white;
+  transform: translateX(18px);
+}
+
+.stat-room-settings__toggle-row > input:focus-visible + .stat-room-settings__switch {
+  outline: 2px solid var(--tgm-accent);
+  outline-offset: 2px;
+}
+
+.stat-room-settings__toggle-row:has(input:disabled) {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.stat-room-settings__error {
+  margin: 0;
+  color: var(--tgm-danger);
+  font-size: var(--tgm-font-xs);
+}
+
 @media (max-width: 480px) {
   .stat-tracker-modal__backdrop {
     padding: 7px;
