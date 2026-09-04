@@ -176,6 +176,10 @@ body.stat-condition-context-host #root {
 }
 
 .stat-condition-context__condition-label {
+  display: inline-block;
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
   color: var(--tgm-obr-text, #f5f5f7);
