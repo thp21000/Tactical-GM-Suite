@@ -29,6 +29,7 @@ const en: LocaleDictionary = {
   "stats.conditions.error.readToken": "Unable to read the selected token.",
   "stats.conditions.error.tokenMissing": "The token could not be found.",
   "stats.conditions.error.update": "Unable to update the condition.",
+  "stats.conditions.error.playerAccessDenied": "The GM has not enabled player access to the Conditions menu.",
   "stats.conditions.empty.selectToken": "Select a token.",
   "stats.conditions.search.placeholder": "Search for a condition",
   "stats.conditions.list.aria": "Conditions",
@@ -38,6 +39,15 @@ const en: LocaleDictionary = {
   "stats.conditions.value.damage": "Damage",
   "stats.conditions.hover.description": "Description",
   "stats.conditions.hover.rulesSummary": "Rules summary",
+
+  "stats.settings.show": "Stats settings",
+  "stats.settings.hide": "Hide settings",
+  "stats.settings.title": "Stats settings",
+  "stats.settings.permissions.title": "Player permissions",
+  "stats.settings.permissions.summary": "Settings shared across the whole room.",
+  "stats.settings.playerConditions.label": "Allow players to use the Conditions menu",
+  "stats.settings.playerConditions.help": "When enabled, players can open Conditions from the token context menu and add, edit or remove conditions on eligible tokens.",
+  "stats.settings.error": "Unable to update the room Stats settings.",
 
   "stats.conditions.catalog.blinded": "Blinded",
   "stats.conditions.catalog.deafened": "Deafened",
