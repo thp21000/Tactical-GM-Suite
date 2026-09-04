@@ -5,6 +5,8 @@ import { AppPreferencesProvider } from "./core/preferences/AppPreferencesProvide
 import { setupStatBackground } from "./features/stats/background/setupStatBackground";
 import { StatConditionContextMenuApp } from "./features/stats/context/StatConditionContextMenuApp";
 import { StatTrackerContextMenuApp } from "./features/stats/context/StatTrackerContextMenuApp";
+import { setupTokenToolsBackground } from "./features/token-tools/setupTokenToolsBackground";
+import { TokenToolsPopoverApp } from "./features/token-tools/TokenToolsPopoverApp";
 import { I18nProvider } from "./i18n";
 import "./shared/styles/globals.css";
 import "./shared/styles/scrollbars.css";
@@ -22,12 +24,15 @@ const view = new URLSearchParams(window.location.search).get("view");
 
 if (view === "background") {
   setupStatBackground();
+  setupTokenToolsBackground();
 } else {
   const page =
     view === "stats-conditions" ? (
       <StatConditionContextMenuApp />
     ) : view === "stats-trackers" ? (
       <StatTrackerContextMenuApp />
+    ) : view === "token-tools" ? (
+      <TokenToolsPopoverApp />
     ) : (
       <App />
     );
