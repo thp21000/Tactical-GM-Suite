@@ -83,7 +83,6 @@ export function TokenToolsPopoverApp() {
 
   useEffect(() => {
     let mounted = true;
-    let unsubscribeItems: (() => void) | undefined;
     let unsubscribeParty: (() => void) | undefined;
     let unsubscribePlayer: (() => void) | undefined;
     let unsubscribeTheme: (() => void) | undefined;
@@ -113,7 +112,11 @@ export function TokenToolsPopoverApp() {
           if (mounted) setPlayers([]);
         });
 
-      unsubscribeItems = OBR.scene.items.onChange(() => void refreshItem());
+      // Le ContextMenuEmbed n'a pas besoin de relire le token pour chaque
+      // changement de la scène. Les deux actions du menu rafraîchissent déjà
+      // explicitement l'item après leur écriture. Éviter ce listener global
+      // empêche les overlays Stats/Conditions et les autres changements OBR de
+      // provoquer des rerenders permanents du sous-menu.
       unsubscribePlayer = OBR.player.onChange(() => {
         if (!queryItemId) void refreshItem();
       });
@@ -125,7 +128,6 @@ export function TokenToolsPopoverApp() {
     return () => {
       mounted = false;
       document.body.classList.remove("token-tools-host");
-      unsubscribeItems?.();
       unsubscribeParty?.();
       unsubscribePlayer?.();
       unsubscribeTheme?.();
