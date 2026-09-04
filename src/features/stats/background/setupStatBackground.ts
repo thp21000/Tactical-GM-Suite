@@ -9,6 +9,10 @@ import { setupStatConditionInitiativeSync } from "../services/statConditionIniti
 import { setupStatConditionOverlayAutoSync } from "../services/statConditionOverlayAutoSync";
 import { createOrUpdateTokenConditionOverlay } from "../services/statConditionOverlayObrSync";
 import { createEmbeddedStatTokenMetadata } from "../services/statEmbeddedProfileActions";
+import {
+  getStatRoomSettings,
+  subscribeToStatRoomSettings,
+} from "../services/statRoomSettings";
 import { getStatTokenContextKeyFilters } from "../services/statTokenEligibility";
 import {
   hasPlayerEditableTrackers,
@@ -140,10 +144,46 @@ async function registerStatsQuickContextMenu(
   });
 }
 
+async function syncConditionContextMenu(
+  conditionIconUrl: string,
+  tokenFilters: ReturnType<typeof getStatTokenContextKeyFilters>,
+): Promise<void> {
+  const [role, roomSettings] = await Promise.all([
+    OBR.player.getRole(),
+    getStatRoomSettings(),
+  ]);
+  const allowed = role === "GM" || roomSettings.allowPlayerConditions;
+
+  await OBR.contextMenu.remove(STAT_CONDITION_CONTEXT_MENU_ID).catch(() => undefined);
+  if (!allowed) return;
+
+  await OBR.contextMenu.create({
+    id: STAT_CONDITION_CONTEXT_MENU_ID,
+    icons: [
+      {
+        icon: conditionIconUrl,
+        label: "Conditions",
+        filter: {
+          min: 1,
+          max: 1,
+          roles: [role],
+          every: tokenFilters,
+        },
+      },
+    ],
+    embed: {
+      url: getExtensionUrl("stats-conditions"),
+      height: 500,
+    },
+    onClick: () => undefined,
+  });
+}
+
 export function setupStatBackground(): () => void {
   let unsubscribeSceneReady: (() => void) | undefined;
   let unsubscribeInitiativeSync: (() => void) | undefined;
   let unsubscribeConditionOverlaySync: (() => void) | undefined;
+  let unsubscribeRoomSettings: (() => void) | undefined;
 
   OBR.onReady(() => {
     // Start warming the PNG cache immediately, but never delay menu registration.
@@ -155,26 +195,11 @@ export function setupStatBackground(): () => void {
 
     // Ajouter/Retirer du Stat Tracker vit désormais dans le menu Tactical GM Suite.
     void registerStatsQuickContextMenu(iconUrl, tokenFilters).catch(() => undefined);
+    void syncConditionContextMenu(conditionIconUrl, tokenFilters).catch(() => undefined);
 
-    void OBR.contextMenu.create({
-      id: STAT_CONDITION_CONTEXT_MENU_ID,
-      icons: [
-        {
-          icon: conditionIconUrl,
-          label: "Conditions",
-          filter: {
-            min: 1,
-            max: 1,
-            roles: ["GM"],
-            every: tokenFilters,
-          },
-        },
-      ],
-      embed: {
-        url: getExtensionUrl("stats-conditions"),
-        height: 500,
-      },
-      onClick: () => undefined,
+    unsubscribeRoomSettings?.();
+    unsubscribeRoomSettings = subscribeToStatRoomSettings(() => {
+      void syncConditionContextMenu(conditionIconUrl, tokenFilters).catch(() => undefined);
     });
 
     void syncCurrentSceneConditionBadges();
@@ -198,6 +223,7 @@ export function setupStatBackground(): () => void {
     unsubscribeSceneReady?.();
     unsubscribeInitiativeSync?.();
     unsubscribeConditionOverlaySync?.();
+    unsubscribeRoomSettings?.();
     void OBR.contextMenu.remove(STAT_STATS_CONTEXT_MENU_ID);
     void OBR.contextMenu.remove(STAT_CONDITION_CONTEXT_MENU_ID);
   };
