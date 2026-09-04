@@ -38,11 +38,27 @@ export async function assignTacticalTokenToPlayer(
   return assignment;
 }
 
-/** Migre silencieusement une ancienne assignation stockée uniquement dans Stats. */
+/**
+ * Maintient l'invariant Core -> modules.
+ *
+ * - ancien profil Stats sans lien Core : migration vers le Core ;
+ * - lien Core déjà présent : il gagne toujours et remet à jour le miroir Stats
+ *   si un autre chemin vient de créer/modifier le profil.
+ */
 export async function ensureCoreAssignmentForStatToken(item: Item): Promise<void> {
-  if (readTokenPlayerAssignment(item)) return;
   const token = readEmbeddedStatToken(item);
   if (!token) return;
+
+  const coreAssignment = readTokenPlayerAssignment(item);
+  if (coreAssignment) {
+    if (
+      token.assignedPlayerId !== coreAssignment.playerId ||
+      token.assignedPlayerName !== coreAssignment.playerName
+    ) {
+      await mirrorAssignmentIntoStatProfile(item.id, coreAssignment);
+    }
+    return;
+  }
 
   const assignment = await writeTokenPlayerAssignment(
     item.id,
