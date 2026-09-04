@@ -26,6 +26,7 @@ const en: LocaleDictionary = {
   "stats.conditions.editor.hint.notInInitiative": "Rounds and Encounter become available when this token is added to Initiative.",
   "stats.conditions.editor.cancel": "Cancel",
   "stats.conditions.editor.save": "Save",
+  "stats.conditions.loading": "Loading conditions…",
   "stats.conditions.error.readToken": "Unable to read the selected token.",
   "stats.conditions.error.tokenMissing": "The token could not be found.",
   "stats.conditions.error.update": "Unable to update the condition.",
