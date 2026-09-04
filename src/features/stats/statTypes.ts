@@ -47,6 +47,13 @@ export type StatConditionTokenDisplayMode =
   | "icon"
   | "hidden";
 
+export type StatConditionDerivationMode = "while-active" | "on-apply";
+
+export type StatConditionDerivationSource = {
+  conditionId: string;
+  mode: StatConditionDerivationMode;
+};
+
 export type StatConditionEffectTarget =
   | "armor-class"
   | "attack-roll"
@@ -123,6 +130,13 @@ export type StatTokenCondition = {
   tokenDisplayMode?: StatConditionTokenDisplayMode;
   tokenDisplayPriority?: number;
   visibility?: StatTrackerVisibility;
+  /**
+   * True/undefined = la condition a été appliquée explicitement par un utilisateur.
+   * False = elle existe uniquement comme conséquence automatique d'une autre condition.
+   */
+  isExplicit?: boolean;
+  /** Sources automatiques qui maintiennent ou ont initialement appliqué cette condition. */
+  derivedFrom?: StatConditionDerivationSource[];
   createdAt: string;
   updatedAt: string;
 };

@@ -6,6 +6,10 @@ import type {
   StatTrackedToken,
 } from "../statTypes";
 import type { SystemStatConditionDefinition } from "./statConditionCatalog";
+import {
+  applyStatConditionImplications,
+  removeExplicitConditionAndReconcile,
+} from "./statConditionDerivations";
 
 export type StatConditionQuickConfig = {
   value?: number;
@@ -71,10 +75,12 @@ function createConfiguredCondition(
     initiativeEncounterId: encounterId,
     initiativeStartRound: initiativeRound,
     initiativeExpiresAtRound: expiresAtRound,
-    visibility: config.visibility ?? "public",
+    visibility: config.visibility ?? existing?.visibility ?? "public",
     showOnToken: true,
     tokenDisplayMode: "icon",
     tokenDisplayPriority: 50,
+    isExplicit: true,
+    derivedFrom: existing?.derivedFrom,
     createdAt: existing?.createdAt ?? timestamp,
     updatedAt: timestamp,
   };
@@ -94,8 +100,7 @@ export function upsertQuickCondition(
 ): StatTrackedToken {
   const existing = getActiveTokenCondition(token, definition.id);
   const condition = createConfiguredCondition(definition, config, existing);
-
-  return {
+  const next: StatTrackedToken = {
     ...token,
     conditions: existing
       ? token.conditions.map((current) =>
@@ -104,20 +109,15 @@ export function upsertQuickCondition(
       : [...token.conditions, condition],
     updatedAt: now(),
   };
+
+  return applyStatConditionImplications(next, definition, !existing);
 }
 
 export function removeQuickCondition(
   token: StatTrackedToken,
   conditionId: string,
 ): StatTrackedToken {
-  const existing = getActiveTokenCondition(token, conditionId);
-  if (!existing) return token;
-
-  return {
-    ...token,
-    conditions: token.conditions.filter((condition) => condition.id !== existing.id),
-    updatedAt: now(),
-  };
+  return removeExplicitConditionAndReconcile(token, conditionId);
 }
 
 export function getConditionDurationText(
@@ -146,22 +146,27 @@ export function getConditionDurationListText(
   condition: StatTokenCondition,
   t: TranslateFunction,
 ): string | undefined {
+  const automatic = (condition.derivedFrom?.length ?? 0) > 0
+    ? t("stats.conditions.automatic.badge")
+    : undefined;
+  let duration: string | undefined;
+
   if (condition.durationType === "rounds") {
     const rounds = condition.remainingRounds ?? condition.durationValue ?? 0;
-    return t(
+    duration = t(
       rounds === 1
         ? "stats.conditions.duration.roundOne"
         : "stats.conditions.duration.roundMany",
       { count: rounds },
     );
+  } else if (condition.durationType === "encounter") {
+    duration = t("stats.conditions.duration.encounter");
+  } else if (condition.durationType === "rest") {
+    duration = t("stats.conditions.duration.rest");
   }
-  if (condition.durationType === "encounter") {
-    return t("stats.conditions.duration.encounter");
-  }
-  if (condition.durationType === "rest") {
-    return t("stats.conditions.duration.rest");
-  }
-  return undefined;
+
+  if (automatic && duration) return `${automatic} · ${duration}`;
+  return automatic ?? duration;
 }
 
 export function getConditionDisplayName(

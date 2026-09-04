@@ -1,15 +1,22 @@
 import type {
+  StatConditionDerivationMode,
+  StatConditionDerivationSource,
   StatConditionDurationType,
   StatTrackerVisibility,
   StatTokenCondition,
 } from "../statTypes";
 import { isCanonicalStatConditionId } from "./statConditionCatalog";
+import { reconcileDerivedConditionList } from "./statConditionDerivations";
 
 const DURATION_TYPES = new Set<StatConditionDurationType>([
   "manual",
   "rounds",
   "encounter",
   "rest",
+]);
+const DERIVATION_MODES = new Set<StatConditionDerivationMode>([
+  "while-active",
+  "on-apply",
 ]);
 
 function createId(): string {
@@ -41,6 +48,37 @@ function durationType(value: unknown): StatConditionDurationType | undefined {
   return typeof value === "string" && DURATION_TYPES.has(value as StatConditionDurationType)
     ? (value as StatConditionDurationType)
     : undefined;
+}
+
+function derivationSources(value: unknown): StatConditionDerivationSource[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const sources: StatConditionDerivationSource[] = [];
+
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object") continue;
+    const record = entry as Record<string, unknown>;
+    if (!isCanonicalStatConditionId(record.conditionId)) continue;
+    if (
+      typeof record.mode !== "string" ||
+      !DERIVATION_MODES.has(record.mode as StatConditionDerivationMode)
+    ) {
+      continue;
+    }
+    const source: StatConditionDerivationSource = {
+      conditionId: record.conditionId,
+      mode: record.mode as StatConditionDerivationMode,
+    };
+    if (
+      !sources.some(
+        (candidate) =>
+          candidate.conditionId === source.conditionId && candidate.mode === source.mode,
+      )
+    ) {
+      sources.push(source);
+    }
+  }
+
+  return sources.length > 0 ? sources : undefined;
 }
 
 function normalizeCondition(entry: unknown): StatTokenCondition | undefined {
@@ -76,6 +114,8 @@ function normalizeCondition(entry: unknown): StatTokenCondition | undefined {
     tokenDisplayMode: "icon",
     tokenDisplayPriority: integer(record.tokenDisplayPriority) ?? 50,
     visibility: visibility(record.visibility),
+    isExplicit: record.isExplicit !== false,
+    derivedFrom: derivationSources(record.derivedFrom),
     createdAt: cleanText(record.createdAt) ?? timestamp,
     updatedAt: cleanText(record.updatedAt) ?? timestamp,
   };
@@ -84,6 +124,7 @@ function normalizeCondition(entry: unknown): StatTokenCondition | undefined {
 /**
  * Canonical-only persistence. Unknown/obsolete condition IDs are discarded.
  * No single-condition display rule exists: every active condition is preserved.
+ * Derived while-active conditions are also pruned when their last source is gone.
  */
 export function normalizeTokenConditions(value: unknown): StatTokenCondition[] {
   if (!Array.isArray(value)) return [];
@@ -92,10 +133,12 @@ export function normalizeTokenConditions(value: unknown): StatTokenCondition[] {
     .map(normalizeCondition)
     .filter((condition): condition is StatTokenCondition => Boolean(condition));
 
-  return normalized.filter(
+  const unique = normalized.filter(
     (condition, index, conditions) =>
       conditions.findIndex(
         (candidate) => candidate.conditionId === condition.conditionId,
       ) === index,
   );
+
+  return reconcileDerivedConditionList(unique);
 }
