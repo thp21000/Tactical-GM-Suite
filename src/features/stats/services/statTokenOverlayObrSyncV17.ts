@@ -44,25 +44,28 @@ function getPresentation(item: Item, sourceItemId: string): DockPresentation | u
   const element = getDockElement(item, sourceItemId);
   if (!element) return undefined;
 
-  // Tout reste volontairement sur ATTACHMENT : c'est la configuration V12
-  // qui a réellement validé le texte en espace scène et le comportement au zoom.
-  // On ne règle ici que l'ordre interne au layer.
-  if (item.type === "TEXT") return { zIndex: 40 };
+  // IMPORTANT : ne jamais muter un objet TEXT après sa création.
+  // Les tests en room montrent que V12 affiche correctement ses Text de scène
+  // tant qu'ils restent exactement tels que le builder les a créés. Les
+  // changements de layer ou de zIndex appliqués après addItems les font
+  // disparaître. Les Text restent donc à leur zIndex natif (0), et tous les
+  // éléments graphiques sont simplement placés derrière eux.
+  if (item.type === "TEXT") return undefined;
 
   if (item.type === "SHAPE") {
-    if (element.endsWith("-mute")) return { zIndex: 50 };
-    return { zIndex: 20 };
+    if (element.endsWith("-mute")) return { zIndex: -5 };
+    return { zIndex: -20 };
   }
 
   if (item.type === "IMAGE") {
-    if (element.endsWith("-icon")) return { zIndex: 30 };
-    return { zIndex: 10 };
+    if (element.endsWith("-icon")) return { zIndex: -10 };
+    return { zIndex: -30 };
   }
 
   return undefined;
 }
 
-async function orderDockElements(
+async function orderDockGraphics(
   api: OverlayMutableApi,
   sourceItemId: string,
 ): Promise<void> {
@@ -80,6 +83,8 @@ async function orderDockElements(
     for (const draft of drafts) {
       const presentation = presentations.get(draft.id);
       if (!presentation) continue;
+      // Tous les éléments restent sur ATTACHMENT. Seuls les éléments non-TEXT
+      // sont ordonnés derrière le texte de scène natif.
       draft.layer = "ATTACHMENT";
       draft.zIndex = presentation.zIndex;
     }
@@ -87,9 +92,10 @@ async function orderDockElements(
 }
 
 /**
- * V17 conserve intégralement la géométrie V12, y compris ses vrais objets Text
- * de scène. Aucun Label screen-space et aucun changement de layer n'est utilisé.
- * L'empilement est seulement rendu déterministe via zIndex dans ATTACHMENT.
+ * V17.1 conserve intégralement la géométrie V12 et ses vrais objets Text de
+ * scène. Aucun Label screen-space n'est utilisé et, surtout, aucun Text n'est
+ * modifié après sa création. L'empilement est obtenu en envoyant uniquement les
+ * plaques, formes et icônes derrière le zIndex natif du texte.
  */
 export async function createOrUpdateTokenOverlay(
   token: StatTrackedToken,
@@ -106,8 +112,8 @@ export async function createOrUpdateTokenOverlay(
 
   try {
     await Promise.all([
-      orderDockElements(OBR.scene.items, sourceItemId),
-      orderDockElements(OBR.scene.local, sourceItemId),
+      orderDockGraphics(OBR.scene.items, sourceItemId),
+      orderDockGraphics(OBR.scene.local, sourceItemId),
     ]);
     return result;
   } catch (error) {
