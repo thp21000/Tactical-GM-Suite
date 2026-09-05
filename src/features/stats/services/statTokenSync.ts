@@ -1,4 +1,4 @@
-import type { StatTrackedToken, StatTrackerVisibility } from "../statTypes";
+import type { StatTrackedToken, StatTrackerVisibility, StatTrackerVisualType } from "../statTypes";
 import {
   getTokenDisplayItems,
   getTokenDisplayItemsByVisibility,
@@ -15,8 +15,16 @@ export type StatTokenSyncItem = {
   sourceId: string;
   label: string;
   title: string;
+  name: string;
   iconId: string;
+  iconSrc?: string;
+  accentColor: string;
+  visualType: StatTrackerVisualType;
   mode: StatTokenDisplayItemMode;
+  current?: number;
+  max?: number;
+  value?: number;
+  enabled?: boolean;
   priority: number;
   visibility: StatTrackerVisibility;
 };
@@ -48,8 +56,16 @@ function toSyncItem(item: StatTokenDisplayItem): StatTokenSyncItem {
     sourceId: item.sourceId,
     label: item.label,
     title: item.title,
+    name: item.name,
     iconId: item.iconId,
+    iconSrc: item.iconSrc,
+    accentColor: item.accentColor,
+    visualType: item.visualType,
     mode: item.mode,
+    current: item.current,
+    max: item.max,
+    value: item.value,
+    enabled: item.enabled,
     priority: item.priority,
     visibility: item.visibility,
   };
@@ -57,7 +73,6 @@ function toSyncItem(item: StatTokenDisplayItem): StatTokenSyncItem {
 
 export function getTokenSyncStatus(token: StatTrackedToken): StatTokenSyncStatus {
   if (!token.sourceItemId) return "not-linked";
-
   return getTokenDisplayItems(token).length > 0 ? "ready" : "empty";
 }
 
@@ -107,7 +122,6 @@ export function createStatSyncPayload(
 export function getTokenSyncSummary(payload: StatTokenSyncPayload): string {
   if (payload.status === "not-linked") return "Non lié Owlbear";
   if (payload.status === "empty") return "Aucun item token";
-
   return `Sync prête · ${payload.itemCount} item${payload.itemCount > 1 ? "s" : ""}`;
 }
 
@@ -116,9 +130,7 @@ export function createDryRunStatSyncReport(
 ): StatDryRunSyncReport {
   const payloads = createStatSyncPayload(tokens);
   const readyCount = payloads.filter((payload) => payload.status === "ready").length;
-  const notLinkedCount = payloads.filter(
-    (payload) => payload.status === "not-linked",
-  ).length;
+  const notLinkedCount = payloads.filter((payload) => payload.status === "not-linked").length;
   const emptyCount = payloads.filter((payload) => payload.status === "empty").length;
   const itemCount = payloads.reduce((total, payload) => total + payload.itemCount, 0);
 

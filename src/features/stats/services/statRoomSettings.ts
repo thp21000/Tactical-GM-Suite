@@ -2,33 +2,42 @@ import OBR from "@owlbear-rodeo/sdk";
 import { EXTENSION_ID } from "../../../core/constants/ids";
 
 export const STAT_ROOM_SETTINGS_METADATA_KEY = `${EXTENSION_ID}/stats-room-settings`;
-export const STAT_ROOM_SETTINGS_VERSION = 1;
+export const STAT_ROOM_SETTINGS_VERSION = 2;
+
+export type StatTokenDockPosition = "top" | "bottom";
 
 export type StatRoomSettings = {
   version: typeof STAT_ROOM_SETTINGS_VERSION;
   allowPlayerConditions: boolean;
+  tokenStatsPosition: StatTokenDockPosition;
 };
 
 export const DEFAULT_STAT_ROOM_SETTINGS: StatRoomSettings = {
   version: STAT_ROOM_SETTINGS_VERSION,
   allowPlayerConditions: false,
+  tokenStatsPosition: "top",
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function normalizeTokenStatsPosition(value: unknown): StatTokenDockPosition {
+  return value === "bottom" ? "bottom" : "top";
+}
+
 export function readStatRoomSettings(
   metadata: Record<string, unknown> | undefined,
 ): StatRoomSettings {
   const value = metadata?.[STAT_ROOM_SETTINGS_METADATA_KEY];
-  if (!isRecord(value) || value.version !== STAT_ROOM_SETTINGS_VERSION) {
-    return DEFAULT_STAT_ROOM_SETTINGS;
-  }
+  if (!isRecord(value)) return DEFAULT_STAT_ROOM_SETTINGS;
 
+  // V1 ne contenait que allowPlayerConditions. On la lit sans migration
+  // destructive et on ajoute simplement la position par défaut du Stat Dock.
   return {
     version: STAT_ROOM_SETTINGS_VERSION,
     allowPlayerConditions: value.allowPlayerConditions === true,
+    tokenStatsPosition: normalizeTokenStatsPosition(value.tokenStatsPosition),
   };
 }
 
@@ -39,11 +48,9 @@ export async function getStatRoomSettings(): Promise<StatRoomSettings> {
 }
 
 export async function setStatRoomSettings(
-  patch: Partial<Pick<StatRoomSettings, "allowPlayerConditions">>,
+  patch: Partial<Pick<StatRoomSettings, "allowPlayerConditions" | "tokenStatsPosition">>,
 ): Promise<StatRoomSettings> {
-  if (!OBR.isAvailable) {
-    return { ...DEFAULT_STAT_ROOM_SETTINGS, ...patch };
-  }
+  if (!OBR.isAvailable) return { ...DEFAULT_STAT_ROOM_SETTINGS, ...patch };
 
   if ((await OBR.player.getRole()) !== "GM") {
     throw new Error("Only the GM can update Stats room settings.");
@@ -64,21 +71,20 @@ export async function setStatRoomSettings(
 }
 
 /**
- * `OBR.room.onMetadataChange` se déclenche pour les métadonnées de tous les
- * modules. On ne propage donc un événement Stats que si la valeur qui nous
- * intéresse change réellement.
+ * Les métadonnées room sont partagées avec tous les modules. On ne propage
+ * donc que les changements réels des réglages Stats qui nous concernent.
  */
 export function subscribeToStatRoomSettings(
   listener: (settings: StatRoomSettings) => void,
 ): () => void {
   if (!OBR.isAvailable) return () => undefined;
 
-  let previousAllowPlayerConditions: boolean | undefined;
-
+  let previousSignature: string | undefined;
   return OBR.room.onMetadataChange((metadata) => {
     const next = readStatRoomSettings(metadata);
-    if (previousAllowPlayerConditions === next.allowPlayerConditions) return;
-    previousAllowPlayerConditions = next.allowPlayerConditions;
+    const signature = `${next.allowPlayerConditions ? 1 : 0}:${next.tokenStatsPosition}`;
+    if (signature === previousSignature) return;
+    previousSignature = signature;
     listener(next);
   });
 }
