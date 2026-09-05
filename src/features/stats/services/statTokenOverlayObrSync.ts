@@ -1,7 +1,6 @@
 import OBR, {
   buildImage,
   buildLabel,
-  buildShape,
   type BoundingBox,
   type Item,
   type Vector2,
@@ -56,7 +55,11 @@ type DockCell = {
   height: number;
 };
 
-type DockLayout = { cells: DockCell[]; width: number; height: number };
+type DockLayout = {
+  cells: DockCell[];
+  width: number;
+  height: number;
+};
 
 type PreparedAudience = {
   visibility: StatTrackerVisibility;
@@ -74,28 +77,44 @@ type RenderContext = {
   sceneDpi: number;
 };
 
+type TextAlign = "LEFT" | "CENTER" | "RIGHT";
+
+type Row = {
+  cells: DockCell[];
+  width: number;
+  height: number;
+};
+
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 const MAX_TRACKERS = 6;
 const ICON_LOGICAL_SIZE = 1024;
 
-const TOKEN_GAP = 10;
-const ITEM_GAP = 4;
-const ROW_GAP = 4;
-const VALUE_WIDTH = 104;
-const TOGGLE_WIDTH = 112;
-const ITEM_HEIGHT = 30;
-const BAR_WIDTH = 150;
+// Dimensions de référence pour un token d'une case.
+// La V1.1 réduit volontairement l'encombrement par rapport au premier prototype.
+const TOKEN_GAP = 5;
+const ITEM_GAP = 3;
+const ROW_GAP = 3;
+const VALUE_WIDTH = 78;
+const TOGGLE_WIDTH = 94;
+const ITEM_HEIGHT = 28;
+const BAR_WIDTH = 142;
 const BAR_HEIGHT = 40;
-const ICON_UNIT_SIZE = 28;
+const ICON_UNIT_SIZE = 24;
 const ICON_UNIT_GAP = 3;
-const OVERFLOW_WIDTH = 38;
-const OVERFLOW_HEIGHT = 24;
+const OVERFLOW_WIDTH = 30;
+const OVERFLOW_HEIGHT = 18;
 
-const COLOR_BACKGROUND = "#171a24";
-const COLOR_TEXT = "#f7f5ff";
-const COLOR_MUTED = "#9aa0ad";
-const COLOR_BORDER = "#626978";
-const COLOR_TRACK = "#090b10";
+const COLOR_BACKGROUND = "#11151f";
+const COLOR_BACKGROUND_INNER = "#181d29";
+const COLOR_TEXT = "#f5f1e8";
+const COLOR_VALUE = "#fff5df";
+const COLOR_MUTED = "#8f96a3";
+const COLOR_BRONZE = "#b58a52";
+const COLOR_BRONZE_HIGHLIGHT = "#d6b273";
+const COLOR_INACTIVE_FRAME = "#656b75";
+const COLOR_TRACK = "#080a0f";
+const COLOR_TRACK_BORDER = "#414754";
+const COLOR_SHADOW = "#000000";
 
 function createResult(
   action: StatOverlayObrManualAction,
@@ -124,7 +143,9 @@ function readOverlayMetadata(item: Item): StatOverlayObrMetadata | undefined {
     typeof value.overlayId !== "string" ||
     typeof value.updatedAt !== "string" ||
     !isVisibility(value.visibility)
-  ) return undefined;
+  ) {
+    return undefined;
+  }
 
   return {
     kind: STAT_OVERLAY_KIND,
@@ -190,6 +211,7 @@ function absoluteAssetUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
   if (/^https?:\/\//i.test(url)) return url;
   if (typeof window === "undefined") return url;
+
   try {
     return new URL(url, window.location.href).href;
   } catch {
@@ -199,7 +221,9 @@ function absoluteAssetUrl(url: string | undefined): string | undefined {
 
 function tokenScale(bounds: BoundingBox, sceneDpi: number): number {
   const diameter = Math.max(bounds.width, bounds.height);
-  if (!Number.isFinite(diameter) || !Number.isFinite(sceneDpi) || sceneDpi <= 0) return 1;
+  if (!Number.isFinite(diameter) || !Number.isFinite(sceneDpi) || sceneDpi <= 0) {
+    return 1;
+  }
   return Math.max(0.25, diameter / sceneDpi);
 }
 
@@ -208,7 +232,9 @@ function iconUnitCount(item: StatTokenSyncItem): number {
 }
 
 function cellSize(item: StatTokenSyncItem, scale: number) {
-  if (item.mode === "bar") return { width: BAR_WIDTH * scale, height: BAR_HEIGHT * scale };
+  if (item.mode === "bar") {
+    return { width: BAR_WIDTH * scale, height: BAR_HEIGHT * scale };
+  }
   if (item.mode === "icon") {
     const units = iconUnitCount(item);
     return {
@@ -222,8 +248,6 @@ function cellSize(item: StatTokenSyncItem, scale: number) {
   };
 }
 
-type Row = { cells: DockCell[]; width: number; height: number };
-
 function dockLayout(payload: StatTokenSyncPayload, scale: number): DockLayout {
   const visible = payload.items.slice(0, MAX_TRACKERS);
   const hidden = Math.max(0, payload.items.length - visible.length);
@@ -232,16 +256,24 @@ function dockLayout(payload: StatTokenSyncPayload, scale: number): DockLayout {
 
   const flushInline = () => {
     if (!inline.length) return;
+
     let x = 0;
     let height = 0;
     const cells = inline.map((item, index) => {
       if (index > 0) x += ITEM_GAP * scale;
       const size = cellSize(item, scale);
-      const cell: DockCell = { kind: "tracker", item, x, y: 0, ...size };
+      const cell: DockCell = {
+        kind: "tracker",
+        item,
+        x,
+        y: 0,
+        ...size,
+      };
       x += size.width;
       height = Math.max(height, size.height);
       return cell;
     });
+
     rows.push({ cells, width: x, height });
     inline = [];
   };
@@ -250,24 +282,30 @@ function dockLayout(payload: StatTokenSyncPayload, scale: number): DockLayout {
     if (item.mode === "bar" || item.mode === "icon") {
       flushInline();
       const size = cellSize(item, scale);
-      rows.push({ cells: [{ kind: "tracker", item, x: 0, y: 0, ...size }], ...size });
-    } else {
-      inline.push(item);
-      if (inline.length === 3) flushInline();
+      rows.push({
+        cells: [{ kind: "tracker", item, x: 0, y: 0, ...size }],
+        ...size,
+      });
+      continue;
     }
+
+    inline.push(item);
+    if (inline.length === 3) flushInline();
   }
   flushInline();
 
   if (hidden > 0) {
     rows.push({
-      cells: [{
-        kind: "overflow",
-        overflowCount: hidden,
-        x: 0,
-        y: 0,
-        width: OVERFLOW_WIDTH * scale,
-        height: OVERFLOW_HEIGHT * scale,
-      }],
+      cells: [
+        {
+          kind: "overflow",
+          overflowCount: hidden,
+          x: 0,
+          y: 0,
+          width: OVERFLOW_WIDTH * scale,
+          height: OVERFLOW_HEIGHT * scale,
+        },
+      ],
       width: OVERFLOW_WIDTH * scale,
       height: OVERFLOW_HEIGHT * scale,
     });
@@ -276,12 +314,16 @@ function dockLayout(payload: StatTokenSyncPayload, scale: number): DockLayout {
   const width = rows.reduce((result, row) => Math.max(result, row.width), 0);
   const cells: DockCell[] = [];
   let y = 0;
+
   rows.forEach((row, rowIndex) => {
     const offsetX = (width - row.width) / 2;
-    row.cells.forEach((cell) => cells.push({ ...cell, x: offsetX + cell.x, y }));
+    row.cells.forEach((cell) => {
+      cells.push({ ...cell, x: offsetX + cell.x, y });
+    });
     y += row.height;
     if (rowIndex < rows.length - 1) y += ROW_GAP * scale;
   });
+
   return { cells, width, height: y };
 }
 
@@ -291,7 +333,10 @@ function prepareAudience(
   scale: number,
 ): PreparedAudience {
   const payload = createTokenSyncPayloadForVisibility(token, visibility);
-  if (!payload.sourceItemId || payload.status !== "ready") return { visibility, payload };
+  if (!payload.sourceItemId || payload.status !== "ready") {
+    return { visibility, payload };
+  }
+
   const overlayId = createOverlayId(payload.sourceItemId, visibility);
   return {
     visibility,
@@ -321,38 +366,48 @@ function audienceOrigins(
 
   for (const audience of audiences) {
     if (!audience.layout) continue;
+
     const x = bounds.center.x - audience.layout.width / 2;
     const y = position === "top" ? cursor - audience.layout.height : cursor;
     result.set(audience.visibility, { x, y });
     cursor = position === "top" ? y - gap : y + audience.layout.height + gap;
   }
+
   return result;
 }
 
 function elementMetadata(metadata: StatOverlayObrMetadata, element: string) {
-  return { [STAT_OVERLAY_METADATA_KEY]: { ...metadata, element } };
+  return {
+    [STAT_OVERLAY_METADATA_KEY]: {
+      ...metadata,
+      element,
+    },
+  };
 }
 
-function panel(
+function roundedBlock(
   ctx: RenderContext,
   id: string,
   position: Vector2,
   width: number,
   height: number,
-  accent: string,
-  active = true,
+  backgroundColor: string,
+  backgroundOpacity: number,
+  cornerRadius: number,
 ): Item {
-  return buildShape()
+  return buildLabel()
     .id(id)
     .name(`Stats Dock — ${ctx.token.name}`)
-    .width(width)
-    .height(height)
-    .shapeType("RECTANGLE")
-    .fillColor(active ? COLOR_BACKGROUND : "#242730")
-    .fillOpacity(0.94)
-    .strokeColor(active ? accent : COLOR_BORDER)
-    .strokeOpacity(active ? 0.72 : 0.55)
-    .strokeWidth(Math.max(1, height * 0.035))
+    .plainText("")
+    .width(Math.max(1, width))
+    .height(Math.max(1, height))
+    .fontSize(1)
+    .padding(0)
+    .fillColor("#000000")
+    .fillOpacity(0)
+    .backgroundColor(backgroundColor)
+    .backgroundOpacity(backgroundOpacity)
+    .cornerRadius(Math.max(0, cornerRadius))
     .position(position)
     .rotation(0)
     .layer("ATTACHMENT")
@@ -365,22 +420,30 @@ function panel(
     .build();
 }
 
-function text(
+function textItem(
   ctx: RenderContext,
   id: string,
   value: string,
   position: Vector2,
+  width: number,
+  height: number,
   fontSize: number,
   color = COLOR_TEXT,
   weight = 600,
+  align: TextAlign = "LEFT",
 ): Item {
   return buildLabel()
     .id(id)
     .name(`Stats Dock — ${ctx.token.name}`)
     .plainText(value)
+    .width(Math.max(1, width))
+    .height(Math.max(1, height))
     .fontSize(Math.max(6, fontSize))
     .fontWeight(weight)
+    .lineHeight(1)
     .padding(0)
+    .textAlign(align)
+    .textAlignVertical("MIDDLE")
     .fillColor(color)
     .backgroundOpacity(0)
     .position(position)
@@ -395,7 +458,127 @@ function text(
     .build();
 }
 
-function icon(
+function frameItems(
+  ctx: RenderContext,
+  baseId: string,
+  position: Vector2,
+  width: number,
+  height: number,
+  frameColor: string,
+): Item[] {
+  const s = ctx.scale;
+  const inset = 1.35 * s;
+
+  return [
+    roundedBlock(
+      ctx,
+      `${baseId}-shadow`,
+      { x: position.x + 1.3 * s, y: position.y + 1.8 * s },
+      width,
+      height,
+      COLOR_SHADOW,
+      0.42,
+      7 * s,
+    ),
+    roundedBlock(
+      ctx,
+      `${baseId}-frame`,
+      position,
+      width,
+      height,
+      frameColor,
+      0.98,
+      7 * s,
+    ),
+    roundedBlock(
+      ctx,
+      `${baseId}-body`,
+      { x: position.x + inset, y: position.y + inset },
+      width - inset * 2,
+      height - inset * 2,
+      COLOR_BACKGROUND,
+      0.98,
+      5.8 * s,
+    ),
+    roundedBlock(
+      ctx,
+      `${baseId}-inner`,
+      { x: position.x + 2.5 * s, y: position.y + 2.5 * s },
+      width - 5 * s,
+      height - 5 * s,
+      COLOR_BACKGROUND_INNER,
+      0.62,
+      4.8 * s,
+    ),
+    roundedBlock(
+      ctx,
+      `${baseId}-highlight`,
+      { x: position.x + 4 * s, y: position.y + 2.3 * s },
+      Math.max(1, width - 8 * s),
+      Math.max(0.7 * s, 0.7),
+      COLOR_BRONZE_HIGHLIGHT,
+      0.22,
+      1 * s,
+    ),
+  ];
+}
+
+function iconPlateItems(
+  ctx: RenderContext,
+  baseId: string,
+  position: Vector2,
+  size: number,
+  accent: string,
+  active: boolean,
+): Item[] {
+  const s = ctx.scale;
+  const outerColor = active ? accent : COLOR_INACTIVE_FRAME;
+
+  return [
+    roundedBlock(
+      ctx,
+      `${baseId}-icon-shadow`,
+      { x: position.x + 0.7 * s, y: position.y + 1 * s },
+      size,
+      size,
+      COLOR_SHADOW,
+      0.35,
+      6 * s,
+    ),
+    roundedBlock(
+      ctx,
+      `${baseId}-icon-frame`,
+      position,
+      size,
+      size,
+      outerColor,
+      active ? 0.92 : 0.78,
+      6 * s,
+    ),
+    roundedBlock(
+      ctx,
+      `${baseId}-icon-body`,
+      { x: position.x + 1.25 * s, y: position.y + 1.25 * s },
+      size - 2.5 * s,
+      size - 2.5 * s,
+      COLOR_BACKGROUND,
+      active ? 0.92 : 0.98,
+      4.8 * s,
+    ),
+    roundedBlock(
+      ctx,
+      `${baseId}-icon-glow`,
+      { x: position.x + 3 * s, y: position.y + 3 * s },
+      size - 6 * s,
+      size - 6 * s,
+      active ? accent : "#555a64",
+      active ? 0.17 : 0.1,
+      4 * s,
+    ),
+  ];
+}
+
+function iconItem(
   ctx: RenderContext,
   id: string,
   item: StatTokenSyncItem,
@@ -404,10 +587,22 @@ function icon(
 ): Item | null {
   const url = absoluteAssetUrl(item.iconSrc);
   if (!url) return null;
+
   const imageScale = size / ctx.sceneDpi;
   return buildImage(
-    { width: ICON_LOGICAL_SIZE, height: ICON_LOGICAL_SIZE, url, mime: "image/png" },
-    { dpi: ICON_LOGICAL_SIZE, offset: { x: ICON_LOGICAL_SIZE / 2, y: ICON_LOGICAL_SIZE / 2 } },
+    {
+      width: ICON_LOGICAL_SIZE,
+      height: ICON_LOGICAL_SIZE,
+      url,
+      mime: "image/png",
+    },
+    {
+      dpi: ICON_LOGICAL_SIZE,
+      offset: {
+        x: ICON_LOGICAL_SIZE / 2,
+        y: ICON_LOGICAL_SIZE / 2,
+      },
+    },
   )
     .id(id)
     .name(`Stats Dock — ${ctx.token.name} — ${item.name}`)
@@ -424,29 +619,7 @@ function icon(
     .build();
 }
 
-function mute(ctx: RenderContext, id: string, position: Vector2, size: number): Item {
-  return buildShape()
-    .id(id)
-    .name(`Stats Dock — ${ctx.token.name} — inactive`)
-    .width(size)
-    .height(size)
-    .shapeType("RECTANGLE")
-    .fillColor("#858a94")
-    .fillOpacity(0.62)
-    .strokeOpacity(0)
-    .position(position)
-    .rotation(0)
-    .layer("ATTACHMENT")
-    .attachedTo(ctx.sourceItemId)
-    .locked(true)
-    .disableHit(true)
-    .disableAutoZIndex(true)
-    .disableAttachmentBehavior(["COPY", "SCALE", "ROTATION"])
-    .metadata(elementMetadata(ctx.metadata, id))
-    .build();
-}
-
-function shortName(value: string, max = 12): string {
+function shortName(value: string, max = 9): string {
   const trimmed = value.trim();
   return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max - 1)}…`;
 }
@@ -455,7 +628,9 @@ function displayValue(item: StatTokenSyncItem): string {
   if (item.visualType === "counter" || item.visualType === "readonly") {
     return String(item.value ?? item.current ?? 0);
   }
-  if (item.visualType === "bar") return `${item.current ?? 0}/${item.max ?? 0}`;
+  if (item.visualType === "bar") {
+    return `${item.current ?? 0}/${item.max ?? 0}`;
+  }
   return "";
 }
 
@@ -465,104 +640,252 @@ function valueOrToggleItems(
   cell: DockCell,
   origin: Vector2,
 ): Item[] {
+  const s = ctx.scale;
   const x = origin.x + cell.x;
   const y = origin.y + cell.y;
   const baseId = `${ctx.metadata.overlayId}-${sanitizeId(item.id)}`;
   const active = item.mode !== "toggle" || item.enabled === true;
-  const iconSize = 21 * ctx.scale;
-  const center = { x: x + 15 * ctx.scale, y: y + cell.height / 2 };
-  const result: Item[] = [
-    panel(ctx, `${baseId}-panel`, { x, y }, cell.width, cell.height, item.accentColor, active),
-  ];
-  const iconItem = icon(ctx, `${baseId}-icon`, item, center, iconSize);
-  if (iconItem) result.push(iconItem);
-  if (!active) {
-    result.push(mute(ctx, `${baseId}-mute`, { x: center.x - iconSize / 2, y: center.y - iconSize / 2 }, iconSize));
-  }
-  const suffix = item.mode === "value" ? ` ${displayValue(item)}` : "";
+  const frameColor = item.mode === "toggle"
+    ? active
+      ? item.accentColor
+      : COLOR_INACTIVE_FRAME
+    : COLOR_BRONZE;
+  const result: Item[] = frameItems(
+    ctx,
+    baseId,
+    { x, y },
+    cell.width,
+    cell.height,
+    frameColor,
+  );
+
+  const plateSize = 22 * s;
+  const platePosition = {
+    x: x + 3 * s,
+    y: y + (cell.height - plateSize) / 2,
+  };
   result.push(
-    text(
+    ...iconPlateItems(ctx, baseId, platePosition, plateSize, item.accentColor, active),
+  );
+
+  const icon = iconItem(
+    ctx,
+    `${baseId}-icon`,
+    item,
+    {
+      x: platePosition.x + plateSize / 2,
+      y: platePosition.y + plateSize / 2,
+    },
+    18 * s,
+  );
+  if (icon) result.push(icon);
+
+  if (!active) {
+    result.push(
+      roundedBlock(
+        ctx,
+        `${baseId}-icon-mute`,
+        { x: platePosition.x + 2 * s, y: platePosition.y + 2 * s },
+        plateSize - 4 * s,
+        plateSize - 4 * s,
+        "#767b84",
+        0.5,
+        4 * s,
+      ),
+    );
+  }
+
+  const textX = x + 29 * s;
+  const textY = y + 3 * s;
+  const textHeight = cell.height - 6 * s;
+
+  if (item.mode === "toggle") {
+    result.push(
+      textItem(
+        ctx,
+        `${baseId}-name`,
+        shortName(item.name, 13),
+        { x: textX, y: textY },
+        Math.max(10 * s, cell.width - 33 * s),
+        textHeight,
+        9.2 * s,
+        active ? COLOR_TEXT : COLOR_MUTED,
+        active ? 650 : 550,
+      ),
+    );
+    return result;
+  }
+
+  const valueWidth = 21 * s;
+  const nameWidth = Math.max(10 * s, cell.width - 33 * s - valueWidth);
+  result.push(
+    textItem(
       ctx,
-      `${baseId}-text`,
-      `${shortName(item.name)}${suffix}`,
-      { x: x + 29 * ctx.scale, y: y + cell.height / 2 },
-      10.5 * ctx.scale,
-      active ? COLOR_TEXT : COLOR_MUTED,
-      item.mode === "value" ? 650 : 600,
+      `${baseId}-name`,
+      shortName(item.name),
+      { x: textX, y: textY },
+      nameWidth,
+      textHeight,
+      8.2 * s,
+      COLOR_TEXT,
+      560,
+    ),
+    textItem(
+      ctx,
+      `${baseId}-value`,
+      displayValue(item),
+      { x: x + cell.width - valueWidth - 4 * s, y: textY },
+      valueWidth,
+      textHeight,
+      10.6 * s,
+      COLOR_VALUE,
+      760,
+      "RIGHT",
     ),
   );
+
   return result;
 }
 
-function barItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCell, origin: Vector2): Item[] {
+function barItems(
+  ctx: RenderContext,
+  item: StatTokenSyncItem,
+  cell: DockCell,
+  origin: Vector2,
+): Item[] {
+  const s = ctx.scale;
   const x = origin.x + cell.x;
   const y = origin.y + cell.y;
   const baseId = `${ctx.metadata.overlayId}-${sanitizeId(item.id)}`;
-  const result: Item[] = [panel(ctx, `${baseId}-panel`, { x, y }, cell.width, cell.height, item.accentColor)];
-  const iconItem = icon(ctx, `${baseId}-icon`, item, { x: x + 15 * ctx.scale, y: y + 16 * ctx.scale }, 22 * ctx.scale);
-  if (iconItem) result.push(iconItem);
-  result.push(
-    text(ctx, `${baseId}-name`, shortName(item.name, 13), { x: x + 30 * ctx.scale, y: y + 14 * ctx.scale }, 9.5 * ctx.scale),
-    text(ctx, `${baseId}-value`, displayValue(item), { x: x + cell.width - 34 * ctx.scale, y: y + 14 * ctx.scale }, 10.5 * ctx.scale, COLOR_TEXT, 700),
+  const result: Item[] = frameItems(
+    ctx,
+    baseId,
+    { x, y },
+    cell.width,
+    cell.height,
+    COLOR_BRONZE,
   );
 
-  const trackX = x + 30 * ctx.scale;
-  const trackY = y + 28 * ctx.scale;
-  const trackWidth = Math.max(24 * ctx.scale, cell.width - 38 * ctx.scale);
-  const trackHeight = 5 * ctx.scale;
+  const plateSize = 29 * s;
+  const platePosition = {
+    x: x + 4 * s,
+    y: y + (cell.height - plateSize) / 2,
+  };
+  result.push(
+    ...iconPlateItems(ctx, baseId, platePosition, plateSize, item.accentColor, true),
+  );
+
+  const icon = iconItem(
+    ctx,
+    `${baseId}-icon`,
+    item,
+    {
+      x: platePosition.x + plateSize / 2,
+      y: platePosition.y + plateSize / 2,
+    },
+    23 * s,
+  );
+  if (icon) result.push(icon);
+
+  const contentX = x + 38 * s;
+  const topY = y + 4 * s;
+  const contentWidth = cell.width - 43 * s;
+  result.push(
+    textItem(
+      ctx,
+      `${baseId}-name`,
+      shortName(item.name, 14),
+      { x: contentX, y: topY },
+      Math.max(10 * s, contentWidth - 42 * s),
+      14 * s,
+      8.5 * s,
+      COLOR_TEXT,
+      600,
+    ),
+    textItem(
+      ctx,
+      `${baseId}-value`,
+      displayValue(item),
+      { x: x + cell.width - 43 * s, y: topY },
+      38 * s,
+      14 * s,
+      10.2 * s,
+      COLOR_VALUE,
+      760,
+      "RIGHT",
+    ),
+  );
+
+  const trackX = contentX;
+  const trackY = y + 24 * s;
+  const trackWidth = Math.max(28 * s, contentWidth);
+  const trackHeight = 8 * s;
   const max = Math.max(0, item.max ?? 0);
   const current = Math.max(0, item.current ?? 0);
   const ratio = max > 0 ? Math.min(1, current / max) : 0;
+  const innerX = trackX + 1.2 * s;
+  const innerY = trackY + 1.2 * s;
+  const innerWidth = trackWidth - 2.4 * s;
+  const innerHeight = trackHeight - 2.4 * s;
+
   result.push(
-    buildShape()
-      .id(`${baseId}-track`)
-      .name(`Stats Dock — ${ctx.token.name} — track`)
-      .width(trackWidth)
-      .height(trackHeight)
-      .shapeType("RECTANGLE")
-      .fillColor(COLOR_TRACK)
-      .fillOpacity(0.96)
-      .strokeColor(COLOR_BORDER)
-      .strokeOpacity(0.7)
-      .strokeWidth(Math.max(0.8, ctx.scale))
-      .position({ x: trackX, y: trackY })
-      .rotation(0)
-      .layer("ATTACHMENT")
-      .attachedTo(ctx.sourceItemId)
-      .locked(true)
-      .disableHit(true)
-      .disableAutoZIndex(true)
-      .disableAttachmentBehavior(["COPY", "SCALE", "ROTATION"])
-      .metadata(elementMetadata(ctx.metadata, `${baseId}-track`))
-      .build(),
+    roundedBlock(
+      ctx,
+      `${baseId}-track-frame`,
+      { x: trackX, y: trackY },
+      trackWidth,
+      trackHeight,
+      COLOR_TRACK_BORDER,
+      0.96,
+      4 * s,
+    ),
+    roundedBlock(
+      ctx,
+      `${baseId}-track`,
+      { x: innerX, y: innerY },
+      innerWidth,
+      innerHeight,
+      COLOR_TRACK,
+      1,
+      3 * s,
+    ),
   );
+
   if (ratio > 0) {
+    const fillWidth = Math.max(1.5 * s, innerWidth * ratio);
     result.push(
-      buildShape()
-        .id(`${baseId}-fill`)
-        .name(`Stats Dock — ${ctx.token.name} — fill`)
-        .width(Math.max(1, trackWidth * ratio))
-        .height(trackHeight)
-        .shapeType("RECTANGLE")
-        .fillColor(item.accentColor)
-        .fillOpacity(0.98)
-        .strokeOpacity(0)
-        .position({ x: trackX, y: trackY })
-        .rotation(0)
-        .layer("ATTACHMENT")
-        .attachedTo(ctx.sourceItemId)
-        .locked(true)
-        .disableHit(true)
-        .disableAutoZIndex(true)
-        .disableAttachmentBehavior(["COPY", "SCALE", "ROTATION"])
-        .metadata(elementMetadata(ctx.metadata, `${baseId}-fill`))
-        .build(),
+      roundedBlock(
+        ctx,
+        `${baseId}-fill`,
+        { x: innerX, y: innerY },
+        fillWidth,
+        innerHeight,
+        item.accentColor,
+        0.98,
+        3 * s,
+      ),
+      roundedBlock(
+        ctx,
+        `${baseId}-fill-highlight`,
+        { x: innerX + 1 * s, y: innerY + 0.8 * s },
+        Math.max(1, fillWidth - 2 * s),
+        Math.max(0.8, 1 * s),
+        "#ffffff",
+        0.22,
+        1 * s,
+      ),
     );
   }
+
   return result;
 }
 
-function iconUnitItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCell, origin: Vector2): Item[] {
+function iconUnitItems(
+  ctx: RenderContext,
+  item: StatTokenSyncItem,
+  cell: DockCell,
+  origin: Vector2,
+): Item[] {
   const result: Item[] = [];
   const max = iconUnitCount(item);
   const current = Math.min(max, Math.max(0, Math.round(item.current ?? 0)));
@@ -575,24 +898,79 @@ function iconUnitItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCe
   for (let index = 0; index < max; index += 1) {
     const active = index < current;
     const x = startX + index * (size + gap);
-    result.push(panel(ctx, `${baseId}-unit-${index}-panel`, { x, y }, size, size, item.accentColor, active));
-    const iconItem = icon(ctx, `${baseId}-unit-${index}-icon`, item, { x: x + size / 2, y: y + size / 2 }, 20 * ctx.scale);
-    if (iconItem) result.push(iconItem);
+    const unitId = `${baseId}-unit-${index}`;
+
+    result.push(
+      ...frameItems(
+        ctx,
+        unitId,
+        { x, y },
+        size,
+        size,
+        active ? COLOR_BRONZE : COLOR_INACTIVE_FRAME,
+      ),
+    );
+
+    const icon = iconItem(
+      ctx,
+      `${unitId}-icon`,
+      item,
+      { x: x + size / 2, y: y + size / 2 },
+      18.5 * ctx.scale,
+    );
+    if (icon) result.push(icon);
+
     if (!active) {
-      result.push(mute(ctx, `${baseId}-unit-${index}-mute`, { x: x + 2 * ctx.scale, y: y + 2 * ctx.scale }, size - 4 * ctx.scale));
+      result.push(
+        roundedBlock(
+          ctx,
+          `${unitId}-mute`,
+          { x: x + 2.7 * ctx.scale, y: y + 2.7 * ctx.scale },
+          size - 5.4 * ctx.scale,
+          size - 5.4 * ctx.scale,
+          "#737781",
+          0.58,
+          4 * ctx.scale,
+        ),
+      );
     }
   }
+
   return result;
 }
 
-function overflowItems(ctx: RenderContext, cell: DockCell, origin: Vector2): Item[] {
+function overflowItems(
+  ctx: RenderContext,
+  cell: DockCell,
+  origin: Vector2,
+): Item[] {
   const x = origin.x + cell.x;
   const y = origin.y + cell.y;
   const baseId = `${ctx.metadata.overlayId}-overflow`;
-  return [
-    panel(ctx, `${baseId}-panel`, { x, y }, cell.width, cell.height, COLOR_BORDER),
-    text(ctx, `${baseId}-text`, `+${cell.overflowCount ?? 0}`, { x: x + 10 * ctx.scale, y: y + cell.height / 2 }, 9.5 * ctx.scale, COLOR_MUTED, 700),
-  ];
+  const result = frameItems(
+    ctx,
+    baseId,
+    { x, y },
+    cell.width,
+    cell.height,
+    COLOR_INACTIVE_FRAME,
+  );
+
+  result.push(
+    textItem(
+      ctx,
+      `${baseId}-text`,
+      `+${cell.overflowCount ?? 0}`,
+      { x, y },
+      cell.width,
+      cell.height,
+      8.5 * ctx.scale,
+      COLOR_MUTED,
+      760,
+      "CENTER",
+    ),
+  );
+  return result;
 }
 
 function audienceItems(
@@ -604,7 +982,15 @@ function audienceItems(
   sceneDpi: number,
 ): Item[] {
   if (!audience.layout || !audience.metadata) return [];
-  const ctx: RenderContext = { token, sourceItemId, metadata: audience.metadata, scale, sceneDpi };
+
+  const ctx: RenderContext = {
+    token,
+    sourceItemId,
+    metadata: audience.metadata,
+    scale,
+    sceneDpi,
+  };
+
   return audience.layout.cells.flatMap((cell) => {
     if (cell.kind === "overflow") return overflowItems(ctx, cell, origin);
     const item = cell.item;
@@ -620,6 +1006,7 @@ async function findOverlays(
   visibility: StatTrackerVisibility,
 ): Promise<StatOverlayObrExistingOverlay[]> {
   if (!token.sourceItemId) return [];
+
   const items = await getAudienceApi(visibility).getItems();
   return items.flatMap((item) => {
     if (!matchesTokenOverlay(item, token, visibility)) return [];
@@ -643,20 +1030,41 @@ async function replaceAudienceItems(
 ): Promise<{ created: number; deleted: number }> {
   const api = getAudienceApi(visibility);
   const existing = await findOverlays(token, visibility);
-  if (existing.length > 0) await api.deleteItems(existing.map(({ item }) => item.id));
-  if (desired.length > 0) await api.addItems(desired);
-  return { created: desired.length, deleted: existing.length };
+
+  if (existing.length > 0) {
+    await api.deleteItems(existing.map(({ item }) => item.id));
+  }
+  if (desired.length > 0) {
+    await api.addItems(desired);
+  }
+
+  return {
+    created: desired.length,
+    deleted: existing.length,
+  };
 }
 
-export async function createOrUpdateTokenOverlay(token: StatTrackedToken): Promise<StatOverlayObrSyncResult> {
+export async function createOrUpdateTokenOverlay(
+  token: StatTrackedToken,
+): Promise<StatOverlayObrSyncResult> {
   const action: StatOverlayObrManualAction = "create-or-update";
   const sourceItemId = token.sourceItemId;
-  if (!sourceItemId) return createResult(action, "not-ready", "Token non lié à un item Owlbear.");
+
+  if (!sourceItemId) {
+    return createResult(action, "not-ready", "Token non lié à un item Owlbear.");
+  }
   if (!canUseDockOverlaySync()) {
-    return createResult(action, "unavailable", "Owlbear indisponible ou scène non prête.", { sourceItemId });
+    return createResult(
+      action,
+      "unavailable",
+      "Owlbear indisponible ou scène non prête.",
+      { sourceItemId },
+    );
   }
   if (!(await canCurrentPlayerManageOverlays())) {
-    return createResult(action, "unavailable", "Action réservée au MJ.", { sourceItemId });
+    return createResult(action, "unavailable", "Action réservée au MJ.", {
+      sourceItemId,
+    });
   }
 
   try {
@@ -666,15 +1074,29 @@ export async function createOrUpdateTokenOverlay(token: StatTrackedToken): Promi
       getStatRoomSettings(),
     ]);
     const scale = tokenScale(bounds, sceneDpi);
-    const audiences = AUDIENCES.map((visibility) => prepareAudience(token, visibility, scale));
-    const origins = audienceOrigins(bounds, audiences, settings.tokenStatsPosition, scale);
+    const audiences = AUDIENCES.map((visibility) =>
+      prepareAudience(token, visibility, scale),
+    );
+    const origins = audienceOrigins(
+      bounds,
+      audiences,
+      settings.tokenStatsPosition,
+      scale,
+    );
+
     let created = 0;
     let deleted = 0;
 
     for (const audience of audiences) {
       const origin = origins.get(audience.visibility);
-      const desired = origin ? audienceItems(token, sourceItemId, audience, origin, scale, sceneDpi) : [];
-      const result = await replaceAudienceItems(token, audience.visibility, desired);
+      const desired = origin
+        ? audienceItems(token, sourceItemId, audience, origin, scale, sceneDpi)
+        : [];
+      const result = await replaceAudienceItems(
+        token,
+        audience.visibility,
+        desired,
+      );
       created += result.created;
       deleted += result.deleted;
     }
@@ -685,24 +1107,62 @@ export async function createOrUpdateTokenOverlay(token: StatTrackedToken): Promi
     const message = `Public ${counts.public} · Privé ${counts.private} · MJ ${counts.gm}`;
 
     if (created > 0) {
-      return createResult(action, deleted > 0 ? "updated" : "created", `Stat Dock mis à jour · ${message}`, { sourceItemId });
+      return createResult(
+        action,
+        deleted > 0 ? "updated" : "created",
+        `Stat Dock mis à jour · ${message}`,
+        { sourceItemId },
+      );
     }
-    if (deleted > 0) return createResult(action, "updated", `Stat Dock retiré · ${message}`, { sourceItemId });
-    return createResult(action, "not-ready", "Aucun tracker activé pour affichage token.", { sourceItemId });
+    if (deleted > 0) {
+      return createResult(action, "updated", `Stat Dock retiré · ${message}`, {
+        sourceItemId,
+      });
+    }
+    return createResult(
+      action,
+      "not-ready",
+      "Aucun tracker activé pour affichage token.",
+      { sourceItemId },
+    );
   } catch (error) {
-    return createResult(action, "error", error instanceof Error ? error.message : "Erreur Owlbear pendant la mise à jour.", { sourceItemId });
+    return createResult(
+      action,
+      "error",
+      error instanceof Error
+        ? error.message
+        : "Erreur Owlbear pendant la mise à jour.",
+      { sourceItemId },
+    );
   }
 }
 
-export async function deleteTokenOverlay(token: StatTrackedToken): Promise<StatOverlayObrSyncResult> {
+export async function deleteTokenOverlay(
+  token: StatTrackedToken,
+): Promise<StatOverlayObrSyncResult> {
   const action: StatOverlayObrManualAction = "delete";
   const sourceItemId = token.sourceItemId;
-  if (!sourceItemId) return createResult(action, "not-ready", "Token non lié à un item Owlbear.");
-  if (!canUseDockOverlaySync()) return createResult(action, "unavailable", "Owlbear indisponible ou scène non prête.", { sourceItemId });
-  if (!(await canCurrentPlayerManageOverlays())) return createResult(action, "unavailable", "Action réservée au MJ.", { sourceItemId });
+
+  if (!sourceItemId) {
+    return createResult(action, "not-ready", "Token non lié à un item Owlbear.");
+  }
+  if (!canUseDockOverlaySync()) {
+    return createResult(
+      action,
+      "unavailable",
+      "Owlbear indisponible ou scène non prête.",
+      { sourceItemId },
+    );
+  }
+  if (!(await canCurrentPlayerManageOverlays())) {
+    return createResult(action, "unavailable", "Action réservée au MJ.", {
+      sourceItemId,
+    });
+  }
 
   try {
     let deleted = 0;
+
     for (const visibility of AUDIENCES) {
       const api = getAudienceApi(visibility);
       const overlays = await findOverlays(token, visibility);
@@ -710,6 +1170,7 @@ export async function deleteTokenOverlay(token: StatTrackedToken): Promise<StatO
       await api.deleteItems(overlays.map(({ item }) => item.id));
       deleted += overlays.length;
     }
+
     return createResult(
       action,
       deleted > 0 ? "deleted" : "not-found",
@@ -717,6 +1178,13 @@ export async function deleteTokenOverlay(token: StatTrackedToken): Promise<StatO
       { sourceItemId },
     );
   } catch (error) {
-    return createResult(action, "error", error instanceof Error ? error.message : "Erreur Owlbear pendant la suppression.", { sourceItemId });
+    return createResult(
+      action,
+      "error",
+      error instanceof Error
+        ? error.message
+        : "Erreur Owlbear pendant la suppression.",
+      { sourceItemId },
+    );
   }
 }
