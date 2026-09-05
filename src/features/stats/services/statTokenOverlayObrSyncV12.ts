@@ -1,7 +1,7 @@
 import OBR, {
   buildImage,
-  buildLabel,
   buildShape,
+  buildText,
   type BoundingBox,
   type Item,
   type Vector2,
@@ -390,6 +390,12 @@ function unitFrameItem(
   return imageFrame(ctx, id, muted ? UNIT_MUTED_ASSET : UNIT_ASSET, 96, 96, position, size, size);
 }
 
+/**
+ * Les Label Owlbear sont rendus en screen-space et gardent donc une taille
+ * d'écran indépendante du zoom. Le Stat Dock doit au contraire se comporter
+ * comme les badges Conditions : tout appartient à l'espace de la scène et ne
+ * change de proportion que lorsque la taille réelle du token change.
+ */
 function textItem(
   ctx: RenderContext,
   id: string,
@@ -402,7 +408,7 @@ function textItem(
   weight = 600,
   align: TextAlign = "LEFT",
 ): Item {
-  return buildLabel()
+  return buildText()
     .id(id)
     .name(`Stats Dock — ${ctx.token.name}`)
     .plainText(value)
@@ -415,7 +421,6 @@ function textItem(
     .textAlign(align)
     .textAlignVertical("MIDDLE")
     .fillColor(color)
-    .backgroundOpacity(0)
     .position(position)
     .rotation(0)
     .layer("ATTACHMENT")
