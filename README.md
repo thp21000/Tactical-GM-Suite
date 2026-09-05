@@ -1,153 +1,199 @@
 # Tactical GM Suite
 
-Tactical GM Suite est une extension modulaire pour MJ sur Owlbear Rodeo. Le projet regroupe plusieurs outils tactiques dans une seule interface tout en conservant des frontières nettes entre les modules.
+Tactical GM Suite est une extension modulaire pour MJ sur Owlbear Rodeo. Elle rassemble plusieurs outils tactiques dans une seule extension tout en gardant des frontières nettes entre les modules et en laissant le MJ maître de ses règles.
 
-Le projet est développé en React, TypeScript et Vite avec le SDK Owlbear Rodeo, puis déployé sur GitHub Pages.
+Stack : React, TypeScript, Vite, SDK Owlbear Rodeo, GitHub Pages.
 
 ## État actuel
 
-Modules intégrés :
+Modules actifs :
 
-- **Core / Dashboard** : shell de l’extension, navigation, registre des modules, préférences globales, intégration du thème Owlbear et vues de synthèse.
-- **Initiative Tracker** : participants, ordre d’initiative, rounds, tours, états simples et import depuis Owlbear.
-- **Distance / Déplacement / Portée** : mesures tactiques entre items Owlbear, lecture de la grille, presets de portée et préférences.
-- **Stat Tracker** : suivi avancé de tokens, trackers personnalisables, presets, assignation joueur, permissions réelles, conditions, affichages sur token et contrôles rapides depuis le menu contextuel.
+- **Core / Dashboard** : shell, navigation, préférences globales, thème Owlbear, assignation token→joueur et synthèses.
+- **Initiative Tracker** : participants, ordre, rounds, tours, états simples et import Owlbear.
+- **Distance / Déplacement / Portée** : mesures, lecture de grille, presets et préférences.
+- **Stat Tracker / Conditions** : profils token, trackers libres, presets, permissions, conditions, menus contextuels et overlays de scène.
 
-Modules volontairement reportés :
-
-- Calendar
-- Loot Table
-
-Calendar et Loot Table ne doivent pas être intégrés tant qu’un chantier explicite ne les ouvre pas.
+Modules volontairement reportés : Calendar et Loot Table.
 
 ## Langue et système de jeu
 
-Le Core possède deux préférences globales persistantes :
+Préférences globales :
 
-- **Langue** : Français (`fr`) ou English (`en`), avec drapeau dans le sélecteur ;
-- **Système** : D&D 5e (`DND5E`), Pathfinder 2e (`PF2E`) ou Générique (`GENERIC`), avec indicateur visuel explicite du système actif.
+```text
+language   = fr | en
+gameSystem = DND5E | PF2E | GENERIC
+```
 
-La traduction de l’interface historique est progressive. Toute nouvelle chaîne visible ou chaîne reprise dans un chantier doit être fournie simultanément en FR et EN dans les fichiers i18n du module concerné.
+La langue possède un drapeau dans le sélecteur. Le système actif possède un état visuel explicite.
 
-Le système actif n’est consommé que par les modules qui en ont besoin. Conditions l’utilise déjà ; le futur module Loot Table devra réutiliser la même préférence globale. Le catalogue Générique existe dans le modèle mais reste volontairement vide pour le moment.
+Toute nouvelle chaîne ou chaîne modifiée doit être fournie en FR et EN.
 
-Voir [`docs/LOCALIZATION_AND_SYSTEMS.md`](docs/LOCALIZATION_AND_SYSTEMS.md).
+Conditions utilise déjà `gameSystem`. Le futur Loot Table devra réutiliser la même préférence.
 
-## Stat Tracker — état courant
+Voir `docs/LOCALIZATION_AND_SYSTEMS.md`.
 
-Stats est actuellement le module le plus avancé de la suite. Il ne s’agit pas d’une fiche de personnage complète : le système suit des valeurs libres attachées aux tokens.
+## Assignation token → joueur
 
-Le module comprend notamment :
+L’assignation d’un token à un joueur est une donnée Core et ne dépend plus du Stat Tracker.
 
-- profils Stats persistés dans les métadonnées des tokens Owlbear ;
-- ajout/retrait du Stat Tracker sans perte de la configuration embarquée ;
-- prise en charge des copies d’un même token dans les scènes ;
-- presets par type de token ;
-- bibliothèque d’icônes PNG classée en quatre catégories ;
-- cinq types visuels de trackers ;
-- affichage automatique de trackers sélectionnés au-dessus du token ;
-- conditions indépendantes du fait qu’un token soit ou non ajouté au Stat Tracker ;
-- durées `Manuelle`, `Rounds`, `Rencontre` et `Repos` ;
-- synchronisation des durées `Rounds` / `Rencontre` avec Initiative ;
-- sous-menu **Conditions** permanent dans le clic droit Owlbear ;
-- sous-menu **Stats** de modification rapide permanent dans le clic droit Owlbear ;
-- interface joueur limitée aux trackers explicitement autorisés par le MJ.
+Un token peut donc être lié à un joueur sans être suivi par Stats.
 
-### Types visuels actuels
+Dans le clic droit, le sous-menu **Tactical GM Suite** propose actuellement :
 
-| Type technique | Nom UI / usage courant | Interaction principale |
-|---|---|---|
-| `bar` | Barre à valeur max | barre `current/max`, drag horizontal, valeur centrale éditable |
-| `counter` | Indicateur modifiable | `-5`, `-1`, valeur centrale, `+1`, `+5` |
-| `readonly` | Indicateur fixe | pastille 48 px, valeur centrale éditable, sans boutons rapides |
-| `toggle` | Toggle / case | pastille 48 px, clic couleur ↔ désaturé |
-| `icon` | Indicateur à icônes | 1 à 6 icônes cumulatives, clic pour activer/désactiver un niveau |
+```text
+Ajouter au Stat Tracker / Retirer du Stat Tracker
+Lié à personne / Lié à <nom du joueur>
+```
 
-Les champs numériques éditables acceptent aussi un calcul inline : `+3`, `-2`, `*2`, `x2`, `×2`, `/2` ou `÷2`.
+Référence : `docs/TOKEN_PLAYER_ASSIGNMENT.md`.
 
-Le nom technique `readonly` est historique : dans l’interface actuelle, l’**Indicateur fixe** reste modifiable par clic direct sur sa valeur, mais n’a pas de boutons `+/-`.
+## Stat Tracker
 
-## Menus contextuels Owlbear
+Stats suit des données libres attachées aux tokens ; il ne s’agit pas d’une fiche de personnage automatisée.
 
-Le background permanent de l’extension enregistre les menus même lorsque le popover principal n’est pas ouvert.
+Fonctions principales :
 
-Sur les vrais tokens compatibles (`IMAGE` dans les couches `CHARACTER`, `MOUNT` ou `PROP`) :
+- profils persistés dans les métadonnées Owlbear ;
+- ajout/retrait du suivi sans perte du profil ;
+- copies et instances de scène ;
+- presets ;
+- bibliothèque d’icônes PNG ;
+- cinq types techniques de tracker ;
+- permission `canPlayerEdit` ;
+- visibilité `public/private/gm` ;
+- affichage `showOnToken` ;
+- menu Stats rapide permanent.
 
-- **Ajouter au Stat Tracker / Retirer du Stat Tracker** : MJ uniquement ;
-- **Conditions** : MJ uniquement ;
-- **Stats** : MJ, et joueur assigné lorsqu’au moins un tracker possède `Modification joueur autorisée`.
+Types :
 
-Le sous-menu **Stats** est volontairement une interface de changement rapide : il n’affiche pas les commandes d’administration `Modifier`, `Supprimer` ou `Afficher sur le token`. Ces actions restent dans l’interface principale.
+| Type | Usage |
+|---|---|
+| `bar` | current/max + barre |
+| `counter` | valeur modifiable + contrôles rapides |
+| `readonly` | valeur fixe visuellement, toujours éditable dans Stats |
+| `toggle` | actif/inactif |
+| `icon` | 1 à 6 unités cumulatives |
 
-## Permissions joueur
-
-Un token peut être assigné à un joueur Owlbear.
-
-Dans les interfaces de contrôle Stats :
-
-- le MJ voit et administre tous les trackers ;
-- le joueur assigné ne voit que les trackers ayant `canPlayerEdit = true` ;
-- ce même joueur peut modifier ces trackers ;
-- `Modification joueur autorisée` est indépendante de la visibilité d’overlay `gm/private/public`.
-
-La visibilité d’overlay continue de définir qui voit l’information sur la scène ; la permission d’édition définit qui peut manipuler le tracker dans les interfaces de contrôle.
+Les calculs inline numériques acceptent notamment `+3`, `-2`, `*2`, `x2`, `×2`, `/2`, `÷2`.
 
 ## Conditions
 
 Conditions est un sous-système distinct des trackers.
 
-Un token peut recevoir des conditions même s’il n’est pas ajouté au Stat Tracker. Le menu **Conditions** fournit une recherche, une liste et une fenêtre d’ajout/édition avec les paramètres applicables : niveau/valeur, durée et visibilité.
+Un token peut recevoir des Conditions sans être ajouté au Stat Tracker.
 
-Le contenu proposé dépend du système global :
+Catalogues :
 
-- D&D 5e 2014 : 15 conditions ;
-- Pathfinder 2e Remaster : 42 conditions ;
-- Générique : catalogue préparé mais vide actuellement.
+```text
+D&D 5e 2014        15 conditions
+PF2e Remaster      42 conditions
+Générique           0 actuellement
+```
 
-Le runtime utilise exclusivement les IDs canoniques du catalogue V1. Il n’existe plus de catalogue historique ni d’alias de migration pour les anciennes conditions.
+La liste est triée selon la langue active et supporte plusieurs conditions simultanées.
 
-La liste est triée alphabétiquement selon le libellé de la langue active. Au survol d’une ligne, une carte s’ancre directement au-dessus de la condition et affiche :
+Au hover :
 
-- la **Description** ;
-- le **Résumé règles** correspondant au système sélectionné.
+- Description ;
+- Résumé règles du système actif.
 
-Plusieurs conditions peuvent être actives simultanément sur le même token. Une condition active peut être désactivée depuis la liste ou modifiée via son action d’édition sans toucher aux autres.
+Durées : Manuelle, Rounds, Rencontre, Repos.
 
-### Affichage Conditions sur token
+Le MJ peut autoriser l’accès des joueurs au menu Conditions via un réglage de room ; ce réglage est désactivé par défaut.
 
-Les conditions actives sont rendues sous forme de médaillons PNG autour du token.
+## Conditions dérivées
 
-Règles actuelles :
+Certaines relations explicites entre conditions peuvent être automatisées.
 
-- aucun chiffre de niveau n’est affiché sur le token ; le niveau se consulte/modifie dans le menu ;
-- jusqu’à 12 badges sont placés sur le premier anneau ;
-- la couronne utilise une légère correction visuelle vers la gauche et le haut ;
-- la taille de référence actuelle est `BASE_BADGE_SCALE = 0.2574` pour un token d’une case ;
-- la taille réelle suit proportionnellement le diamètre du token : un token deux fois plus grand produit des badges deux fois plus grands ;
-- le rayon et l’espacement utilisent la même échelle dynamique afin de conserver les proportions visuelles.
+Deux modes :
 
-Voir [`docs/stats/CONDITIONS_RUNTIME_SYNC.md`](docs/stats/CONDITIONS_RUNTIME_SYNC.md).
+```text
+while-active
+on-apply
+```
 
-### Séparation affichage Stats / Conditions
+Une condition `on-apply` peut ensuite être retirée indépendamment de sa condition maître.
 
-Les deux affichages sont indépendants :
+Les relations circonstancielles restent manuelles.
 
-- **Stats** lit uniquement `token.trackers` et produit ses propres overlays ;
-- **Conditions** lit uniquement `token.conditions` et produit ses propres badges ;
-- les deux systèmes ont des clés de métadonnées Owlbear, des services de synchronisation et des cycles d’update distincts ;
-- modifier une condition ne doit jamais réveiller l’overlay Stats.
+Voir `docs/stats/CONDITION_DERIVATIONS.md`.
 
-Les effets mécaniques décrits dans le catalogue restent informatifs : Tactical GM Suite n’automatise pas actuellement toutes les règles de D&D 5e ou PF2e.
+## Affichage Conditions sur token
+
+Les Conditions actives utilisent des médaillons PNG autour du token.
+
+La couronne suit proportionnellement la taille réelle du token.
+
+Le niveau n’est pas imprimé sur la scène ; il reste consultable dans le menu Conditions.
+
+Référence : `docs/stats/CONDITIONS_RUNTIME_SYNC.md`.
+
+## Stat Dock — affichage Stats sur token
+
+Les trackers Stats visibles sont regroupés dans une **zone unique** appelée Stat Dock.
+
+Le MJ choisit sa position :
+
+```text
+top
+bottom
+```
+
+Règles :
+
+- pas de cercle ;
+- aucun contrôle interactif sur la scène ;
+- Conditions et Stats restent totalement séparés ;
+- la taille doit suivre la taille réelle du token ;
+- le zoom ne doit pas changer la proportion du texte par rapport aux plaques.
+
+Mapping visuel :
+
+```text
+readonly/counter -> icône + nom + valeur
+toggle           -> icône + nom, couleur/désaturation
+bar              -> icône + nom + current/max + barre
+icon             -> unités répétées actives/inactives
+```
+
+Direction détaillée : `docs/stats/STAT_TOKEN_OVERLAY_VISUAL_SPEC_V1.md`.
+
+### État technique actuel
+
+L’entrée publique `statTokenOverlayObrSync.ts` utilise actuellement **V17.1**.
+
+Cette version réutilise la géométrie V12 et conserve les vrais objets `Text` de scène sans les muter après création. Les plaques, shapes et icônes sont placées derrière le texte avec des zIndex négatifs.
+
+Cette décision vient de tests en room :
+
+- `Label` reste visible mais se comporte en screen-space et donne un mauvais résultat au zoom ;
+- `Text` suit correctement l’espace scène ;
+- modifier layer/zIndex d’un `Text` après création peut le faire disparaître.
+
+Le Stat Dock est donc **encore en stabilisation visuelle/technique**. Il ne doit pas être considéré comme final tant que le test `texte visible + zoom stable + empilement correct` n’est pas validé en room.
+
+## Séparation Stats / Conditions
+
+Invariant :
+
+```text
+Stats      -> token.trackers   -> Stat Dock
+Conditions -> token.conditions -> badges Conditions
+```
+
+Les deux systèmes utilisent des services de synchronisation, métadonnées et triggers distincts.
+
+Une modification Conditions ne doit pas réveiller Stats.
 
 ## Préchargement des assets
 
-Le background permanent précharge les PNG dès que le SDK Owlbear est prêt :
+Le background permanent précharge les PNG dès que Owlbear est prêt :
 
-1. icônes canoniques Conditions en priorité ;
-2. icônes Stats ensuite ;
-3. concurrence limitée pour ne pas bloquer le démarrage de la room.
+1. Conditions ;
+2. Trackers ;
+3. concurrence limitée.
 
-L’objectif est de bénéficier du cache navigateur avant l’ouverture des popovers, sous-menus et overlays.
+Le background peut ensuite resynchroniser les overlays à partir des profils embarqués.
 
 ## Installation Owlbear
 
@@ -163,13 +209,7 @@ Application :
 https://thp21000.github.io/Tactical-GM-Suite/
 ```
 
-Dépôt :
-
-```text
-https://github.com/thp21000/Tactical-GM-Suite
-```
-
-## Développement local
+## Développement
 
 ```bash
 npm install
@@ -178,60 +218,28 @@ npm run typecheck
 npm run build
 ```
 
-Le workflow GitHub Pages exécute le typecheck et le build avant le déploiement.
-
-## Architecture rapide
-
-```text
-src/
-  core/        fondations communes, préférences, thème, constantes, wrappers Owlbear
-  features/    modules fonctionnels
-  shared/      composants et styles réellement partagés
-  i18n/        registre de traduction commun
-
-src/features/
-  dashboard/
-  initiative/
-  range/
-  stats/
-  settings/
-  debug/
-
-docs/
-  ARCHITECTURE.md
-  LOCALIZATION_AND_SYSTEMS.md
-  features/STATS_V2_SPEC.md
-  stats/
-
-public/
-  manifest.json
-```
-
-Stats possède un background permanent et deux vues embarquées utilisées par les menus contextuels Owlbear :
-
-- `?view=stats-conditions`
-- `?view=stats-trackers`
+Le workflow Pages exécute typecheck et build avant déploiement.
 
 ## Documentation de référence
 
-- [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) : contexte opérationnel du projet, état réel et journal de session.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) : architecture globale et frontières entre modules.
-- [`docs/LOCALIZATION_AND_SYSTEMS.md`](docs/LOCALIZATION_AND_SYSTEMS.md) : préférences globales de langue/système et règles i18n.
-- [`docs/features/STATS_V2_SPEC.md`](docs/features/STATS_V2_SPEC.md) : cahier des charges et comportement validé du module Stats.
-- [`docs/stats/CONDITIONS_MASTER_CATALOG_V1.md`](docs/stats/CONDITIONS_MASTER_CATALOG_V1.md) : catalogue canonique des conditions.
-- [`docs/stats/CONDITIONS_RUNTIME_SYNC.md`](docs/stats/CONDITIONS_RUNTIME_SYNC.md) : runtime, préchargement, séparation d’overlay et géométrie des badges.
-- [`docs/stats/README.md`](docs/stats/README.md) : index technique/visuel du système Stats.
-- [`src/features/stats/README.md`](src/features/stats/README.md) : carte du code Stats et état d’implémentation.
+- `PROJECT_CONTEXT.md` — état opérationnel + journal de session.
+- `docs/ARCHITECTURE.md` — frontières d’architecture.
+- `docs/LOCALIZATION_AND_SYSTEMS.md` — langue/système/i18n.
+- `docs/TOKEN_PLAYER_ASSIGNMENT.md` — assignation transverse token→joueur.
+- `docs/features/STATS_V2_SPEC.md` — cahier des charges Stats.
+- `docs/stats/README.md` — index technique Stats/Conditions.
+- `docs/stats/STAT_TOKEN_OVERLAY_VISUAL_SPEC_V1.md` — Stat Dock.
+- `docs/stats/CONDITIONS_MASTER_CATALOG_V1.md` — catalogue canonique.
+- `docs/stats/CONDITIONS_RUNTIME_SYNC.md` — overlay Conditions.
+- `docs/stats/CONDITION_DERIVATIONS.md` — moteur de dérivation.
 
 ## Principes du projet
 
 - garder les modules séparés ;
-- ne pas déplacer la logique métier dans `App.tsx` ;
-- ne pas créer de dossier `utils` fourre-tout ;
-- ne pas déduire la signification d’un tracker à partir de son icône ;
-- conserver les données Stats lisibles et exploitables par d’autres modules ;
-- les nouveaux textes utilisateur doivent être ajoutés en FR et EN ;
-- les modules dépendants d’un système doivent lire la préférence globale plutôt que créer leur propre réglage ;
-- ne jamais mélanger l’overlay Stats et l’overlay Conditions ;
-- une condition active ne doit jamais désactiver automatiquement une autre condition ;
-- lancer `npm run typecheck` et `npm run build` après toute modification de code.
+- garder `App.tsx` léger ;
+- ne pas créer de `utils` fourre-tout ;
+- ne pas déduire le sens d’un tracker depuis son icône ;
+- garder `canPlayerEdit`, `visibility` et `showOnToken` distincts ;
+- toute nouvelle chaîne visible doit exister en FR et EN ;
+- ne jamais mélanger Stat Dock et Conditions ;
+- exécuter typecheck + build après toute modification de code.

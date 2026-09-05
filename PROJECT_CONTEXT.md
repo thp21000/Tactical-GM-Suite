@@ -1,103 +1,84 @@
 # PROJECT_CONTEXT
 
 > Document de contexte opérationnel — Tactical GM Suite  
-> Dernière remise à niveau : **4 septembre 2026**.
+> Dernière remise à niveau : **5 septembre 2026**.  
+> Version du manifest après cette remise à niveau : **0.3.47**.
 
-Ce fichier décrit l’état réel du produit, les décisions stabilisées, les frontières d’architecture, les points ouverts et l’historique suffisamment détaillé pour reprendre le projet sans reconstruire le contexte depuis les conversations précédentes.
+Ce fichier décrit l’état réel du produit, les décisions stabilisées, les frontières d’architecture, les points ouverts et l’historique nécessaire pour reprendre le projet sans reconstruire le contexte depuis les conversations précédentes.
 
 ---
 
-## Projet
+# Projet
 
 **Nom :** Tactical GM Suite  
 **Type :** extension modulaire Owlbear Rodeo  
 **Dépôt :** `thp21000/Tactical-GM-Suite`
 
-### Objectif
+Objectif : regrouper plusieurs outils tactiques pour MJ dans une seule extension, sans transformer Owlbear Rodeo en système entièrement automatisé. Le MJ garde la maîtrise des règles, des données et de la manière de jouer.
 
-Regrouper dans une même extension plusieurs outils tactiques pour MJ tout en gardant les modules autonomes, lisibles et maintenables.
-
-Le projet ne cherche pas à reproduire un VTT complet ni une fiche de personnage automatisée. Il doit surtout réduire les manipulations du MJ pendant la partie.
-
-### Modules actifs
+Modules actifs :
 
 1. Core / Dashboard
 2. Initiative Tracker
 3. Distance / Déplacement / Portée
 4. Stat Tracker / Conditions
 
-### Modules reportés
+Modules reportés tant qu’aucun chantier explicite ne les ouvre :
 
 5. Calendar
 6. Loot Table
 
-Calendar et Loot Table restent hors scope tant qu’un chantier explicite ne les ouvre pas.
-
 ---
 
-## URLs importantes
+# URLs et stack
 
-### Dépôt
+Dépôt :
 
 ```text
 https://github.com/thp21000/Tactical-GM-Suite
 ```
 
-### GitHub Pages
+GitHub Pages :
 
 ```text
 https://thp21000.github.io/Tactical-GM-Suite/
 ```
 
-### Manifest Owlbear
+Manifest Owlbear :
 
 ```text
 https://thp21000.github.io/Tactical-GM-Suite/manifest.json
 ```
 
----
+Stack : React, TypeScript, Vite, Owlbear Rodeo SDK, lucide-react, CSS local, GitHub Pages et GitHub Actions.
 
-## Stack
-
-- React
-- TypeScript
-- Vite
-- Owlbear Rodeo SDK
-- lucide-react
-- CSS local
-- GitHub Pages
-- GitHub Actions
-
-Commandes courantes :
+Validation attendue après toute modification de code :
 
 ```bash
-npm install
-npm run dev
 npm run typecheck
 npm run build
 ```
 
+Le workflow `.github/workflows/deploy-pages.yml` exécute ces validations avant le déploiement Pages.
+
 ---
 
-## Versions observées au checkpoint
+# Versioning
 
-Le versioning n’est toujours pas harmonisé.
+Le dépôt garde encore une divergence historique :
 
 ```text
 package.json          0.1.0
-public/manifest.json  0.2.38
-jalons Git            jusqu’à au moins "Version 0.3.10"
+public/manifest.json  0.3.47
 ```
 
-Le head observé avant ce checkpoint documentaire était `bed593839c8dcb9851791499be233954693c7e1a`, nommé `Version 0.3.10`.
+Le manifest est actuellement la version opérationnelle utilisée pour les modifications du projet. Toute modification réalisée directement sur `main` doit incrémenter ce numéro d’une unité.
 
-Important : un nom de commit n’est pas une preuve de version publique. Ne pas annoncer automatiquement `0.3.10` comme version publiée tant que `package.json`, `manifest.json` et la stratégie de release n’ont pas été alignés explicitement.
+Ne jamais déduire une version publiée depuis le nom d’un commit seul.
 
 ---
 
-# Décisions produit validées
-
-## Modularité
+# Principes d’architecture
 
 Le projet reste structuré autour de :
 
@@ -108,24 +89,27 @@ src/shared/
 src/i18n/
 ```
 
-Règles :
+Règles non négociables :
 
 - ne pas déplacer la logique métier dans `App.tsx` ;
-- ne pas créer un dossier `utils` générique ;
-- ne pas mélanger Initiative, Range, Trackers et Conditions dans un même moteur ;
-- une intégration inter-module doit être volontaire, petite et documentée ;
-- Calendar/Loot restent hors scope sans demande explicite.
+- ne pas créer de dossier `utils` fourre-tout ;
+- garder Initiative, Range, Trackers et Conditions comme domaines distincts ;
+- toute intégration inter-module doit être volontaire, petite et documentée ;
+- le code courant est la référence finale lorsqu’une doc historique contredit le runtime ;
+- Calendar et Loot Table restent hors scope sans demande explicite.
 
-## Langue et système de jeu
+---
 
-Depuis le 3 septembre 2026, Tactical GM Suite possède deux préférences globales dans le Core :
+# Préférences globales — langue et système
+
+Le Core fournit :
 
 ```text
 language   = fr | en
 gameSystem = DND5E | PF2E | GENERIC
 ```
 
-Préférences par défaut :
+Valeurs par défaut :
 
 ```text
 language   = fr
@@ -135,106 +119,57 @@ gameSystem = PF2E
 Décisions :
 
 - sélecteur de langue avec drapeau ;
-- système actif avec indicateur visuel explicite ;
-- traduction rétroactive progressive, pas de refonte globale immédiate ;
-- toute nouvelle chaîne ou chaîne modifiée doit maintenant être fournie simultanément en FR et EN ;
-- les modules n’utilisent le système que s’ils en ont besoin ;
-- Conditions consomme déjà `gameSystem` ;
-- le futur Loot Table devra réutiliser ces préférences, pas créer son propre réglage global.
+- système actif avec indication visuelle claire ;
+- traduction historique progressive ;
+- toute nouvelle chaîne ou chaîne modifiée doit être fournie en FR et EN ;
+- un module ne consomme `gameSystem` que s’il en a besoin ;
+- Conditions utilise déjà cette préférence ;
+- le futur Loot Table devra la réutiliser au lieu de recréer un réglage global.
 
-## UI
-
-La direction visuelle globale reste fortement intégrée au design Owlbear :
-
-- thème sombre/glass ;
-- couleurs dérivées du thème OBR ;
-- Overlay Effect ;
-- scrollbars intégrées ;
-- sous-menus proches du comportement natif Owlbear ;
-- interfaces contextuelles compactes ;
-- états actifs lisibles sans dépendre uniquement de la couleur.
+Référence : `docs/LOCALIZATION_AND_SYSTEMS.md`.
 
 ---
 
-# État actuel par module
+# Assignation token → joueur
 
-## Core / Dashboard
+L’assignation d’un token à un joueur n’appartient plus à Stats.
 
-Le Core fournit :
-
-- shell principal ;
-- navigation ;
-- registre de modules ;
-- disponibilité Owlbear ;
-- thème ;
-- préférences globales langue/système ;
-- provider partagé entre popover et embeds ;
-- panneaux de synthèse Dashboard.
-
-La synthèse Stats reste sur le Dashboard afin de ne pas surcharger la page Stats.
-
-## Initiative Tracker
-
-État fonctionnel :
-
-- participants ;
-- ordre ;
-- tours ;
-- rounds ;
-- actifs/inactifs ;
-- vaincus ;
-- import Owlbear ;
-- stockage partagé adapté à la room.
-
-Intégration autorisée avec Conditions :
-
-- disponibilité des durées `Rounds` / `Rencontre` ;
-- synchronisation des rounds et de la fin de rencontre.
-
-Aucune automatisation générale de combat n’en découle.
-
-## Distance / Déplacement / Portée
-
-État V1 :
-
-- origine/cibles ;
-- mesure ;
-- lecture de grille ;
-- presets ;
-- préférences.
-
-Pas de dépendance active avec Stats/Conditions au checkpoint.
-
-## Stat Tracker
-
-Stats possède maintenant une couche runtime Owlbear mature :
-
-- profils embarqués ;
-- copies/instances de scène ;
-- presets ;
-- assignation joueur ;
-- permissions ;
-- cinq renderers ;
-- menus contextuels permanents ;
-- overlays trackers ;
-- Conditions contextuelles séparées ;
-- background permanent.
-
----
-
-# Stats — décisions fonctionnelles stabilisées
-
-## Trackers libres
-
-Le système ne doit jamais déduire une stat de son icône.
+Source de vérité :
 
 ```text
-heart != obligatoirement HP
-shield != obligatoirement AC
+src/core/tokens/tokenPlayerAssignment.ts
+```
+
+Un token peut donc être lié à un joueur même s’il n’est pas ajouté au Stat Tracker.
+
+Le clic droit expose un sous-menu `Tactical GM Suite` qui contient actuellement les actions rapides :
+
+```text
+Ajouter au Stat Tracker / Retirer du Stat Tracker
+Lié à personne / Lié à <nom du joueur>
+```
+
+Le sous-menu est un embed Owlbear et doit se comporter comme les autres sous-menus : ouverture au survol, pas de rafraîchissement visuel continu, pas de logique de module dupliquée.
+
+Stats conserve encore un miroir d’assignation dans son profil pour compatibilité avec les permissions actuelles, mais ce miroir n’est plus la source de vérité.
+
+Référence : `docs/TOKEN_PLAYER_ASSIGNMENT.md`.
+
+---
+
+# Stat Tracker — principes fonctionnels
+
+Stats n’est pas une fiche de personnage complète. Un tracker est une donnée libre attachée à un token.
+
+L’addon ne doit jamais déduire la sémantique d’un tracker depuis son icône :
+
+```text
+heart != obligatoirement PV
+shield != obligatoirement CA
 coin != obligatoirement monnaie
 ```
 
-Le modèle doit seulement connaître :
+Le modèle connaît seulement :
 
 ```text
 nom
@@ -243,78 +178,32 @@ valeur(s)
 icône
 permissions
 visibilité
-affichage
+affichage sur token
 ```
 
-## Style/skin supprimé
+## Types techniques
 
-`skinId` n’est plus un choix UI actif.
+Le runtime conserve cinq types :
 
-Le rendu dépend du renderer, de l’accent déclaré de l’icône et du thème Owlbear.
+```text
+bar
+counter
+readonly
+toggle
+icon
+```
 
-## Bibliothèque Trackers
+Dans l’interface Stats principale :
 
-Quatre catégories :
+- `bar` : current/max, drag, math inline ;
+- `counter` : valeur modifiable et contrôles rapides ;
+- `readonly` : indicateur fixe sans contrôles rapides, valeur toujours éditable ;
+- `toggle` : actif en couleur, inactif désaturé ;
+- `icon` : 1 à 6 unités cumulatives.
 
-- Corps & Protection
-- Arcane & Combat
-- Ressources & Richesses
-- Objets & Marques
+Les indicateurs `readonly` et `toggle` sont regroupés jusqu’à trois par ligne dans l’interface normale.
 
-Base documentée : 48 icônes.  
-Ajouts documentés : 15.  
-Total documenté : 63 identifiants.
-
-Les accents sont déclarés manuellement.
-
-## Cinq renderers
-
-### `bar` — Barre à valeur max
-
-- current/max ;
-- icône à gauche ;
-- valeur centrale ;
-- drag horizontal ;
-- inline math ;
-- borne 0..max ;
-- texture liquide/organique ;
-- bulles pseudo-aléatoires ;
-- désaturation progressive de l’icône.
-
-### `counter` — Indicateur modifiable
-
-- orbe 48 px ;
-- `-5`, `-1`, `+1`, `+5` ;
-- négatifs autorisés ;
-- pas de min/max ;
-- pas de drag ;
-- inline math.
-
-### `readonly` — Indicateur fixe
-
-Nom technique historique.
-
-- orbe 48 px ;
-- pas de rail ;
-- pas de +/- ;
-- valeur toujours éditable ;
-- jusqu’à trois par ligne.
-
-### `toggle`
-
-- orbe 48 px ;
-- aucun chiffre ;
-- couleur = actif ;
-- désaturé = inactif ;
-- jusqu’à trois par ligne.
-
-### `icon`
-
-- 1 à 6 unités ;
-- current = unités actives ;
-- clic cumulatif.
-
-## Inline math
+Calcul inline accepté :
 
 ```text
 12
@@ -331,51 +220,32 @@ Division par zéro refusée.
 
 ---
 
-# Stats — persistance
+# Stats — persistance et copies
 
-## Source durable
+Les profils sont persistés dans les métadonnées des tokens Owlbear.
 
-Les profils sont écrits dans les métadonnées du token Owlbear.
-
-Le profil inclut notamment :
+Un profil embarque notamment :
 
 - trackers ;
 - conditions ;
-- assignation joueur ;
+- assignation miroir ;
 - type ;
 - groupe ;
 - notes ;
 - timestamps ;
-- état tracked.
+- état `isTracked`.
 
-## Retrait sans perte
+`Retirer du Stat Tracker` désactive le suivi sans supprimer la configuration. Réajouter le token doit restaurer le profil.
 
-`Retirer du Stat Tracker` change l’état de suivi mais conserve le profil.
+Le modèle distingue l’ID canonique du profil et `sourceItemId` pour rester scene-aware et supporter les copies.
 
-Réajouter le token doit restaurer la configuration.
-
-## Copies
-
-Le modèle distingue :
-
-- ID canonique ;
-- `sourceItemId` ;
-- instances de scène ;
-- copies liées.
-
-Les copies ne doivent pas devenir des profils indépendants incohérents.
-
-## Point ouvert : garbage collection globale
-
-Les métadonnées disparaissent avec l’item supprimé, mais aucune garantie documentaire complète n’a encore clos le cas d’une éventuelle référence canonique centrale après suppression de la dernière copie dans toutes les scènes.
+Point ouvert : vérifier la stratégie globale de garbage collection lorsqu’une dernière copie est supprimée de toutes les scènes.
 
 ---
 
-# Conditions — état stabilisé au 4 septembre 2026
+# Conditions — catalogue et menu
 
-## Catalogue canonique
-
-Le catalogue runtime est désormais :
+Catalogue runtime :
 
 ```text
 src/features/stats/services/statConditionCatalog.ts
@@ -389,111 +259,70 @@ PF2E    -> 42 conditions PF2e Remaster
 GENERIC -> 0 condition actuellement
 ```
 
-Le catalogue maître contient 46 concepts canoniques, dont 11 communs aux deux systèmes.
+Le catalogue maître contient 46 concepts canoniques. L’ancien catalogue historique et les aliases de migration ne font plus partie du runtime.
 
-Un concept partagé garde le même ID visuel/canonique, mais ses règles restent spécifiques au système.
-
-## Suppression du legacy
-
-L’ancien `statConditions.ts` et les anciennes définitions/aliases de migration ont été supprimés du runtime.
-
-Décision produit : aucune transition n’est nécessaire à ce stade car l’addon n’est pas encore distribué à un parc externe à migrer.
-
-## Conditions indépendantes du suivi Stats
-
-Un token peut avoir des conditions sans être ajouté au Stat Tracker.
-
-Un profil dormant condition-only peut exister avec :
+Un token peut avoir des Conditions sans être suivi par Stats ; un profil dormant peut exister avec :
 
 ```text
 isTracked = false
 trackers = []
 ```
 
-## Menu Conditions
+Le menu Conditions :
 
-Flux principal :
+- utilise le système global ;
+- est traduit FR/EN pour les parties migrées ;
+- trie la liste alphabétiquement selon le libellé traduit ;
+- supporte plusieurs conditions actives simultanément ;
+- permet de désactiver ou éditer une condition active sans toucher aux autres ;
+- affiche au hover la **Description** et le **Résumé règles** du système actif ;
+- ancre le hover à la ligne réellement survolée.
+
+Le hover ne doit se déclencher que sur le contenu utile de la ligne — icône ou texte — et non sur toute la largeur vide du bouton.
+
+Durées disponibles : Manuelle, Rounds, Rencontre, Repos. Les durées Rounds/Rencontre utilisent Initiative lorsqu’une rencontre exploitable existe.
+
+---
+
+# Conditions dérivées
+
+Le moteur de dérivation automatise uniquement les relations explicites et sûres.
+
+Deux comportements existent :
 
 ```text
-clic droit token
-→ Conditions
-→ recherche / liste
-→ activation, désactivation ou édition
+while-active
+on-apply
 ```
 
-État actuel :
+`while-active` maintient une condition secondaire tant qu’au moins une source maître la maintient.
 
-- MJ uniquement ;
-- langue FR/EN globale ;
-- système global D&D5e/PF2e/Générique ;
-- liste triée alphabétiquement selon le libellé traduit ;
-- plusieurs conditions actives simultanément ;
-- condition active désactivable ;
-- condition active modifiable par son action d’édition ;
-- niveau/valeur, durée et visibilité gérés sans modifier les autres conditions.
+`on-apply` ajoute la condition au moment de l’activation du maître, puis la condition secondaire devient indépendante et peut être retirée manuellement.
 
-## Hover
+Les relations circonstancielles ou dépendantes d’autres créatures restent manuelles.
 
-Au survol d’une condition :
+Le moteur suit plusieurs sources et distingue une condition ajoutée manuellement d’une condition maintenue automatiquement.
 
-- carte ancrée à la ligne survolée ;
-- affichage directement au-dessus lorsque possible ;
-- fallback sous la ligne si l’espace manque en haut ;
-- **Description** ;
-- **Résumé règles** du système sélectionné ;
-- contenu dans la langue active.
+Les conditions automatiques peuvent être indiquées `AUTO` dans le menu, mais aucun marquage supplémentaire n’est ajouté sur les badges autour du token.
 
-## Durées
-
-- Manuelle
-- Rounds
-- Rencontre
-- Repos
-
-Rounds/Rencontre dépendent de l’état Initiative exploitable.
-
-## Effets mécaniques
-
-Les résumés de règles sont informatifs. Tactical GM Suite n’applique pas automatiquement toutes les conséquences mécaniques D&D/PF2e.
+Référence : `docs/stats/CONDITION_DERIVATIONS.md`.
 
 ---
 
 # Conditions — affichage sur token
 
-## Séparation stricte avec Stats
+Les Conditions utilisent leur propre overlay, totalement indépendant de Stats.
 
 Invariants :
 
 ```text
-Stats      -> token.trackers   -> overlay Stats
+Stats      -> token.trackers   -> Stat Dock
 Conditions -> token.conditions -> badges Conditions
 ```
 
-Les deux systèmes ont :
+Une modification Conditions ne doit jamais réveiller l’affichage Stats.
 
-- leurs propres métadonnées Owlbear ;
-- leurs propres services de synchronisation ;
-- leurs propres triggers.
-
-Une modification Conditions ne doit jamais faire réapparaître l’affichage Stats.
-
-`useStatTokenOverlayAutoSync` ne doit réagir qu’aux trackers.
-
-Conditions possède son propre auto-sync dans le background.
-
-## Préchargement PNG
-
-Le background lance le préchargement dès `OBR.onReady` :
-
-1. PNG Conditions canoniques ;
-2. PNG Trackers ;
-3. concurrence limitée à 4.
-
-But : chauffer le cache navigateur avant le premier sous-menu/overlay.
-
-## Géométrie actuelle
-
-Valeurs finales du checkpoint :
+Géométrie Conditions stabilisée :
 
 ```text
 BASE_BADGE_SCALE = 0.2574
@@ -504,66 +333,167 @@ RING_CENTER_X_OFFSET_RATIO = -0.03
 RING_CENTER_Y_OFFSET_RATIO = -0.025
 ```
 
-La couronne possède une correction visuelle légère vers la gauche et le haut.
-
-## Resize proportionnel
-
-Formule :
+Formule de resize :
 
 ```text
 badgeScale = BASE_BADGE_SCALE × (tokenDiameter / sceneDpi)
 ```
 
-Donc un token ×2 produit des badges ×2 ; un token ×0,5 produit des badges ×0,5.
+Les badges suivent donc la taille réelle du token. Le niveau n’est jamais écrit sur le badge ; il reste consultable dans le menu.
 
-Le rayon et l’espacement utilisent la même échelle.
+---
 
-## Niveau sur token
+# Préchargement des assets
 
-Le chiffre de niveau/valeur n’est plus rendu sur la scène.
+Le background permanent précharge les PNG dès `OBR.onReady` :
 
-Le niveau reste consultable et modifiable dans le menu Conditions.
+1. Conditions ;
+2. Trackers ;
+3. concurrence limitée.
 
-Le runtime peut encore reconnaître un ancien rôle metadata `level` uniquement pour supprimer des labels obsolètes lors d’un sync.
+Le but est de chauffer le cache navigateur avant l’ouverture des menus et overlays.
+
+Après le préchargement, le background peut reconstruire les Stat Docks depuis les profils embarqués afin d’éviter qu’un overlay ancien ou incomplet reste affiché.
+
+---
+
+# Réglages Stats de room
+
+Source : `src/features/stats/services/statRoomSettings.ts`.
+
+Version actuelle :
+
+```text
+STAT_ROOM_SETTINGS_VERSION = 2
+```
+
+Réglages :
+
+```text
+allowPlayerConditions : boolean
+tokenStatsPosition    : top | bottom
+```
+
+Valeurs par défaut :
+
+```text
+allowPlayerConditions = false
+tokenStatsPosition    = top
+```
+
+Seul le MJ peut modifier ces réglages.
+
+Lorsque `allowPlayerConditions` est activé, le menu Conditions devient disponible pour les joueurs selon la logique de permission prévue ; l’option est désactivée par défaut.
+
+---
+
+# Stat Dock — direction visuelle validée
+
+Le Stat Dock est l’affichage des trackers Stats sur la scène.
+
+Principes validés :
+
+- tous les trackers Stats d’un token sont regroupés dans **une seule zone** ;
+- la zone est au-dessus ou au-dessous du token selon `tokenStatsPosition` ;
+- aucun tracker Stats n’est placé en cercle ;
+- l’overlay est strictement informatif : aucun bouton, aucun drag, aucun contrôle de données ;
+- les Conditions restent totalement séparées ;
+- le dock suit la taille réelle du token ;
+- le zoom ne doit jamais modifier les proportions internes du dock par rapport au token.
+
+Mapping visuel :
+
+```text
+readonly + counter -> Valeur simple : icône + nom + valeur
+toggle             -> icône + nom, couleur/désaturation
+bar                -> icône + nom + current/max + barre
+icon               -> répétition de 1 à 6 tuiles actives/inactives
+```
+
+Assets de cadre actuels :
+
+```text
+public/assets/stats/stat-plate.svg
+public/assets/stats/stat-plate-muted.svg
+public/assets/stats/stat-unit.svg
+public/assets/stats/stat-unit-muted.svg
+```
+
+Référence détaillée : `docs/stats/STAT_TOKEN_OVERLAY_VISUAL_SPEC_V1.md`.
+
+---
+
+# Stat Dock — architecture runtime au 5 septembre 2026
+
+Entrée publique :
+
+```text
+src/features/stats/services/statTokenOverlayObrSync.ts
+```
+
+Elle réexporte actuellement :
+
+```text
+statTokenOverlayObrSyncV17
+```
+
+Le renderer V17.1 s’appuie volontairement sur la géométrie V12.
+
+Décision technique importante issue des tests en room :
+
+- les objets `Text` de scène créés par V12 ne doivent **pas être mutés après `addItems`** ;
+- changer leur layer ou leur `zIndex` après création les a fait disparaître dans plusieurs essais ;
+- les `Text` restent donc tels que le builder les crée ;
+- plaques, formes et icônes sont placées derrière eux avec des zIndex négatifs ;
+- tout reste sur `ATTACHMENT`.
+
+Ordre visuel actuel visé :
+
+```text
+Text natif        zIndex 0, non muté
+mute shape        zIndex -5
+icône PNG         zIndex -10
+shape/barre       zIndex -20
+plaque SVG        zIndex -30
+```
+
+Cette approche est un compromis pour préserver à la fois le comportement scène/zoom et la visibilité du contenu.
+
+## État de validation réel
+
+Les tests successifs V12→V17 ont permis d’isoler plusieurs comportements Owlbear :
+
+- `Label` affiche le texte mais reste en screen-space et change donc de proportion au zoom ;
+- `Text` est la bonne primitive pour suivre l’espace scène ;
+- déplacer un `Text` vers un autre layer ou lui réécrire un zIndex après création peut le faire disparaître ;
+- la géométrie des plaques/icônes est désormais proche de la direction validée ;
+- le rendu final texte + zoom + empilement reste à revalider en room après V17.1.
+
+Ne pas considérer le Stat Dock comme visuellement terminé tant que ce test final n’est pas validé.
 
 ---
 
 # Menus contextuels permanents
 
-Le background Owlbear reste actif sans ouverture du popover principal.
+Le background Owlbear fonctionne sans ouverture du popover principal.
 
-Tokens autorisés : images sur `CHARACTER`, `MOUNT`, `PROP`.
+Tokens compatibles : images sur `CHARACTER`, `MOUNT`, `PROP`.
 
-## Ajouter/Retirer du Stat Tracker
+Sous-menus actuels :
 
-MJ uniquement.
+- `Tactical GM Suite` : assignation joueur + ajout/retrait Stat Tracker ;
+- `Stats` : changement rapide des trackers ;
+- `Conditions` : gestion des conditions.
 
-## Conditions
+Le menu rapide Stats n’expose pas les actions d’administration Modifier/Supprimer/Afficher sur token.
 
-MJ uniquement au checkpoint.
-
-## Stats rapide
-
-### MJ
-
-Tous les trackers du token.
-
-### Joueur
-
-Uniquement si :
-
-- token assigné au joueur ;
-- au moins un tracker `canPlayerEdit = true`.
-
-À l’intérieur, seulement les trackers modifiables sont rendus.
-
-Aucune administration (`Modifier`, `Supprimer`, `Afficher sur token`) dans le menu rapide.
+Pour un joueur, Stats dépend de l’assignation Core et de `canPlayerEdit`.
 
 ---
 
-# Permissions joueur
+# Permissions
 
-Séparer impérativement :
+Toujours distinguer :
 
 ```text
 canPlayerEdit
@@ -571,9 +501,11 @@ visibility
 showOnToken
 ```
 
-`canPlayerEdit` = permission de contrôle.  
+`canPlayerEdit` = droit de modifier la donnée.  
 `visibility` = audience de scène.  
-`showOnToken` = intention d’affichage.
+`showOnToken` = intention d’affichage dans le Stat Dock.
+
+Ces concepts ne doivent jamais être fusionnés.
 
 ---
 
@@ -584,49 +516,46 @@ Ordre recommandé :
 1. `PROJECT_CONTEXT.md`
 2. `docs/ARCHITECTURE.md`
 3. `docs/LOCALIZATION_AND_SYSTEMS.md`
-4. `docs/features/STATS_V2_SPEC.md`
-5. `docs/stats/CONDITIONS_MASTER_CATALOG_V1.md`
-6. `docs/stats/CONDITIONS_RUNTIME_SYNC.md`
-7. `docs/stats/README.md`
-8. `src/features/stats/README.md`
+4. `docs/TOKEN_PLAYER_ASSIGNMENT.md`
+5. `docs/features/STATS_V2_SPEC.md`
+6. `docs/stats/README.md`
+7. `docs/stats/STAT_TOKEN_OVERLAY_VISUAL_SPEC_V1.md`
+8. `docs/stats/CONDITIONS_MASTER_CATALOG_V1.md`
+9. `docs/stats/CONDITIONS_RUNTIME_SYNC.md`
+10. `docs/stats/CONDITION_DERIVATIONS.md`
+11. `src/features/stats/README.md`
 
-Pour l’audio prévu :
-
-- `docs/stats/STAT_AUDIO_FEEDBACK_V1.md`
-
-Le code courant reste la référence finale pour l’implémentation réelle.
+Le code courant reste la référence finale pour le comportement réel.
 
 ---
 
 # Points ouverts / dette connue
 
+## Priorité immédiate
+
+- valider V17.1 en room : texte visible, proportions stables au zoom, contenu correctement empilé ;
+- seulement après cette validation, reprendre le polish visuel fin du Stat Dock ;
+- vérifier le rendu avec tokens 0,5 / 1 / 2 / 3 cases ;
+- vérifier plusieurs audiences public/private/gm sur un même dock ;
+- vérifier le `+N` au-delà de six trackers.
+
 ## Technique
 
-- vérifier le nettoyage global après suppression de la dernière copie d’un profil dans toutes les scènes ;
-- tester la propagation instantanée d’une modification joueur vers les overlays multi-clients ;
-- harmoniser le versioning package/manifest/jalons Git ;
-- continuer les tests Context Menus après refresh/changement de scène ;
-- documenter une vraie migration si `STAT_TOKEN_PROFILE_VERSION` évolue.
+- garbage collection globale après suppression de la dernière copie ;
+- propagation immédiate multi-client des modifications rapides joueur ;
+- harmonisation future `package.json` / manifest / stratégie de release ;
+- documentation/migration si `STAT_TOKEN_PROFILE_VERSION` évolue.
 
-## Conditions
+## UX
 
-- tester les tailles extrêmes de token et le resize répété ;
-- tester >12 conditions pour le second anneau ;
-- tester toutes les audiences multi-client ;
-- tester changement FR/EN et D&D5e/PF2e en room ;
-- décider ultérieurement du contenu Générique ;
-- D&D 2024 reste hors scope.
-
-## UX Stats
-
-- poursuivre le polissage sur vraies rooms ;
-- vérifier les largeurs extrêmes du menu Stats rapide ;
-- clarifier à long terme le nom technique `readonly`.
+- finaliser taille, densité, typographie et proportions du Stat Dock après stabilisation technique ;
+- vérifier noms longs et valeurs extrêmes ;
+- conserver la distinction visuelle forte entre Conditions et Stats.
 
 ## Futur
 
 - audio Stats ;
-- effets mécaniques uniquement via chantier dédié ;
+- automatisations Conditions supplémentaires uniquement après validation de règles ;
 - Calendar ;
 - Loot Table.
 
@@ -634,477 +563,122 @@ Le code courant reste la référence finale pour l’implémentation réelle.
 
 # Journal de session / historique détaillé
 
-Cette section est volontairement détaillée. Elle doit permettre à une future session de comprendre non seulement ce qui existe, mais **comment et pourquoi** l’état actuel a été atteint.
+Cette section doit rester suffisamment précise pour qu’une prochaine session comprenne non seulement ce qui existe, mais aussi pourquoi certaines décisions techniques ont été prises.
 
 ## 22 juin 2026 — fondation de la suite
 
-### Core / Dashboard
+Mise en place du Core/Dashboard, de l’architecture modulaire et de l’ordre de développement. Initiative, Range puis Stats sont ouverts comme modules séparés. Calendar et Loot Table sont explicitement reportés.
 
-- création de la base Core/Dashboard V1 (`d7d4ffef...`) ;
-- stabilisation du Dashboard (`9f879ca5...`) ;
-- validation de l’architecture modulaire `core/features/shared`.
+## 2 septembre 2026 — refonte majeure Stats
 
-### Initiative Tracker
+- modernisation de la modale Ajouter/Modifier tracker ;
+- bibliothèque PNG classée en quatre catégories ;
+- suppression progressive du concept de skin actif ;
+- stabilisation des cinq types techniques ;
+- presets, profils embarqués, copies de token, permissions et menus rapides ;
+- séparation entre page Stats opérationnelle et synthèse Dashboard.
 
-- ajout Initiative Tracker V1 (`6d4dd13c...`) ;
-- gestion ordre/rounds/tours ;
-- comportement ultérieur pour participants inactifs/vaincus (`bff78887...`).
+## 3–4 septembre 2026 — langue, systèmes et Conditions canoniques
 
-### Distance / Range
+- fondation globale FR/EN ;
+- préférence système D&D5e/PF2e/Générique ;
+- drapeaux langue et indicateur visuel du système sélectionné ;
+- catalogue canonique Conditions : 15 D&D5e, 42 PF2e, union de 46 concepts ;
+- suppression des anciennes références de conditions et de la transition legacy ;
+- branchement des 46 PNG canoniques ;
+- hover Description + Résumé règles ;
+- tri alphabétique ;
+- plusieurs conditions actives simultanément ;
+- couronne Conditions redimensionnée proportionnellement au token ;
+- suppression du niveau sur les badges ;
+- séparation stricte des overlays Stats et Conditions.
 
-- ajout Range Measurement V1 (`9e883d9c...`).
+## 4 septembre 2026 — assignation joueur et menus contextuels
 
-### Stats V1
+- déplacement du lien token→joueur hors de Stats vers le Core ;
+- ajout du sous-menu `Tactical GM Suite` au clic droit ;
+- action Ajouter/Retirer du Stat Tracker ;
+- action `Lié à personne / Lié à <joueur>` ;
+- comportement au survol harmonisé avec les autres sous-menus ;
+- correction d’un rafraîchissement continu qui provoquait un clignotement du menu ;
+- ajout du réglage MJ `allowPlayerConditions`, désactivé par défaut.
 
-- ajout du premier Stat Tracker (`b4373745...`).
+## 4–5 septembre 2026 — conditions dérivées
 
-Décision durable : les quatre outils tactiques principaux doivent être stabilisés avant Calendar/Loot.
-
-## 23 juin 2026 — Stats V2.1
-
-- migration vers des trackers personnalisables (`3dda9b98...`) ;
-- modèle token + trackers ;
-- helpers labels Stats V2 (`e55211e1...`) ;
-- corrections Context Menu/paths Pages (`1272be23...`).
-
-Décision : les trackers deviennent des objets génériques, pas des champs PV/CA codés en dur.
-
-## 24–25 juin 2026 — presets, assignation et permissions préparées
-
-- types de token ;
-- presets ;
-- assignation joueur ;
-- préparation permissions (`d2ae2fe5...`) ;
-- filtrage viewer (`7abe2bb7...`).
-
-## 25 juin 2026 — Conditions V2.4A/B
-
-- premier catalogue/assignation (`f5eb9102...`) ;
-- durée et édition simple (`e192de72...`).
-
-Les conditions sont séparées des trackers dès cette phase.
-
-## 29 juin 2026 — effets et pipeline overlay
-
-- effets descriptifs (`878756d0...`) ;
-- métadonnées affichage token (`e88a3acc...`) ;
-- modèle aperçu (`e021765d...`) ;
-- dry-run (`2ecf3196...`) ;
-- plan rendu (`dd21ff98...`) ;
-- aperçu SVG (`368104d9...`) ;
-- adaptateur Owlbear (`a22ae6e9...`).
-
-## 30 août 2026 — Stats V2.5F devient réel
-
-### Overlays/audiences
-
-- visibilité conditions (`817c284a...`) ;
-- overlays audience-aware (`302c5802...`) ;
-- rendu réel (`20f13e06...`) ;
-- normalisation visibilité (`a418ba0e...`) ;
-- persistance condition (`ec56dba9...`).
-
-### Synchronisation automatique
-
-- auto-sync overlays Stats (`1a7d2bdb...`, `7458bf1e...`).
-
-### Copies/scènes
-
-- liens scene-aware (`4a6e4ecf...`) ;
-- instances par scène (`0a110c22...`) ;
-- prévention doublons (`612e5a7e...`) ;
-- sync instances (`cd821dfd...`) ;
-- liste scène courante (`b3e664bc...`) ;
-- plusieurs instances (`a1e9b24c...`).
-
-## 31 août 2026 — assets Conditions et Dashboard
-
-- resolver images Conditions (`b87c1846...`) ;
-- alignement assets (`8446639d...`) ;
-- ajustements overlays ;
-- synthèse Stats Dashboard (`d7258e2b...`) ;
-- déplacement vers Dashboard (`d744ae14...`) ;
-- suppression overview page Stats (`b0a3b2a0...`).
-
-Décision UX : page Stats = travail du token ; Dashboard = synthèse.
-
-## 2 septembre 2026 — session majeure de refonte Stats
-
-### A. Modale tracker et bibliothèque PNG
-
-- modernisation modale (`efc01f0a...`) ;
-- bibliothèque PNG par catégories ;
-- corrections registre TypeScript (`01baa74c...`) ;
-- suppression du style/skin actif ;
-- accent dérivé de l’icône.
-
-### B. Profils persistants
-
-- persistance profils liés (`354cb367...`) ;
-- retrait sans perte (`7e0c6103...`) ;
-- stockage durable token Owlbear (`405832f3...`) ;
-- hydratation Dashboard (`c816fd32...`).
-
-### C. Conditions déplacées vers le clic droit
-
-- retrait ancien éditeur de la fiche Stats (`38858278...` et suivants) ;
-- IDs/menu Conditions (`90ace840...`, `e338a2ee...`) ;
-- sous-menu (`14cf699b...`) ;
-- badges radiaux à la place des grands anneaux (`bd8aeeaa...`).
-
-### D. Background permanent
-
-Entrypoint background consolidé jusqu’au merge `49bcf579...`.
-
-Résultat : menus/Conditions fonctionnent sans ouverture préalable du popover.
-
-### E. Conditions sans suivi Stats
-
-- profil condition-only (`72052991...`) ;
-- ouverture sur tout token compatible (`9688cc7e...`) ;
-- affichage indépendant (`776ccb77...`) ;
-- conservation hors Stat Tracker (`eb270b5b...`) ;
-- merge `50779812...`.
-
-### F. Intégration visuelle OBR
-
-- thème/largeur native/custom selects ;
-- couche UI globale OBR (`718b9b7e...`) ;
-- merge `3d980a5d...`.
-
-### G. Durées Conditions ↔ Initiative
-
-- sync Initiative (`94c62174...`) ;
-- rounds/rencontre (`af0d5ee9...`) ;
-- affichage compact (`a83615a9...`) ;
-- options indisponibles explicites (`b6a4d1b1...`) ;
-- consolidation `25a73925...`.
-
-### H. Refonte renderers
-
-Barre (`898419cb...` puis nombreuses passes), Counter (`3e866777...`), Fixed (`03019445...`), Toggle (`cc1ef32a...`) et Icon cumulatif (`850a0249...`) sont progressivement stabilisés.
-
-Décisions finales :
-
-- bar draggable + inline math ;
-- counter non borné avec -5/-1/+1/+5 ;
-- readonly éditable malgré son nom ;
-- toggle sans chiffre ;
-- icon cumulatif 1–6.
-
-### I. Menu Stats rapide et permissions réelles
-
-- menu Stats contextuel (`159ff8b4...`, `3acc05e9...`, `c024b385...`) ;
-- `canPlayerEdit` réellement appliqué (`c6af4180...`) ;
-- filtrage viewer (`babb8e44...`) ;
-- résumé metadata (`71b47fbb...`, `b8ea116c...`) ;
-- menu joueurs autorisés (`fc915507...`) ;
-- contrôles autorisés uniquement (`7f4588a5...`) ;
-- actions admin retirées (`d7f03f4f...`).
-
-Règle finale :
+Un moteur de relations entre conditions est ajouté avec deux modes :
 
 ```text
-joueur assigné + canPlayerEdit
-=> tracker visible/modifiable dans les interfaces de contrôle
+while-active
+on-apply
 ```
 
-### J. Jalon
+La règle essentielle est de ne pas rendre toute condition automatique « non désactivable ». Certaines conséquences sont seulement appliquées à l’activation, puis deviennent indépendantes. Les interactions circonstancielles restent manuelles.
 
-- commit `60d5b0b9...` nommé `Version 0.3.00` ;
-- divergence avec package/manifest déjà connue.
+## 5 septembre 2026 — conception du Stat Dock
 
-## 3–4 septembre 2026 — i18n, systèmes et refonte Conditions canonique
+La direction visuelle des indicateurs Stats sur token est redéfinie depuis zéro.
 
-Cette session est structurante pour la suite du projet : elle pose les fondations globales de langue/système et remplace le vieux moteur Conditions par un catalogue canonique multi-système.
+Décisions :
 
-### A. Fondation langue + système — PR #12
+- tous les indicateurs Stats dans une seule zone ;
+- position globale haut/bas ;
+- aucun affichage en cercle ;
+- aucun contrôle de données sur la scène ;
+- quatre familles visuelles issues des cinq types techniques ;
+- plaques dark-fantasy compactes avec icône forte et information courte ;
+- `icon` = unités répétées actives/inactives, pas une Condition.
 
-PR #12, merge squash :
+La spec `STAT_TOKEN_OVERLAY_VISUAL_SPEC_V1.md` est créée puis implantée.
 
-```text
-4614ae5c14e40b8b9e313b14d1ce28683e7f6fe4
-```
+## 5 septembre 2026 — itérations techniques Stat Dock V12→V17.1
 
-Travail réalisé :
+Le chantier a nécessité plusieurs itérations parce que les primitives Owlbear ne se comportent pas toutes de la même manière au zoom et lors d’une mutation après création.
 
-- préférences globales `fr/en` ;
-- préférences globales `DND5E/PF2E/GENERIC` ;
-- provider partagé entre popover principal et embeds Owlbear ;
-- persistance locale + synchronisation via `storage` ;
-- fichiers i18n préparés par module ;
-- règle de développement : tout nouveau texte/modification doit exister en FR et EN ;
-- Conditions branché sur le système global ;
-- 15 conditions D&D 5e 2014 ;
-- 42 conditions PF2e Remaster ;
-- entrée Générique conservée mais catalogue vide.
+### Première implantation
 
-Décision importante : le système est une préférence du Core et non une préférence de Conditions. Le futur Loot Table devra lire la même valeur.
+Le payload de l’overlay est enrichi pour conserver les vraies données des trackers au lieu de fabriquer un simple label texte. Le réglage `tokenStatsPosition` est ajouté aux paramètres de room.
 
-### B. Sélecteurs visuels Paramètres
+### Problèmes identifiés
 
-Après la fondation :
+Les premiers rendus montrent successivement :
 
-- drapeau ajouté au choix de langue ;
-- système actif doté d’un indicateur visuel explicite ;
-- l’état sélectionné ne repose plus uniquement sur une variation de couleur/fond.
+- plaques trop grandes et trop techniques ;
+- textes microscopiques ;
+- `Label` qui change de proportion avec le zoom ;
+- contenu masqué par les plaques selon l’empilement ;
+- `Text` qui disparaît lorsqu’il est déplacé de layer ou muté après création.
 
-### C. Catalogue canonique et suppression du legacy — PR #13
+### Leçons stabilisées
 
-PR #13, merge squash :
+- les Conditions n’ont pas ce problème car leur overlay est essentiellement image-based ;
+- un `Label` n’est pas acceptable pour une donnée qui doit suivre l’échelle du token ;
+- les vrais `Text` de scène sont nécessaires pour respecter le zoom ;
+- la géométrie V12 est le point de départ le plus fiable ;
+- ne pas modifier un objet `Text` après son ajout à la scène ;
+- ordonner uniquement les objets graphiques derrière le texte.
 
-```text
-1bc327e6465fcb499b02ae3ff26ee4cc6e7be7ad
-```
+### État V17.1
 
-Changements :
+Le renderer public pointe sur `statTokenOverlayObrSyncV17`.
 
-- migration du runtime vers les IDs canoniques ;
-- utilisation des nouveaux PNG `assets/condition/Icon/` ;
-- suppression physique de l’ancien `statConditions.ts` ;
-- suppression des aliases français et des anciennes entrées hors catalogue ;
-- suppression de la logique historique de migration ;
-- nettoyage des derniers imports vers l’ancien service ;
-- la page Stats n’administre plus les Conditions ;
-- les anciennes conditions `Mort`, `Marque du chasseur`, etc. ne font plus partie du runtime canonique.
+V17.1 :
 
-Décision : pas de transition legacy car seul le développeur utilise encore cette version de l’addon.
+- réutilise la création V12 ;
+- laisse les `Text` natifs intacts ;
+- garde tous les objets sur `ATTACHMENT` ;
+- place uniquement plaques, shapes et icônes à des zIndex négatifs ;
+- conserve la reconstruction du dock depuis le background après préchargement.
 
-### D. Plusieurs Conditions simultanées sécurisées
+La géométrie graphique est nettement plus proche de la direction validée, mais le résultat texte + zoom + ordre d’affichage doit encore être confirmé en room avant de considérer ce chantier comme stabilisé.
 
-Pendant la suppression du legacy, vérification explicite de la logique d’upsert :
+## 5 septembre 2026 — checkpoint documentaire 0.3.47
 
-```text
-ajouter A
-puis ajouter B
-=> A et B restent actives
-```
+Cette remise à niveau met en cohérence :
 
-Modifier une condition ne touche qu’à celle-ci.
+- `PROJECT_CONTEXT.md` ;
+- `README.md` ;
+- `docs/ARCHITECTURE.md` ;
+- `docs/stats/README.md` ;
+- `docs/stats/STAT_TOKEN_OVERLAY_VISUAL_SPEC_V1.md`.
 
-Une condition active reste visible dans le menu ; elle peut être désactivée ou modifiée individuellement.
-
-C’est désormais un invariant du produit.
-
-### E. Hover Description / Résumé règles
-
-Le menu Conditions a été enrichi :
-
-- descriptions FR/EN ;
-- résumés de règles FR/EN ;
-- résumé spécifique au système actuellement sélectionné ;
-- aucune fusion mécanique entre D&D et PF2e même pour les IDs communs.
-
-Puis le hover a été repositionné pour apparaître directement au-dessus de la ligne survolée, avec fallback sous la ligne lorsque le haut de la fenêtre ne laisse pas assez d’espace.
-
-PR #15, merge :
-
-```text
-858effdf94d611bfa44ae7e3d54f35c33fe7d96f
-```
-
-### F. Préchargement PNG et séparation stricte Stats/Conditions — PR #14
-
-PR #14, merge :
-
-```text
-feec489f92ae7b2d76a99771c18e6b7bf5b470a8
-```
-
-Problème observé : cliquer sur une condition pouvait faire réapparaître l’affichage Stats au-dessus du token.
-
-Cause : l’ancien auto-sync Stats réagissait trop largement à des changements de profil/token.
-
-Correction :
-
-- `useStatTokenOverlayAutoSync` recentré uniquement sur les trackers ;
-- Conditions possède désormais son propre auto-sync ;
-- une action Conditions ne peut plus appeler indirectement l’écrivain Stats ;
-- resize Conditions géré dans le background permanent.
-
-En parallèle :
-
-- préchargement des PNG dès `OBR.onReady` ;
-- Conditions en priorité ;
-- Trackers ensuite ;
-- concurrence limitée à 4 ;
-- aucune attente bloquante avant l’enregistrement des menus.
-
-Décision architecturale majeure :
-
-```text
-Stats      -> moteur overlay Stats
-Conditions -> moteur overlay Conditions
-```
-
-Ils peuvent partager le profil de données embarqué, mais pas leur logique de rendu/synchronisation.
-
-### G. Taille et géométrie des badges — PR #14 à #17
-
-Plusieurs passes visuelles ont été faites à partir de captures en room.
-
-Évolution :
-
-- réduction initiale forte ;
-- +10 % ;
-- +30 % supplémentaire ;
-- recentrage ;
-- élargissement de la couronne ;
-- correction visuelle vers le haut/gauche.
-
-PR #16, merge :
-
-```text
-95d503898ec9db24b840ca0aa092f704529a11b2
-```
-
-Cette passe a aussi supprimé totalement les chiffres de niveau sur les badges de scène.
-
-PR #17, merge :
-
-```text
-45f6c8a9ed35462709c26eaf22db7c12ea9fb697
-```
-
-Valeurs de correction actuellement retenues :
-
-```text
-RING_CENTER_X_OFFSET_RATIO = -0.03
-RING_CENTER_Y_OFFSET_RATIO = -0.025
-FIRST_RING_RADIAL_OFFSET_BADGE_RATIO = 0.22
-MAX_BADGES_PER_RING = 12
-```
-
-### H. Tri alphabétique des Conditions — PR #17
-
-La liste du menu est maintenant triée par le libellé traduit :
-
-```text
-langue FR -> ordre alphabétique français
-langue EN -> ordre alphabétique anglais
-```
-
-Le premier CI de cette PR a remonté un problème TypeScript sur le typage de `category`; il a été corrigé avant merge. Typecheck/build finaux verts.
-
-Important : ce tri concerne le menu. L’ordre radial sur token reste stable selon création/ID afin d’éviter que changer de langue déplace toute la couronne.
-
-### I. Resize proportionnel — PR #18
-
-Problème observé : lors d’un changement de taille du token, la couronne suivait le rayon mais les icônes ne conservaient pas la même proportion visuelle.
-
-PR #18, merge :
-
-```text
-77026e6d19619d79bf2a6a0f9a0b54f42c162cf6
-```
-
-Nouvelle formule :
-
-```text
-badgeScale = BASE_BADGE_SCALE × (tokenDiameter / sceneDpi)
-```
-
-Donc :
-
-```text
-0,5 case -> badge ×0,5
-1 case   -> taille de référence
-2 cases  -> badge ×2
-```
-
-Le diamètre utilisé pour le rayon/espacement reprend la même échelle dynamique.
-
-### J. Agrandissements finaux directs sur `main`
-
-Après validation du comportement proportionnel, deux ajustements visuels ont été appliqués directement sur `main` :
-
-1. `3403f8c9d2914be94ac0770005a5c1c6d4dcddc9`
-   - `0.1144 -> 0.1716` ;
-   - +50 %.
-
-2. `7baacc714c8479109f81d6db870862583f01ee22`
-   - `0.1716 -> 0.2574` ;
-   - encore +50 %.
-
-Taille de référence finale du checkpoint :
-
-```text
-BASE_BADGE_SCALE = 0.2574
-```
-
-Cette valeur reste multipliée par le facteur de taille du token.
-
-### K. État final Conditions de la session
-
-Le sous-système Conditions possède désormais les invariants suivants :
-
-- catalogue canonique uniquement ;
-- D&D5e/PF2e réellement filtrés ;
-- Générique prévu mais vide ;
-- langue FR/EN ;
-- descriptions/résumés localisés ;
-- hover ancré à la ligne ;
-- liste alphabétique selon la langue ;
-- plusieurs conditions simultanées ;
-- édition ciblée ;
-- aucune migration legacy ;
-- assets PNG canoniques ;
-- préchargement au démarrage ;
-- aucun chiffre de niveau sur le token ;
-- couronne légèrement haut-gauche ;
-- resize proportionnel ;
-- overlay Conditions totalement séparé de l’overlay Stats.
-
-### L. Validation et jalon observé
-
-Les PR de cette session ont été mergées uniquement après passage du typecheck/build correspondant.
-
-Un commit ultérieur du dépôt porte le jalon :
-
-```text
-bed593839c8dcb9851791499be233954693c7e1a
-Version 0.3.10
-```
-
-Ce nom de commit ne résout pas la divergence :
-
-```text
-package.json         0.1.0
-manifest.json        0.2.38
-```
-
-Le chantier de versioning reste donc ouvert.
-
----
-
-# Prochaine reprise recommandée
-
-Avant une nouvelle grosse feature, effectuer une passe terrain ciblée :
-
-1. Conditions sur token 0,5 / 1 / 2 / 3 cases ;
-2. plusieurs resize successifs dans les deux sens ;
-3. 1, 2, 4, 8, 12 et >12 conditions ;
-4. vérifier position/couronne après déplacement + resize ;
-5. vérifier que le niveau n’apparaît jamais sur le token ;
-6. passage FR ↔ EN et vérification du tri/hover ;
-7. passage PF2e ↔ D&D5e ↔ Générique ;
-8. plusieurs conditions simultanées + édition/désactivation ;
-9. vérifier qu’une action Conditions ne réactive jamais Stats ;
-10. audiences `public/private/gm` en multi-client ;
-11. Rounds/Rencontre avec Initiative ;
-12. refresh sans ouverture du popover ;
-13. changement de scène ;
-14. copie et retrait/réajout de token ;
-15. propagation joueur des trackers Stats ;
-16. suppression de la dernière copie et garbage collection ;
-17. harmonisation du versioning package/manifest/release.
-
-Après cette passe, les chantiers logiques possibles sont :
-
-- traduction progressive du reste de l’interface ;
-- contenu Générique des Conditions si nécessaire ;
-- stabilisation Stats supplémentaire ;
-- audio ;
-- approfondissement Initiative/Range ;
-- ouverture de Calendar ;
-- ouverture de Loot Table en réutilisant langue + système globaux.
+Le manifest est incrémenté de `0.3.46` à `0.3.47` dans le même commit documentaire.

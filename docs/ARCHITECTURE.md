@@ -1,6 +1,7 @@
 # Tactical GM Suite — Architecture
 
-> Point de documentation : **4 septembre 2026**.
+> Point de documentation : **5 septembre 2026**.  
+> Manifest après remise à niveau documentaire : **0.3.47**.
 
 ## 1. But du projet
 
@@ -11,17 +12,15 @@ Ordre de développement validé :
 1. Core / Dashboard
 2. Initiative Tracker
 3. Distance / Déplacement / Portée
-4. Stat Tracker
-5. intégration Calendar
-6. intégration Loot Table
-
-Les quatre premiers blocs sont présents. Calendar et Loot Table restent explicitement reportés.
+4. Stat Tracker / Conditions
+5. Calendar — reporté
+6. Loot Table — reporté
 
 ## 2. Principes d’architecture
 
-### 2.1 Séparation par module
+### 2.1 Séparation par domaine
 
-La logique spécifique doit rester dans son feature :
+La logique métier reste dans son feature :
 
 ```text
 src/features/dashboard/
@@ -31,116 +30,99 @@ src/features/stats/
 src/features/settings/
 ```
 
-Une interaction entre deux modules doit être petite, explicite et documentée.
-
-Exemples actuels :
+Exemples d’intégrations autorisées :
 
 - Conditions lit Initiative uniquement pour les durées `Rounds` / `Rencontre` ;
-- Conditions lit les préférences globales uniquement pour la langue et le système ;
-- Stats trackers et Conditions ne partagent pas leur moteur d’overlay.
+- Conditions lit les préférences Core pour langue et système ;
+- Stats lit l’assignation joueur Core pour ses permissions ;
+- Conditions et Trackers partagent le profil embarqué mais pas leur moteur d’overlay.
 
-### 2.2 Core minimal mais transversal
+### 2.2 Core transversal
 
-`src/core/` contient les fondations communes :
+`src/core/` contient uniquement les fondations réellement communes :
 
-- identifiants ;
+- constantes ;
 - registre de modules ;
 - wrappers Owlbear ;
 - thème ;
 - préférences globales ;
-- stockage partagé des préférences lorsqu’il est réellement transversal.
+- assignation token → joueur ;
+- stockage transversal nécessaire.
 
-Le Core ne doit pas contenir la logique métier des trackers, des conditions, de l’initiative ou des mesures.
+L’assignation joueur est maintenant une donnée Core, pas une propriété métier du Stat Tracker.
+
+Référence : `docs/TOKEN_PLAYER_ASSIGNMENT.md`.
 
 ### 2.3 Shared réellement générique
 
-`src/shared/` reçoit uniquement ce qui est réutilisable par plusieurs modules : composants génériques, primitives de style et scrollbars.
+`src/shared/` contient seulement les composants et styles réutilisables par plusieurs modules.
 
-Les composants propres à Stats restent dans `src/features/stats/components/` ou `src/features/stats/context/`.
+Les composants propres à Stats/Conditions restent dans `src/features/stats/`.
 
 ### 2.4 Robustesse Owlbear
 
 Toute intégration Owlbear doit :
 
-- attendre que le SDK soit prêt ;
-- supporter l’absence ou la transition d’une scène sans faire crasher l’extension ;
+- attendre la disponibilité du SDK ;
+- supporter les changements de scène ;
 - nettoyer abonnements et menus ;
-- ne jamais inventer une API SDK ;
-- limiter les écritures à ce qui est nécessaire ;
-- maintenir une lecture prudente des métadonnées utiles ;
+- ne pas inventer d’API SDK ;
+- limiter les écritures ;
+- utiliser des métadonnées versionnées et lues prudemment ;
 - séparer les cycles de synchronisation de domaines différents.
 
 ## 3. Stack et pipeline
 
-Stack actuelle :
+Stack : React, TypeScript, Vite, `@owlbear-rodeo/sdk`, `lucide-react`, CSS local.
 
-- React
-- TypeScript
-- Vite
-- `@owlbear-rodeo/sdk`
-- `lucide-react`
-- CSS local au projet
-
-Commandes de validation :
+Validation :
 
 ```bash
 npm run typecheck
 npm run build
 ```
 
-Le déploiement GitHub Pages passe par `.github/workflows/deploy-pages.yml`.
+Déploiement : `.github/workflows/deploy-pages.yml`.
 
 ## 4. Entrypoints runtime
 
-Le projet possède plusieurs surfaces runtime.
+### Popover principal
 
-### 4.1 Popover principal
+`src/main.tsx` charge `<App />` dans le cas normal.
 
-`src/main.tsx` charge normalement `<App />`.
+Le popover mesure 560 × 720 px.
 
-Le popover principal, déclaré dans `public/manifest.json`, mesure actuellement 560 × 720 px.
+`App.tsx` reste un shell : navigation et routage léger, sans logique métier de module.
 
-`App.tsx` doit rester un shell : navigation et routage léger, sans logique métier de module.
+### Background permanent
 
-### 4.2 Background Owlbear permanent
+Le manifest déclare `background.html` comme background.
 
-Le manifest déclare :
+Le background porte les fonctions qui doivent rester actives même si le popover principal n’est jamais ouvert :
 
-```text
-background_url = .../background.html
-```
+- menus contextuels ;
+- assignation joueur ;
+- ajout/retrait Stat Tracker ;
+- préchargement PNG ;
+- synchronisation Conditions ;
+- synchronisation des durées Conditions avec Initiative ;
+- reconstruction/synchronisation des Stat Docks ;
+- résumé de permissions nécessaire aux Context Menus.
 
-Le background initialise les comportements qui doivent rester actifs même si l’utilisateur n’a pas ouvert le popover principal.
+Le préchargement des assets est lancé dès `OBR.onReady`, Conditions en priorité puis Trackers.
 
-Pour Stats/Conditions, il gère notamment :
+### Vues contextuelles embarquées
 
-- Ajouter au Stat Tracker ;
-- Retirer du Stat Tracker ;
-- Stats ;
-- Conditions ;
-- préchargement des assets PNG ;
-- synchronisation autonome des badges Conditions ;
-- résumé des permissions joueur nécessaire aux filtres de Context Menu ;
-- synchronisation des durées Conditions avec Initiative.
-
-Le préchargement des assets est non bloquant : Conditions en priorité, puis Stats, avec concurrence limitée.
-
-### 4.3 Vues embarquées de Context Menu
-
-`src/main.tsx` route aussi les vues :
+`src/main.tsx` route les vues embarquées utilisées par les sous-menus Owlbear, notamment :
 
 ```text
 ?view=stats-conditions
 ?view=stats-trackers
 ```
 
-Elles sont embarquées dans les sous-menus Owlbear via `contextMenu.embed`.
+Le sous-menu `Tactical GM Suite` utilise lui aussi une vue/context embed pour avoir un comportement au survol cohérent avec Stats et Conditions.
 
-Cette séparation est importante : une interface contextuelle doit pouvoir fonctionner sans que le popover principal soit ouvert.
-
-## 5. Préférences globales, i18n et système
-
-Les préférences transversales vivent dans le Core.
+## 5. Préférences globales
 
 Fichiers clés :
 
@@ -150,26 +132,16 @@ src/core/preferences/AppPreferencesProvider.tsx
 src/i18n/index.tsx
 ```
 
-Préférences actuelles :
+Préférences :
 
 ```text
 language   = fr | en
 gameSystem = DND5E | PF2E | GENERIC
 ```
 
-Règles :
+Toute nouvelle chaîne ou chaîne modifiée doit être fournie simultanément en FR et EN.
 
-- langue et système sont globaux ;
-- un module ne doit les consommer que s’il en a besoin ;
-- un futur Loot Table doit réutiliser ces préférences ;
-- toute nouvelle chaîne ou chaîne modifiée doit être fournie en FR et EN ;
-- la traduction historique reste progressive.
-
-Les vues contextuelles utilisent le même provider et la même clé de stockage que le popover principal.
-
-Voir `docs/LOCALIZATION_AND_SYSTEMS.md`.
-
-## 6. Arborescence fonctionnelle
+## 6. Arborescence utile
 
 ```text
 src/
@@ -184,6 +156,7 @@ src/
     preferences/
     storage/
     theme/
+    tokens/
 
   i18n/
 
@@ -202,77 +175,37 @@ src/
 
 public/
   manifest.json
-  icon.svg
-  condition.svg
-  ...
+  assets/stats/
 
 docs/
   ARCHITECTURE.md
   LOCALIZATION_AND_SYSTEMS.md
-  features/
-    STATS_V2_SPEC.md
+  TOKEN_PLAYER_ASSIGNMENT.md
+  features/STATS_V2_SPEC.md
   stats/
-    CONDITIONS_MASTER_CATALOG_V1.md
-    CONDITIONS_RUNTIME_SYNC.md
-    README.md
 ```
 
-## 7. Core / Dashboard
+## 7. Initiative Tracker
 
-Le Core fournit le shell stable de la suite.
+Responsabilités : participants, ordre, rounds, tours, actifs/inactifs, vaincus, import Owlbear et stockage adapté à la room.
 
-Responsabilités :
+Conditions peut uniquement consulter Initiative pour :
 
-- navigation ;
-- registre des modules ;
-- identifiants communs ;
-- état de disponibilité Owlbear ;
-- thème dérivé du thème Owlbear ;
-- langue/système ;
-- primitives de stockage partagé réellement transversales.
+- disponibilité des durées `Rounds` / `Rencontre` ;
+- progression des rounds ;
+- fin de rencontre.
 
-Le Dashboard centralise les informations de synthèse qui n’ont pas vocation à encombrer les modules.
+Cela ne transforme pas Initiative en moteur de règles D&D/PF2e.
 
-## 8. Initiative Tracker
+## 8. Distance / Déplacement / Portée
 
-Le code Initiative vit dans `src/features/initiative/`.
+Responsabilités : lecture des items Owlbear, origine/cibles, mesures tactiques, grille, presets et préférences.
 
-Responsabilités établies :
+Aucune dépendance Stats/Range automatique n’est active.
 
-- participants ;
-- ordre d’initiative ;
-- rounds et tours ;
-- participants actifs/inactifs ;
-- participants vaincus ;
-- import depuis Owlbear ;
-- stockage partagé adapté à la room.
+## 9. Stat Tracker — modèle et persistance
 
-L’interaction actuellement autorisée avec Conditions est ciblée : les durées `Rounds` et `Rencontre` peuvent référencer la rencontre active et être mises à jour avec l’avancement des rounds.
-
-Cela ne transforme pas Initiative en moteur PF2e/D&D et n’autorise pas Stats à modifier arbitrairement l’initiative.
-
-## 9. Distance / Déplacement / Portée
-
-Le code Range vit dans `src/features/range/`.
-
-Responsabilités :
-
-- lecture des items Owlbear ;
-- origine et cibles ;
-- mesure tactique ;
-- lecture prudente de la grille ;
-- presets de portée ;
-- préférences locales.
-
-Aucune automatisation Stats/Range n’est active à ce stade.
-
-## 10. Stat Tracker — architecture courante
-
-Le code Stats vit dans `src/features/stats/`.
-
-### 10.1 Modèle
-
-Structure principale :
+Structure conceptuelle :
 
 ```text
 StatTrackerState
@@ -283,127 +216,125 @@ StatTrackerState
   └─ presets
 ```
 
-Les trackers ne possèdent aucune sémantique de jeu obligatoire. Le nom, le type visuel, l’icône et les valeurs sont des choix indépendants.
+Les trackers n’ont aucune sémantique obligatoire. Le sens utilisateur, le renderer, l’icône et la valeur sont indépendants.
 
-### 10.2 Persistance durable
-
-La configuration liée à un token est embarquée dans les métadonnées Owlbear via la clé de lien Stats.
-
-Le profil embarqué contient notamment :
-
-- type de token ;
-- trackers ;
-- conditions ;
-- assignation joueur ;
-- groupe ;
-- notes ;
-- état `tracked` ;
-- timestamps.
+Le profil durable est embarqué dans les métadonnées du token Owlbear.
 
 Conséquences :
 
-- retirer un token du Stat Tracker peut conserver son profil ;
-- le réajouter restaure sa configuration ;
+- retirer du Stat Tracker peut conserver le profil ;
+- réajouter restaure la configuration ;
 - copier un token peut transporter le profil ;
-- plusieurs instances de scène peuvent correspondre au même profil canonique ;
-- les conditions peuvent être conservées sur un token non suivi.
+- plusieurs instances peuvent représenter un même profil canonique ;
+- Conditions peut exister sur un profil dormant `isTracked = false`.
 
-### 10.3 Conditions indépendantes du suivi Stats
+## 10. Assignation joueur
 
-Conditions peut créer/maintenir un profil dormant condition-only avec `isTracked = false` et `trackers = []`.
-
-Le menu Conditions n’exige donc pas que le token ait d’abord été ajouté au Stat Tracker.
-
-Cette indépendance fonctionnelle ne signifie pas que les données doivent nécessairement vivre dans un stockage totalement séparé : elles partagent aujourd’hui le profil embarqué, mais leurs services, interfaces et overlays doivent rester distincts.
-
-### 10.4 Context menus
-
-Les menus Stats sont limités aux images appartenant aux couches :
+Source de vérité :
 
 ```text
-CHARACTER
-MOUNT
-PROP
+src/core/tokens/tokenPlayerAssignment.ts
 ```
 
-Règles :
+L’assignation n’exige pas que le token soit suivi par Stats.
 
-- Ajouter/Retirer du Stat Tracker : MJ uniquement ;
-- Conditions : MJ uniquement ;
-- Stats rapide : MJ, ou joueur assigné ayant au moins un tracker modifiable.
+Stats conserve encore un miroir d’assignation pour compatibilité avec ses permissions actuelles, mais ce miroir ne doit pas devenir une seconde source de vérité.
 
-### 10.5 Permissions
+## 11. Menus contextuels
 
-Les règles d’édition sont centralisées dans `services/statPermissions.ts`.
+Tokens compatibles : `IMAGE` sur `CHARACTER`, `MOUNT`, `PROP`.
 
-Pour les interfaces de contrôle :
+### Tactical GM Suite
+
+Sous-menu rapide :
 
 ```text
-MJ -> tous les trackers
-Joueur -> uniquement les trackers canPlayerEdit du token qui lui est assigné
+Ajouter/Retirer du Stat Tracker
+Lié à personne / Lié à <joueur>
 ```
 
-La visibilité `gm/private/public` est une autre dimension : elle sert à l’audience de l’affichage, pas à décider si un tracker autorisé apparaît dans l’interface de changement rapide.
+Il doit s’ouvrir au survol et rester stable : aucun polling ou resync visuel continu ne doit provoquer de clignotement.
 
-Comme Owlbear ne peut pas filtrer directement un tableau de trackers dans un Context Menu, un résumé indexable (`playerEditable`, `assignedPlayerId`) est maintenu au niveau des métadonnées du lien. Le profil complet reste la source de vérité.
+### Stats
 
-## 11. Conditions — catalogue et runtime
+Interface de changement rapide :
 
-Le catalogue canonique runtime est :
+- MJ : trackers applicables ;
+- joueur : uniquement token assigné + tracker `canPlayerEdit` ;
+- aucune action d’administration Modifier/Supprimer/Afficher sur token.
+
+### Conditions
+
+L’accès joueur est contrôlé par le réglage room `allowPlayerConditions`, désactivé par défaut.
+
+## 12. Réglages Stats de room
+
+Service :
 
 ```text
-src/features/stats/services/statConditionCatalog.ts
+src/features/stats/services/statRoomSettings.ts
 ```
 
-Il expose :
+Version : `STAT_ROOM_SETTINGS_VERSION = 2`.
+
+```ts
+{
+  allowPlayerConditions: boolean,
+  tokenStatsPosition: "top" | "bottom"
+}
+```
+
+Le MJ seul peut modifier ces réglages.
+
+## 13. Conditions — catalogue et dérivations
+
+Catalogue runtime : `services/statConditionCatalog.ts`.
 
 ```text
 DND5E   -> 15
 PF2E    -> 42
-GENERIC -> 0 actuellement
+GENERIC -> 0
 ```
 
-Le runtime n’utilise plus l’ancien catalogue `statConditions.ts` ni des aliases de migration.
+Le runtime n’utilise plus l’ancien catalogue ni ses aliases de migration.
 
-Les nouvelles icônes canoniques sont résolues depuis :
+Le moteur de dérivation distingue :
 
 ```text
-src/features/stats/assets/condition/Icon/
+while-active
+on-apply
 ```
 
-La liste Conditions :
+Les relations circonstancielles restent manuelles.
 
-- est triée selon le libellé traduit ;
-- permet plusieurs conditions actives simultanément ;
-- permet désactivation et édition ciblée ;
-- affiche au hover Description + Résumé règles du système actif.
+Référence : `docs/stats/CONDITION_DERIVATIONS.md`.
 
-## 12. Overlays — frontière stricte
+## 14. Frontière stricte entre overlays
 
-### 12.1 Overlay Stats
+```text
+Stats      -> token.trackers   -> Stat Dock
+Conditions -> token.conditions -> badges Conditions
+```
 
-L’overlay Stats lit les trackers et utilise sa propre chaîne de rendu/synchronisation.
+Ils ont :
 
-`hooks/useStatTokenOverlayAutoSync.ts` ne doit pas resynchroniser Stats sur un changement qui ne concerne que les conditions.
+- services de sync distincts ;
+- métadonnées distinctes ;
+- triggers distincts ;
+- géométries distinctes.
 
-### 12.2 Overlay Conditions
+Une modification Conditions ne doit jamais faire réapparaître le Stat Dock.
 
-L’overlay Conditions lit `token.conditions` et utilise :
+## 15. Overlay Conditions
+
+Services principaux :
 
 ```text
 services/statConditionOverlayObrSync.ts
 services/statConditionOverlayAutoSync.ts
 ```
 
-Il possède sa propre clé de métadonnées Owlbear.
-
-Une action Conditions ne doit jamais faire réapparaître l’overlay Stats.
-
-### 12.3 Géométrie Conditions
-
-Les badges suivent proportionnellement la taille du token.
-
-Valeurs de référence actuelles :
+Géométrie de référence :
 
 ```text
 BASE_BADGE_SCALE = 0.2574
@@ -413,140 +344,119 @@ RING_CENTER_X_OFFSET_RATIO = -0.03
 RING_CENTER_Y_OFFSET_RATIO = -0.025
 ```
 
-Formule principale :
+Formule :
 
 ```text
 badgeScale = BASE_BADGE_SCALE × (tokenDiameter / sceneDpi)
 ```
 
-Le rayon de couronne utilise la même échelle afin de conserver les proportions.
+Aucun niveau n’est écrit sur le badge.
 
-Aucun chiffre de niveau n’est généré sur le token ; le niveau reste consultable dans le menu Conditions.
+## 16. Stat Dock — modèle visuel
 
-Voir `docs/stats/CONDITIONS_RUNTIME_SYNC.md`.
+Le Stat Dock regroupe tous les trackers `showOnToken` dans une seule zone au-dessus ou au-dessous du token.
 
-## 13. Copies et scènes
+Aucun contrôle interactif n’est rendu sur la scène.
 
-Le code Stats est scene-aware :
-
-- liens token ↔ profil ;
-- instances multiples ;
-- affichage limité aux instances présentes dans la scène courante ;
-- synchronisation des copies d’un même profil.
-
-Point restant à vérifier : la stratégie de garbage collection globale après suppression de la dernière copie à travers toutes les scènes.
-
-## 14. Design UI et thème
-
-La couche `shared/styles/obrIntegratedUi.css` harmonise l’ensemble de l’addon avec Owlbear.
-
-Règles visuelles :
-
-- pas de deuxième design system incompatible dans les sous-menus ;
-- scrollbars fines et intégrées ;
-- menus contextuels adaptés à la largeur imposée par Owlbear ;
-- trackers rapides réutilisent le même renderer que l’interface principale autant que possible ;
-- les actions d’administration sont retirées des interfaces de changement rapide ;
-- les sélecteurs de langue/système doivent avoir un état actif lisible ;
-- le hover Conditions doit rester attaché à l’élément survolé.
-
-## 15. Bibliothèques d’assets
-
-### Trackers
+Mapping :
 
 ```text
-src/features/stats/assets/icons/
-  Corps & Protection/
-  Arcane & Combat/
-  Ressources & Richesses/
-  Objets & Marques/
+readonly/counter -> valeur simple
+toggle           -> icône + nom, actif/inactif visuel
+bar              -> icône + nom + current/max + barre
+icon             -> unités répétées actives/inactives
 ```
 
-Le registre associe labels et accents. L’icône ne définit jamais le sens du tracker.
+La position room est `tokenStatsPosition`.
 
-### Conditions
+Le layout limite actuellement le nombre de trackers visibles et peut produire un `+N` pour l’overflow.
+
+## 17. Stat Dock — pipeline runtime
+
+Entrée publique :
 
 ```text
-src/features/stats/assets/condition/Icon/
+services/statTokenOverlayObrSync.ts
 ```
 
-Les PNG Conditions sont indépendants de la langue et du système ; les règles/labels viennent du catalogue et de l’i18n.
-
-Le background précharge les PNG afin de réduire la latence au premier affichage.
-
-## 16. Stockage par domaine
-
-| Domaine | Stockage principal |
-|---|---|
-| langue/système | préférences Core persistantes locales |
-| Initiative partagé | stockage room selon le module |
-| Range presets/préférences | stockage local adapté au module |
-| profil Stats durable d’un token | métadonnées du token Owlbear |
-| conditions d’un token | champ structuré du profil embarqué |
-| résumé de permission Context Menu | métadonnées du lien Stats |
-| état runtime transient | mémoire uniquement |
-
-Ne pas stocker de gros historiques ou de logs de combat dans les métadonnées des items.
-
-## 17. Frontières entre modules
-
-Interactions actuelles autorisées :
+Au checkpoint, elle réexporte :
 
 ```text
-Conditions -> Initiative
-  uniquement pour disponibilité et synchronisation des durées
-
-Conditions -> Core Preferences
-  uniquement pour langue et système
-
-Tous les modules UI -> Core Theme/i18n
-  uniquement via les fondations partagées prévues
+statTokenOverlayObrSyncV17
 ```
 
-Interactions futures possibles mais non implémentées par défaut :
+V17.1 repose sur la création géométrique V12.
 
-- Initiative lisant un tracker de PV ;
-- Range lisant une vitesse/portée ;
-- module Combat appliquant une variation de tracker ;
-- Calendar influençant des ressources ;
-- Loot écrivant dans des ressources.
+### Leçon Owlbear importante
 
-Aucune de ces possibilités ne doit être ajoutée implicitement.
+Les tests en room ont montré que les objets `Text` de scène peuvent disparaître lorsqu’on modifie leur layer ou leur zIndex après création.
 
-## 18. Validation et CI
+Règle actuelle :
 
-Après une modification TypeScript/React :
+- ne jamais muter les `Text` après `addItems` ;
+- laisser leur layer/zIndex natif ;
+- placer uniquement les objets graphiques derrière eux.
 
-```bash
-npm run typecheck
-npm run build
+Ordre graphique actuel :
+
+```text
+Text natif       0, non muté
+mute shape      -5
+icône PNG       -10
+shape/barre     -20
+plaque SVG      -30
 ```
 
-Le workflow GitHub Pages doit rester vert.
+Tout reste sur `ATTACHMENT`.
 
-Pour une modification documentaire seule, le build n’est pas techniquement requis, mais le workflow peut s’exécuter à chaque push.
+### Pourquoi pas Label ?
 
-## 19. Versions
+`Label` s’est révélé visible mais en screen-space : sa taille ne suit pas correctement le zoom par rapport au token.
 
-Au checkpoint du 4 septembre 2026 :
+Le Stat Dock doit suivre l’espace scène comme les Conditions. Le renderer privilégie donc `Text` de scène malgré les contraintes d’empilement.
 
-- `package.json` : `0.1.0` ;
-- `public/manifest.json` : `0.2.38` ;
-- le dépôt possède des commits de jalon allant au moins jusqu’à `Version 0.3.10`.
+### État de validation
 
-Cette divergence est volontairement laissée comme dette documentaire/technique : ne pas annoncer une version publique sur la seule base du nom d’un commit.
+La géométrie des plaques et des icônes est proche de la direction voulue. La combinaison finale `Text visible + zoom stable + empilement correct` doit encore être revalidée en room après V17.1.
 
-## 20. Sources de vérité documentaires
+Ne pas considérer ce renderer comme final tant que ce test n’est pas passé.
 
-Pour un nouveau chantier :
+## 18. Assets Stats overlay
 
-1. `PROJECT_CONTEXT.md` — contexte opérationnel, décisions et journal ;
-2. `docs/ARCHITECTURE.md` — frontières et architecture ;
-3. `docs/LOCALIZATION_AND_SYSTEMS.md` — langue/système ;
-4. `docs/features/STATS_V2_SPEC.md` — comportement fonctionnel validé de Stats ;
-5. `docs/stats/CONDITIONS_MASTER_CATALOG_V1.md` — catalogue canonique ;
-6. `docs/stats/CONDITIONS_RUNTIME_SYNC.md` — runtime Conditions ;
-7. `docs/stats/README.md` — design visuel et index Stats ;
-8. `src/features/stats/README.md` — carte du code.
+```text
+public/assets/stats/stat-plate.svg
+public/assets/stats/stat-plate-muted.svg
+public/assets/stats/stat-unit.svg
+public/assets/stats/stat-unit-muted.svg
+```
 
-Le code courant reste la référence finale pour savoir ce qui est effectivement implémenté. Une modification validée qui change le comportement doit être répercutée dans la documentation correspondante.
+Les icônes restent les PNG du registre Stats.
+
+## 19. Audiences et permissions
+
+Toujours distinguer :
+
+```text
+canPlayerEdit
+visibility
+showOnToken
+```
+
+`visibility` pilote l’audience de scène, `canPlayerEdit` l’édition, `showOnToken` l’intention d’affichage.
+
+Les audiences `public/private/gm` restent gérées par les APIs Owlbear prévues (`scene.items` / `scene.local`).
+
+## 20. Documentation de référence
+
+- `PROJECT_CONTEXT.md`
+- `docs/ARCHITECTURE.md`
+- `docs/LOCALIZATION_AND_SYSTEMS.md`
+- `docs/TOKEN_PLAYER_ASSIGNMENT.md`
+- `docs/features/STATS_V2_SPEC.md`
+- `docs/stats/README.md`
+- `docs/stats/STAT_TOKEN_OVERLAY_VISUAL_SPEC_V1.md`
+- `docs/stats/CONDITIONS_MASTER_CATALOG_V1.md`
+- `docs/stats/CONDITIONS_RUNTIME_SYNC.md`
+- `docs/stats/CONDITION_DERIVATIONS.md`
+
+Le code courant reste la référence finale pour l’implémentation réelle.
