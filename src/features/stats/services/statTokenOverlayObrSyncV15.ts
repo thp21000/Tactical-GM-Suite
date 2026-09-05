@@ -29,6 +29,11 @@ type OverlayMutableApi = Pick<
   "getItems" | "updateItems"
 >;
 
+type PositionAdjustment = {
+  dx: number;
+  dy: number;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -38,15 +43,28 @@ function isDockElementForSource(item: Item, sourceItemId: string): boolean {
   return isRecord(metadata) && metadata.sourceItemId === sourceItemId;
 }
 
+function getPositionAdjustment(item: Item): PositionAdjustment | undefined {
+  if (item.type === "LABEL") {
+    const width = typeof item.text.width === "number" ? item.text.width : 0;
+    const height = typeof item.text.height === "number" ? item.text.height : 0;
+    return { dx: width / 2, dy: height / 2 };
+  }
+
+  if (item.type === "SHAPE") {
+    return { dx: -item.width / 2, dy: -item.height / 2 };
+  }
+
+  return undefined;
+}
+
 /**
  * V14 a confirmé que les layers séparés règlent l'empilement, mais a également
  * révélé deux conventions d'ancrage différentes dans Owlbear :
  * - Label : la position correspond au centre de sa boîte screen-space ;
- * - Shape : la position utilisée par notre layout doit rester le coin logique.
+ * - Shape : notre layout calcule la position logique depuis le coin supérieur gauche.
  *
- * Le renderer construit volontairement ses cellules en coordonnées haut-gauche.
- * Cette passe replace donc uniquement Label et Shape après leur création, sans
- * toucher aux plaques/images dont la géométrie est déjà correcte.
+ * Cette passe ne touche donc qu'à la position des Label et Shape après leur
+ * création. Les plaques et icônes conservent exactement leur géométrie V14.
  */
 async function realignDockElements(
   api: OverlayMutableApi,
@@ -58,29 +76,23 @@ async function realignDockElements(
   );
   if (targets.length === 0) return;
 
+  const adjustments = new Map<string, PositionAdjustment>();
+  for (const item of targets) {
+    const adjustment = getPositionAdjustment(item);
+    if (adjustment) adjustments.set(item.id, adjustment);
+  }
+  if (adjustments.size === 0) return;
+
   await api.updateItems(
-    targets.map((item) => item.id),
+    [...adjustments.keys()],
     (drafts) => {
       for (const draft of drafts) {
-        if (draft.type === "LABEL") {
-          const width =
-            typeof draft.text.width === "number" ? draft.text.width : 0;
-          const height =
-            typeof draft.text.height === "number" ? draft.text.height : 0;
-
-          draft.position = {
-            x: draft.position.x + width / 2,
-            y: draft.position.y + height / 2,
-          };
-          continue;
-        }
-
-        if (draft.type === "SHAPE") {
-          draft.position = {
-            x: draft.position.x - draft.width / 2,
-            y: draft.position.y - draft.height / 2,
-          };
-        }
+        const adjustment = adjustments.get(draft.id);
+        if (!adjustment) continue;
+        draft.position = {
+          x: draft.position.x + adjustment.dx,
+          y: draft.position.y + adjustment.dy,
+        };
       }
     },
   );
