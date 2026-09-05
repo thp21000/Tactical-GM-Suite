@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="96" viewBox="0 0 320 96">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#232b38"/><stop offset=".46" stop-color="#141a24"/><stop offset="1" stop-color="#090d14"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f1d69a"/><stop offset=".28" stop-color="#bd8d4e"/><stop offset=".62" stop-color="#76512c"/><stop offset="1" stop-color="#d6ad68"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-22%" width="124%" height="158%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/><feOffset dy="5" result="o"/><feColorMatrix in="o" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <path d="M24 8H296L312 24V72L296 88H24L8 72V24Z" fill="url(#body)" stroke="url(#gold)" stroke-width="4" filter="url(#shadow)"/>
+  <path d="M29 14H291L306 29V67L291 82H29L14 67V29Z" fill="none" stroke="#f8dfaa" stroke-opacity=".28" stroke-width="1.5"/>
+  <path d="M34 18H286" stroke="#fff8e7" stroke-opacity=".18" stroke-width="2" stroke-linecap="round"/>
+  <path d="M18 34V62M302 34V62" stroke="#d1a45f" stroke-opacity=".62" stroke-width="2"/>
+</svg>
