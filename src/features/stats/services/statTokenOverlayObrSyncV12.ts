@@ -95,6 +95,14 @@ const ICON_UNIT_GAP = 3;
 const OVERFLOW_WIDTH = 42;
 const OVERFLOW_HEIGHT = 24;
 
+// Ordre explicite dans le layer ATTACHMENT. Sans cela, les plaques peuvent
+// masquer les textes et les formes internes lorsque l’auto z-index est coupé.
+const Z_PLATE = 10;
+const Z_DETAIL = 20;
+const Z_ICON = 30;
+const Z_TEXT = 40;
+const Z_MUTE = 50;
+
 const COLOR_TEXT = "#f4efe4";
 const COLOR_VALUE = "#fff5dc";
 const COLOR_MUTED = "#a3a7ad";
@@ -344,6 +352,7 @@ function imageFrame(
   position: Vector2,
   width: number,
   height: number,
+  zIndex = Z_PLATE,
 ): Item {
   const url = absoluteAssetUrl(assetPath) ?? assetPath;
   const dpi = logicalWidth;
@@ -355,6 +364,7 @@ function imageFrame(
     .name(`Stats Dock — ${ctx.token.name}`)
     .position({ x: position.x + width / 2, y: position.y + height / 2 })
     .rotation(0)
+    .zIndex(zIndex)
     .scale({
       x: width / ctx.sceneDpi,
       y: (height * logicalWidth) / (logicalHeight * ctx.sceneDpi),
@@ -387,14 +397,13 @@ function unitFrameItem(
   size: number,
   muted = false,
 ): Item {
-  return imageFrame(ctx, id, muted ? UNIT_MUTED_ASSET : UNIT_ASSET, 96, 96, position, size, size);
+  return imageFrame(ctx, id, muted ? UNIT_MUTED_ASSET : UNIT_ASSET, 96, 96, position, size, size, Z_DETAIL);
 }
 
 /**
  * Les textes du Stat Dock doivent rester dans l'espace de la scène pour se
- * comporter comme les autres éléments attachés au token. On centre donc la box
- * de texte exactement comme les images/plaques, afin d'éviter l'effet de
- * décalage haut-gauche observé avec un positionnement interprété comme centre.
+ * comporter comme les autres éléments attachés au token. La box est centrée
+ * dans sa zone logique, puis placée explicitement au-dessus de la plaque.
  */
 function textItem(
   ctx: RenderContext,
@@ -421,10 +430,13 @@ function textItem(
     .textAlign(align)
     .textAlignVertical("MIDDLE")
     .fillColor(color)
+    .fillOpacity(1)
     .strokeColor(COLOR_TEXT_STROKE)
+    .strokeOpacity(0.9)
     .strokeWidth(Math.max(0.8, 1.05 * ctx.scale))
     .position({ x: position.x + width / 2, y: position.y + height / 2 })
     .rotation(0)
+    .zIndex(Z_TEXT)
     .layer("ATTACHMENT")
     .attachedTo(ctx.sourceItemId)
     .locked(true)
@@ -453,6 +465,7 @@ function iconItem(
     .name(`Stats Dock — ${ctx.token.name} — ${item.name}`)
     .position(center)
     .rotation(0)
+    .zIndex(Z_ICON)
     .scale({ x: imageScale, y: imageScale })
     .layer("ATTACHMENT")
     .attachedTo(ctx.sourceItemId)
@@ -475,6 +488,7 @@ function shapeItem(
   strokeColor?: string,
   strokeOpacity = 0,
   strokeWidth = 0,
+  zIndex = Z_DETAIL,
 ): Item {
   return buildShape()
     .id(id)
@@ -487,8 +501,9 @@ function shapeItem(
     .strokeColor(strokeColor ?? fillColor)
     .strokeOpacity(strokeOpacity)
     .strokeWidth(strokeWidth)
-    .position({ x: position.x + width / 2, y: position.y + height / 2 })
+    .position(position)
     .rotation(0)
+    .zIndex(zIndex)
     .layer("ATTACHMENT")
     .attachedTo(ctx.sourceItemId)
     .locked(true)
@@ -530,7 +545,7 @@ function iconTile(
   );
   if (icon) result.push(icon);
   if (!active) {
-    result.push(shapeItem(ctx, `${baseId}-mute`, { x: position.x + size * 0.18, y: position.y + size * 0.18 }, size * 0.64, size * 0.64, "#888b91", 0.56));
+    result.push(shapeItem(ctx, `${baseId}-mute`, { x: position.x + size * 0.18, y: position.y + size * 0.18 }, size * 0.64, size * 0.64, "#888b91", 0.56, undefined, 0, 0, Z_MUTE));
   }
   return result;
 }
@@ -626,7 +641,7 @@ function iconUnitItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCe
     const icon = iconItem(ctx, `${unitId}-icon`, item, { x: x + size / 2, y: y + size / 2 }, size * 0.7);
     if (icon) result.push(icon);
     if (!active) {
-      result.push(shapeItem(ctx, `${unitId}-mute`, { x: x + size * 0.16, y: y + size * 0.16 }, size * 0.68, size * 0.68, "#85888e", 0.58));
+      result.push(shapeItem(ctx, `${unitId}-mute`, { x: x + size * 0.16, y: y + size * 0.16 }, size * 0.68, size * 0.68, "#85888e", 0.58, undefined, 0, 0, Z_MUTE));
     }
   }
   return result;
