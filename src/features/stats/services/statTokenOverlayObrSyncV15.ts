@@ -34,6 +34,18 @@ type PositionAdjustment = {
   dy: number;
 };
 
+type LabelLike = {
+  text?: {
+    width?: unknown;
+    height?: unknown;
+  };
+};
+
+type ShapeLike = {
+  width?: unknown;
+  height?: unknown;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -45,13 +57,19 @@ function isDockElementForSource(item: Item, sourceItemId: string): boolean {
 
 function getPositionAdjustment(item: Item): PositionAdjustment | undefined {
   if (item.type === "LABEL") {
-    const width = typeof item.text.width === "number" ? item.text.width : 0;
-    const height = typeof item.text.height === "number" ? item.text.height : 0;
+    const label = item as unknown as LabelLike;
+    const width =
+      typeof label.text?.width === "number" ? label.text.width : 0;
+    const height =
+      typeof label.text?.height === "number" ? label.text.height : 0;
     return { dx: width / 2, dy: height / 2 };
   }
 
   if (item.type === "SHAPE") {
-    return { dx: -item.width / 2, dy: -item.height / 2 };
+    const shape = item as unknown as ShapeLike;
+    const width = typeof shape.width === "number" ? shape.width : 0;
+    const height = typeof shape.height === "number" ? shape.height : 0;
+    return { dx: -width / 2, dy: -height / 2 };
   }
 
   return undefined;
