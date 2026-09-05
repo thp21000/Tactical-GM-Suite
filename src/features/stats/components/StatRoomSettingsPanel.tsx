@@ -1,5 +1,6 @@
 import { useI18n } from "../../../i18n";
 import { useStatRoomSettings } from "../hooks/useStatRoomSettings";
+import type { StatTokenDockPosition } from "../services/statRoomSettings";
 
 type Props = {
   enabled: boolean;
@@ -9,6 +10,7 @@ export function StatRoomSettingsPanel({ enabled }: Props) {
   const { t } = useI18n();
   const roomSettings = useStatRoomSettings(enabled);
   const checked = roomSettings.settings.allowPlayerConditions;
+  const disabled = !enabled || roomSettings.loading || roomSettings.saving;
 
   return (
     <div className="stat-room-settings">
@@ -25,7 +27,7 @@ export function StatRoomSettingsPanel({ enabled }: Props) {
 
         <input
           checked={checked}
-          disabled={!enabled || roomSettings.loading || roomSettings.saving}
+          disabled={disabled}
           type="checkbox"
           onChange={(event) => {
             void roomSettings
@@ -36,6 +38,25 @@ export function StatRoomSettingsPanel({ enabled }: Props) {
         <span className="stat-room-settings__switch" aria-hidden="true">
           <span />
         </span>
+      </label>
+
+      <label className="stat-room-settings__toggle-row">
+        <span className="stat-room-settings__copy">
+          <strong>{t("stats.settings.tokenDock.label")}</strong>
+          <span>{t("stats.settings.tokenDock.help")}</span>
+        </span>
+        <select
+          aria-label={t("stats.settings.tokenDock.label")}
+          disabled={disabled}
+          value={roomSettings.settings.tokenStatsPosition}
+          onChange={(event) => {
+            const position = event.target.value as StatTokenDockPosition;
+            void roomSettings.setTokenStatsPosition(position).catch(() => undefined);
+          }}
+        >
+          <option value="top">{t("stats.settings.tokenDock.top")}</option>
+          <option value="bottom">{t("stats.settings.tokenDock.bottom")}</option>
+        </select>
       </label>
 
       {roomSettings.error ? (
