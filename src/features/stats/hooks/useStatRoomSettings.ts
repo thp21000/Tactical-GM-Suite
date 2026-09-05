@@ -5,6 +5,7 @@ import {
   setStatRoomSettings,
   subscribeToStatRoomSettings,
   type StatRoomSettings,
+  type StatTokenDockPosition,
 } from "../services/statRoomSettings";
 
 export function useStatRoomSettings(enabled: boolean) {
@@ -49,13 +50,13 @@ export function useStatRoomSettings(enabled: boolean) {
     };
   }, [enabled]);
 
-  const setAllowPlayerConditions = useCallback(async (enabledForPlayers: boolean) => {
+  const savePatch = useCallback(async (
+    patch: Partial<Pick<StatRoomSettings, "allowPlayerConditions" | "tokenStatsPosition">>,
+  ) => {
     setSaving(true);
     setError(null);
     try {
-      const next = await setStatRoomSettings({
-        allowPlayerConditions: enabledForPlayers,
-      });
+      const next = await setStatRoomSettings(patch);
       setSettings(next);
       return next;
     } catch (cause) {
@@ -66,11 +67,22 @@ export function useStatRoomSettings(enabled: boolean) {
     }
   }, []);
 
+  const setAllowPlayerConditions = useCallback(
+    (enabledForPlayers: boolean) => savePatch({ allowPlayerConditions: enabledForPlayers }),
+    [savePatch],
+  );
+
+  const setTokenStatsPosition = useCallback(
+    (position: StatTokenDockPosition) => savePatch({ tokenStatsPosition: position }),
+    [savePatch],
+  );
+
   return {
     settings,
     loading,
     saving,
     error,
     setAllowPlayerConditions,
+    setTokenStatsPosition,
   };
 }
