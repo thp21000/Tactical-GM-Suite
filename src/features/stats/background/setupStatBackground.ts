@@ -14,6 +14,7 @@ import {
   subscribeToStatRoomSettings,
 } from "../services/statRoomSettings";
 import { getStatTokenContextKeyFilters } from "../services/statTokenEligibility";
+import { createOrUpdateTokenOverlay } from "../services/statTokenOverlayObrSync";
 import {
   hasPlayerEditableTrackers,
   readEmbeddedStatToken,
@@ -45,10 +46,30 @@ async function syncCurrentSceneConditionBadges(): Promise<void> {
 }
 
 /**
- * Les filtres du Context Menu ne savent pas parcourir le tableau de trackers.
- * Stats conserve donc uniquement le résumé indexable playerEditable.
- * L'assignation joueur est désormais une métadonnée Core séparée.
+ * Reconstruit les Stat Docks depuis les profils embarqués une fois les PNG
+ * préchargés. Les overlays Stats persistent dans la scène, donc une version
+ * précédente peut laisser des items partiellement rendus tant qu'aucun tracker
+ * ne change. Ce passage background garantit un rendu complet dès le chargement
+ * de la room, même si le panneau Stats n'est jamais ouvert.
  */
+async function syncCurrentSceneStatDocks(): Promise<void> {
+  try {
+    if (!(await OBR.scene.isReady())) return;
+    if ((await OBR.player.getRole()) !== "GM") return;
+
+    await preloadStatPngAssets();
+
+    const items = await OBR.scene.items.getItems();
+    for (const item of items) {
+      const token = readEmbeddedStatToken(item);
+      if (!token || token.isTracked === false) continue;
+      await createOrUpdateTokenOverlay(token).catch(() => undefined);
+    }
+  } catch {
+    // Une scène en transition ne doit jamais bloquer le background permanent.
+  }
+}
+
 async function syncCurrentScenePlayerEditMetadata(): Promise<void> {
   try {
     if (!(await OBR.scene.isReady())) return;
@@ -203,9 +224,6 @@ export function setupStatBackground(): () => void {
   let conditionMenuSyncQueue: Promise<void> = Promise.resolve();
 
   OBR.onReady(() => {
-    // Start warming the PNG cache immediately, but never delay menu registration.
-    void preloadStatPngAssets();
-
     const iconUrl = `${import.meta.env.BASE_URL}icon.svg`;
     const conditionIconUrl = `${import.meta.env.BASE_URL}condition.svg`;
     const tokenFilters = getStatTokenContextKeyFilters();
@@ -222,6 +240,12 @@ export function setupStatBackground(): () => void {
         .catch(() => undefined);
     };
 
+    const warmAssetsAndSyncStatDocks = () => {
+      void preloadStatPngAssets()
+        .then(() => syncCurrentSceneStatDocks())
+        .catch(() => undefined);
+    };
+
     // Ajouter/Retirer du Stat Tracker vit désormais dans le menu Tactical GM Suite.
     void registerStatsQuickContextMenu(iconUrl, tokenFilters).catch(() => undefined);
     requestConditionMenuSync();
@@ -229,8 +253,11 @@ export function setupStatBackground(): () => void {
     unsubscribeRoomSettings?.();
     unsubscribeRoomSettings = subscribeToStatRoomSettings(() => {
       requestConditionMenuSync();
+      // Le choix Haut/Bas doit fonctionner même si le panneau Stats est fermé.
+      void syncCurrentSceneStatDocks();
     });
 
+    warmAssetsAndSyncStatDocks();
     void syncCurrentSceneConditionBadges();
     void syncCurrentScenePlayerEditMetadata();
 
@@ -243,6 +270,7 @@ export function setupStatBackground(): () => void {
     unsubscribeSceneReady?.();
     unsubscribeSceneReady = OBR.scene.onReadyChange((ready) => {
       if (!ready) return;
+      warmAssetsAndSyncStatDocks();
       void syncCurrentSceneConditionBadges();
       void syncCurrentScenePlayerEditMetadata();
     });
