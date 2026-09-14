@@ -54,11 +54,9 @@ function getPresentation(item: Item, sourceItemId: string): DockPresentation | u
 
   if (item.type === "SHAPE") {
     if (element.endsWith("-mute")) return { zIndex: -5 };
-    if (element.includes("-fill-shine")) return { zIndex: -12 };
-    if (element.includes("-fill-glow")) return { zIndex: -16 };
-    if (element.includes("-fill-")) return { zIndex: -14 };
-    if (element.includes("-track-border")) return { zIndex: -24 };
-    if (element.includes("-track-")) return { zIndex: -20 };
+    if (element.endsWith("-fill-shine")) return { zIndex: -12 };
+    if (element.endsWith("-fill")) return { zIndex: -14 };
+    if (element.endsWith("-track")) return { zIndex: -20 };
     return { zIndex: -20 };
   }
 

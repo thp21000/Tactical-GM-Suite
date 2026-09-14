@@ -103,34 +103,28 @@ const TOKEN_GAP = 9;
 const AUDIENCE_GAP = 2;
 const ITEM_GAP = 5;
 const ROW_GAP = 5;
-const ITEM_HEIGHT = 42;
-const BAR_HEIGHT = 60;
-const ICON_UNIT_SIZE = 38;
+const ITEM_HEIGHT = 38;
+const BAR_HEIGHT = 54;
+const ICON_UNIT_SIZE = 34;
 const ICON_UNIT_GAP = 4;
 const OVERFLOW_WIDTH = 48;
 const OVERFLOW_HEIGHT = 28;
 
-const VALUE_ICON_SLOT = 44;
-const BAR_ICON_SLOT = 56;
-const VALUE_RIGHT_PADDING = 10;
-const BAR_RIGHT_PADDING = 10;
+const VALUE_ICON_SLOT = 39;
+const BAR_ICON_SLOT = 51;
+const VALUE_RIGHT_PADDING = 8;
+const BAR_RIGHT_PADDING = 9;
 const TEXT_GAP = 8;
 const MIN_VALUE_CONTENT_WIDTH = 34;
 const MIN_TOGGLE_CONTENT_WIDTH = 42;
-const MIN_BAR_CONTENT_WIDTH = 86;
+const MIN_BAR_CONTENT_WIDTH = 76;
 
-const FONT_FAMILY = "Georgia";
-const VALUE_NAME_FONT_SIZE = 16;
-const TOGGLE_NAME_FONT_SIZE = 17;
-const VALUE_FONT_SIZE = 21;
-const BAR_NAME_FONT_SIZE = 16;
-const BAR_VALUE_FONT_SIZE = 19;
-
-const COLOR_TEXT = "#f6f0e5";
-const COLOR_VALUE = "#fff0cf";
-const COLOR_MUTED = "#a9abb0";
-const COLOR_TRACK = "#05070a";
-const COLOR_TRACK_BORDER = "#70685c";
+const COLOR_TEXT = "#f4efe4";
+const COLOR_VALUE = "#fff5dc";
+const COLOR_MUTED = "#a3a7ad";
+const COLOR_TRACK = "#080b11";
+const COLOR_TRACK_BORDER = "#635b52";
+const COLOR_GOLD = "#d3ad6b";
 
 const PLATE_ASSET = "assets/stats/stat-plate.svg";
 const PLATE_MUTED_ASSET = "assets/stats/stat-plate-muted.svg";
@@ -279,8 +273,8 @@ function estimatedTextWidth(value: string, fontSize: number): number {
 
 function cellSize(item: StatTokenSyncItem, scale: number) {
   if (item.mode === "bar") {
-    const nameWidth = estimatedTextWidth(shortName(item.name, 16), BAR_NAME_FONT_SIZE);
-    const valueWidth = estimatedTextWidth(displayValue(item), BAR_VALUE_FONT_SIZE);
+    const nameWidth = estimatedTextWidth(shortName(item.name, 16), 15);
+    const valueWidth = estimatedTextWidth(displayValue(item), 19);
     const contentWidth = Math.max(
       MIN_BAR_CONTENT_WIDTH,
       nameWidth + TEXT_GAP + valueWidth,
@@ -299,11 +293,11 @@ function cellSize(item: StatTokenSyncItem, scale: number) {
   }
 
   const name = shortName(item.name, item.mode === "toggle" ? 16 : 11);
-  const nameFontSize = item.mode === "toggle" ? TOGGLE_NAME_FONT_SIZE : VALUE_NAME_FONT_SIZE;
+  const nameFontSize = item.mode === "toggle" ? 17 : 15.5;
   const nameWidth = estimatedTextWidth(name, nameFontSize);
   const valueWidth = item.mode === "toggle"
     ? 0
-    : estimatedTextWidth(displayValue(item), VALUE_FONT_SIZE);
+    : estimatedTextWidth(displayValue(item), 20);
   const contentWidth = item.mode === "toggle"
     ? Math.max(MIN_TOGGLE_CONTENT_WIDTH, nameWidth)
     : Math.max(MIN_VALUE_CONTENT_WIDTH, nameWidth + TEXT_GAP + valueWidth);
@@ -498,7 +492,6 @@ function textItem(
     .plainText(value)
     .width(Math.max(1, width))
     .height(Math.max(1, height))
-    .fontFamily(FONT_FAMILY)
     .fontSize(Math.max(8, fontSize))
     .fontWeight(weight)
     .lineHeight(1)
@@ -506,10 +499,6 @@ function textItem(
     .textAlign(align)
     .textAlignVertical("MIDDLE")
     .fillColor(color)
-    .fillOpacity(1)
-    .strokeColor("#020307")
-    .strokeOpacity(0.9)
-    .strokeWidth(Math.max(0.65, fontSize * 0.045))
     .position(position)
     .rotation(0)
     .layer("ATTACHMENT")
@@ -575,14 +564,13 @@ function shapeItem(
   strokeColor?: string,
   strokeOpacity = 0,
   strokeWidth = 0,
-  shapeType: "RECTANGLE" | "CIRCLE" = "RECTANGLE",
 ): Item {
   return buildShape()
     .id(id)
     .name(`Stats Dock — ${ctx.token.name}`)
     .width(width)
     .height(height)
-    .shapeType(shapeType)
+    .shapeType("RECTANGLE")
     .fillColor(fillColor)
     .fillOpacity(fillOpacity)
     .strokeColor(strokeColor ?? fillColor)
@@ -600,64 +588,6 @@ function shapeItem(
     .build();
 }
 
-function pillItems(
-  ctx: RenderContext,
-  baseId: string,
-  position: Vector2,
-  width: number,
-  height: number,
-  fillColor: string,
-  fillOpacity: number,
-): Item[] {
-  const safeWidth = Math.max(1, width);
-  const safeHeight = Math.max(1, height);
-
-  if (safeWidth <= safeHeight) {
-    return [
-      shapeItem(
-        ctx,
-        `${baseId}-dot`,
-        { x: position.x + (safeWidth - safeHeight) / 2, y: position.y },
-        safeHeight,
-        safeHeight,
-        fillColor,
-        fillOpacity,
-        undefined,
-        0,
-        0,
-        "CIRCLE",
-      ),
-    ];
-  }
-
-  const radius = safeHeight / 2;
-  return [
-    shapeItem(ctx, `${baseId}-left`, position, safeHeight, safeHeight, fillColor, fillOpacity, undefined, 0, 0, "CIRCLE"),
-    shapeItem(
-      ctx,
-      `${baseId}-center`,
-      { x: position.x + radius, y: position.y },
-      safeWidth - safeHeight,
-      safeHeight,
-      fillColor,
-      fillOpacity,
-    ),
-    shapeItem(
-      ctx,
-      `${baseId}-right`,
-      { x: position.x + safeWidth - safeHeight, y: position.y },
-      safeHeight,
-      safeHeight,
-      fillColor,
-      fillOpacity,
-      undefined,
-      0,
-      0,
-      "CIRCLE",
-    ),
-  ];
-}
-
 function iconTile(
   ctx: RenderContext,
   baseId: string,
@@ -666,45 +596,17 @@ function iconTile(
   size: number,
   active = true,
 ): Item[] {
-  const glowColor = active ? item.accentColor : "#6f737a";
-  const result: Item[] = [
-    shapeItem(
-      ctx,
-      `${baseId}-icon-glow-outer`,
-      { x: position.x + size * 0.04, y: position.y + size * 0.04 },
-      size * 0.92,
-      size * 0.92,
-      glowColor,
-      active ? 0.08 : 0.04,
-      undefined,
-      0,
-      0,
-      "CIRCLE",
-    ),
-    shapeItem(
-      ctx,
-      `${baseId}-icon-glow-inner`,
-      { x: position.x + size * 0.14, y: position.y + size * 0.14 },
-      size * 0.72,
-      size * 0.72,
-      glowColor,
-      active ? 0.16 : 0.07,
-      undefined,
-      0,
-      0,
-      "CIRCLE",
-    ),
-  ];
+  const result: Item[] = [];
   const icon = iconItem(
     ctx,
     `${baseId}-icon`,
     item,
     { x: position.x + size / 2, y: position.y + size / 2 },
-    size * 0.82,
+    size * 0.72,
   );
   if (icon) result.push(icon);
   if (!active) {
-    result.push(shapeItem(ctx, `${baseId}-mute`, { x: position.x + size * 0.12, y: position.y + size * 0.12 }, size * 0.76, size * 0.76, "#888b91", 0.54, undefined, 0, 0, "CIRCLE"));
+    result.push(shapeItem(ctx, `${baseId}-mute`, { x: position.x + size * 0.18, y: position.y + size * 0.18 }, size * 0.64, size * 0.64, "#888b91", 0.56));
   }
   return result;
 }
@@ -722,8 +624,8 @@ function valueOrToggleItems(
   const active = item.mode !== "toggle" || item.enabled === true;
   const result: Item[] = [plateItem(ctx, `${baseId}-plate`, { x, y }, cell.width, cell.height, !active)];
 
-  const tileSize = 34 * s;
-  const tilePos = { x: x + 6 * s, y: y + (cell.height - tileSize) / 2 };
+  const tileSize = 30 * s;
+  const tilePos = { x: x + 4 * s, y: y + (cell.height - tileSize) / 2 };
   result.push(...iconTile(ctx, baseId, item, tilePos, tileSize, active));
 
   const textX = x + VALUE_ICON_SLOT * s;
@@ -731,17 +633,17 @@ function valueOrToggleItems(
   const textHeight = cell.height - 8 * s;
 
   if (item.mode === "toggle") {
-    result.push(textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: textX, y: textY }, cell.width - (VALUE_ICON_SLOT + VALUE_RIGHT_PADDING) * s, textHeight, TOGGLE_NAME_FONT_SIZE * s, active ? COLOR_TEXT : COLOR_MUTED, active ? 700 : 580));
+    result.push(textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: textX, y: textY }, cell.width - (VALUE_ICON_SLOT + VALUE_RIGHT_PADDING) * s, textHeight, 17 * s, active ? COLOR_TEXT : COLOR_MUTED, active ? 700 : 580));
     return result;
   }
 
   const value = displayValue(item);
-  const valueWidth = estimatedTextWidth(value, VALUE_FONT_SIZE) * s;
+  const valueWidth = estimatedTextWidth(value, 20) * s;
   const valueX = x + cell.width - VALUE_RIGHT_PADDING * s - valueWidth;
   const nameWidth = Math.max(12 * s, valueX - TEXT_GAP * s - textX);
   result.push(
-    textItem(ctx, `${baseId}-name`, shortName(item.name), { x: textX, y: textY }, nameWidth, textHeight, VALUE_NAME_FONT_SIZE * s, COLOR_TEXT, 650),
-    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: textY }, valueWidth, textHeight, VALUE_FONT_SIZE * s, COLOR_VALUE, 760, "RIGHT"),
+    textItem(ctx, `${baseId}-name`, shortName(item.name), { x: textX, y: textY }, nameWidth, textHeight, 15.5 * s, COLOR_TEXT, 600),
+    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: textY }, valueWidth, textHeight, 20 * s, COLOR_VALUE, 780, "RIGHT"),
   );
   return result;
 }
@@ -753,75 +655,33 @@ function barItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCell, o
   const baseId = `${ctx.metadata.overlayId}-${sanitizeId(item.id)}`;
   const result: Item[] = [plateItem(ctx, `${baseId}-plate`, { x, y }, cell.width, cell.height)];
 
-  const tileSize = 42 * s;
-  const tilePos = { x: x + 7 * s, y: y + (cell.height - tileSize) / 2 };
+  const tileSize = 38 * s;
+  const tilePos = { x: x + 6 * s, y: y + (cell.height - tileSize) / 2 };
   result.push(...iconTile(ctx, baseId, item, tilePos, tileSize, true));
 
   const contentX = x + BAR_ICON_SLOT * s;
   const contentWidth = cell.width - (BAR_ICON_SLOT + BAR_RIGHT_PADDING) * s;
   const value = displayValue(item);
-  const valueWidth = estimatedTextWidth(value, BAR_VALUE_FONT_SIZE) * s;
+  const valueWidth = estimatedTextWidth(value, 19) * s;
   const valueX = x + cell.width - BAR_RIGHT_PADDING * s - valueWidth;
   const nameWidth = Math.max(14 * s, valueX - TEXT_GAP * s - contentX);
   result.push(
-    textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: contentX, y: y + 6 * s }, nameWidth, 20 * s, BAR_NAME_FONT_SIZE * s, COLOR_TEXT, 650),
-    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: y + 6 * s }, valueWidth, 20 * s, BAR_VALUE_FONT_SIZE * s, COLOR_VALUE, 760, "RIGHT"),
+    textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: contentX, y: y + 5 * s }, nameWidth, 18 * s, 15 * s, COLOR_TEXT, 650),
+    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: y + 5 * s }, valueWidth, 18 * s, 19 * s, COLOR_VALUE, 800, "RIGHT"),
   );
 
   const trackX = contentX;
-  const trackY = y + 38 * s;
+  const trackY = y + 31 * s;
   const trackWidth = Math.max(30 * s, contentWidth);
-  const trackHeight = 10 * s;
+  const trackHeight = 9 * s;
   const max = Math.max(0, item.max ?? 0);
   const current = Math.max(0, item.current ?? 0);
   const ratio = max > 0 ? Math.min(1, current / max) : 0;
 
-  const trackInset = 1.4 * s;
-  const innerTrackHeight = trackHeight - trackInset * 2;
-  const innerTrackWidth = trackWidth - trackInset * 2;
-  result.push(
-    ...pillItems(ctx, `${baseId}-track-border`, { x: trackX, y: trackY }, trackWidth, trackHeight, COLOR_TRACK_BORDER, 0.98),
-    ...pillItems(
-      ctx,
-      `${baseId}-track`,
-      { x: trackX + trackInset, y: trackY + trackInset },
-      innerTrackWidth,
-      innerTrackHeight,
-      COLOR_TRACK,
-      0.99,
-    ),
-  );
+  result.push(shapeItem(ctx, `${baseId}-track`, { x: trackX, y: trackY }, trackWidth, trackHeight, COLOR_TRACK, 0.98, COLOR_TRACK_BORDER, 0.95, Math.max(1, 1.2 * s)));
   if (ratio > 0) {
-    const fillWidth = Math.max(innerTrackHeight, innerTrackWidth * ratio);
-    result.push(
-      ...pillItems(
-        ctx,
-        `${baseId}-fill-glow`,
-        { x: trackX + trackInset - 0.8 * s, y: trackY + trackInset - 0.8 * s },
-        fillWidth + 1.6 * s,
-        innerTrackHeight + 1.6 * s,
-        item.accentColor,
-        0.3,
-      ),
-      ...pillItems(
-        ctx,
-        `${baseId}-fill`,
-        { x: trackX + trackInset, y: trackY + trackInset },
-        fillWidth,
-        innerTrackHeight,
-        item.accentColor,
-        0.98,
-      ),
-      shapeItem(
-        ctx,
-        `${baseId}-fill-shine`,
-        { x: trackX + trackInset + innerTrackHeight * 0.25, y: trackY + trackInset + 1.1 * s },
-        Math.max(1, fillWidth - innerTrackHeight * 0.5),
-        1.2 * s,
-        "#ffffff",
-        0.42,
-      ),
-    );
+    result.push(shapeItem(ctx, `${baseId}-fill`, { x: trackX + 1.4 * s, y: trackY + 1.4 * s }, Math.max(1.5 * s, (trackWidth - 2.8 * s) * ratio), trackHeight - 2.8 * s, item.accentColor, 0.98));
+    result.push(shapeItem(ctx, `${baseId}-fill-shine`, { x: trackX + 2.3 * s, y: trackY + 2.1 * s }, Math.max(1, (trackWidth - 4.6 * s) * ratio), 1.2 * s, "#ffffff", 0.24));
   }
   return result;
 }
@@ -843,10 +703,10 @@ function iconUnitItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCe
     // Dans le mode « icône seule », le cadre représente l'unité elle-même.
     // Les icônes intégrées aux plaques des autres modes restent sans cadre.
     result.push(unitFrameItem(ctx, `${unitId}-frame`, { x, y }, size, !active));
-    const icon = iconItem(ctx, `${unitId}-icon`, item, { x: x + size / 2, y: y + size / 2 }, size * 0.76);
+    const icon = iconItem(ctx, `${unitId}-icon`, item, { x: x + size / 2, y: y + size / 2 }, size * 0.7);
     if (icon) result.push(icon);
     if (!active) {
-      result.push(shapeItem(ctx, `${unitId}-mute`, { x: x + size * 0.12, y: y + size * 0.12 }, size * 0.76, size * 0.76, "#85888e", 0.56, undefined, 0, 0, "CIRCLE"));
+      result.push(shapeItem(ctx, `${unitId}-mute`, { x: x + size * 0.16, y: y + size * 0.16 }, size * 0.68, size * 0.68, "#85888e", 0.58));
     }
   }
   return result;
