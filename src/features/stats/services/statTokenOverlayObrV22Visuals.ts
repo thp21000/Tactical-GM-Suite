@@ -15,17 +15,15 @@ function elementMetadata(metadata: StatOverlayObrMetadata, element: string) {
   return { [STAT_OVERLAY_METADATA_KEY]: { ...metadata, element } };
 }
 
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
 export function grayscaleImageUrl(url: string, width: number, height: number): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs><filter id="gray" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/></filter></defs><image href="${escapeXml(url)}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" filter="url(#gray)"/></svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  // Les SVG data: qui embarquent une image PNG distante sont bloqués par le
+  // renderer Owlbear sur certains clients. Cela produisait les tuiles rouges
+  // "Image" pour toutes les unités inactives. On réutilise donc directement
+  // l'asset PNG : l'état inactif reste indiqué par le cadre atténué, sans
+  // dépendance à une ressource externe imbriquée dans un SVG.
+  void width;
+  void height;
+  return url;
 }
 
 function svgDataUrl(svg: string): string {
