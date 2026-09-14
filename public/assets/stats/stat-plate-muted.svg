@@ -1,6 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="96" viewBox="0 0 320 96">
-  <defs><linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#20242b"/><stop offset="1" stop-color="#0d1015"/></linearGradient><filter id="shadow" x="-12%" y="-22%" width="124%" height="158%"><feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/><feOffset dy="5" result="o"/><feColorMatrix in="o" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .48 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-  <path d="M24 8H296L312 24V72L296 88H24L8 72V24Z" fill="url(#body)" stroke="#6b7078" stroke-width="4" filter="url(#shadow)"/>
-  <path d="M29 14H291L306 29V67L291 82H29L14 67V29Z" fill="none" stroke="#b4b8bf" stroke-opacity=".22" stroke-width="1.5"/>
-  <path d="M34 18H286" stroke="#ffffff" stroke-opacity=".08" stroke-width="2" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#242930"/>
+      <stop offset=".55" stop-color="#11151b"/>
+      <stop offset="1" stop-color="#080a0e"/>
+    </linearGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c4c7cc"/>
+      <stop offset=".3" stop-color="#777c84"/>
+      <stop offset=".68" stop-color="#454951"/>
+      <stop offset="1" stop-color="#a8abb1"/>
+    </linearGradient>
+    <filter id="plateShadow" x="-16%" y="-28%" width="132%" height="170%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000000" flood-opacity=".78"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="#b8bbc1" flood-opacity=".12"/>
+    </filter>
+  </defs>
+  <path d="M25 6H295L314 25V71L295 90H25L6 71V25Z" fill="url(#body)" stroke="url(#silver)" stroke-width="4" filter="url(#plateShadow)"/>
+  <path d="M29 12H291L308 29V67L291 84H29L12 67V29Z" fill="none" stroke="#d2d4d8" stroke-opacity=".19" stroke-width="1.5"/>
+  <path d="M39 17H281" stroke="#ffffff" stroke-opacity=".09" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M27 7L18 18M293 7L302 18M27 89L18 78M293 89L302 78" fill="none" stroke="#b9bcc2" stroke-opacity=".44" stroke-width="2" stroke-linecap="round"/>
+  <path d="M15 35V61M305 35V61" stroke="#898e96" stroke-opacity=".58" stroke-width="2.4"/>
+  <path d="M31 79H289" stroke="#000000" stroke-opacity=".72" stroke-width="2"/>
 </svg>
