@@ -219,7 +219,7 @@ Renderer actif :
 statTokenOverlayObrSyncV17
 ```
 
-État : **V17.2**.
+État : **V17.3**.
 
 ### Principe de rendu
 
@@ -238,13 +238,17 @@ Les icônes intégrées aux plaques des trois premiers modes n'ont pas de cadre
 propre. Le mode `icon` conserve un cadre par unité afin de distinguer clairement
 les charges actives des charges inactives grisées.
 
+La première étape de rapprochement avec la maquette applique une typographie
+Georgia crème, des valeurs légèrement plus grandes et des espacements adaptés,
+sans ajouter de nouvelle primitive graphique Owlbear.
+
 ### Règle Owlbear critique
 
 Ne pas muter les objets `Text` de scène après leur création.
 
 Les tests ont montré que modifier leur layer ou leur zIndex après `addItems` peut les faire disparaître.
 
-V17.2 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
+V17.3 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
 
 ```text
 Text natif non muté

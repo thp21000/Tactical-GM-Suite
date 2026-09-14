@@ -103,25 +103,26 @@ const TOKEN_GAP = 9;
 const AUDIENCE_GAP = 2;
 const ITEM_GAP = 5;
 const ROW_GAP = 5;
-const ITEM_HEIGHT = 38;
-const BAR_HEIGHT = 54;
+const ITEM_HEIGHT = 40;
+const BAR_HEIGHT = 56;
 const ICON_UNIT_SIZE = 34;
 const ICON_UNIT_GAP = 4;
 const OVERFLOW_WIDTH = 48;
 const OVERFLOW_HEIGHT = 28;
 
-const VALUE_ICON_SLOT = 39;
-const BAR_ICON_SLOT = 51;
-const VALUE_RIGHT_PADDING = 8;
-const BAR_RIGHT_PADDING = 9;
+const VALUE_ICON_SLOT = 41;
+const BAR_ICON_SLOT = 53;
+const VALUE_RIGHT_PADDING = 9;
+const BAR_RIGHT_PADDING = 10;
 const TEXT_GAP = 8;
 const MIN_VALUE_CONTENT_WIDTH = 34;
 const MIN_TOGGLE_CONTENT_WIDTH = 42;
 const MIN_BAR_CONTENT_WIDTH = 76;
 
-const COLOR_TEXT = "#f4efe4";
-const COLOR_VALUE = "#fff5dc";
-const COLOR_MUTED = "#a3a7ad";
+const FONT_FAMILY = "Georgia";
+const COLOR_TEXT = "#f5efe3";
+const COLOR_VALUE = "#fff0cf";
+const COLOR_MUTED = "#aaacb1";
 const COLOR_TRACK = "#080b11";
 const COLOR_TRACK_BORDER = "#635b52";
 const COLOR_GOLD = "#d3ad6b";
@@ -268,12 +269,14 @@ function estimatedTextWidth(value: string, fontSize: number): number {
     if (/[0-9]/u.test(character)) return width + 0.56;
     return width + 0.54;
   }, 0);
-  return Math.ceil(units * fontSize);
+  // Georgia est légèrement plus large que la police sans sérif précédente.
+  // La marge empêche les valeurs et les noms de se toucher ou de revenir à la ligne.
+  return Math.ceil(units * fontSize * 1.08);
 }
 
 function cellSize(item: StatTokenSyncItem, scale: number) {
   if (item.mode === "bar") {
-    const nameWidth = estimatedTextWidth(shortName(item.name, 16), 15);
+    const nameWidth = estimatedTextWidth(shortName(item.name, 16), 15.5);
     const valueWidth = estimatedTextWidth(displayValue(item), 19);
     const contentWidth = Math.max(
       MIN_BAR_CONTENT_WIDTH,
@@ -293,11 +296,11 @@ function cellSize(item: StatTokenSyncItem, scale: number) {
   }
 
   const name = shortName(item.name, item.mode === "toggle" ? 16 : 11);
-  const nameFontSize = item.mode === "toggle" ? 17 : 15.5;
+  const nameFontSize = item.mode === "toggle" ? 16.5 : 15.5;
   const nameWidth = estimatedTextWidth(name, nameFontSize);
   const valueWidth = item.mode === "toggle"
     ? 0
-    : estimatedTextWidth(displayValue(item), 20);
+    : estimatedTextWidth(displayValue(item), 21);
   const contentWidth = item.mode === "toggle"
     ? Math.max(MIN_TOGGLE_CONTENT_WIDTH, nameWidth)
     : Math.max(MIN_VALUE_CONTENT_WIDTH, nameWidth + TEXT_GAP + valueWidth);
@@ -492,6 +495,7 @@ function textItem(
     .plainText(value)
     .width(Math.max(1, width))
     .height(Math.max(1, height))
+    .fontFamily(FONT_FAMILY)
     .fontSize(Math.max(8, fontSize))
     .fontWeight(weight)
     .lineHeight(1)
@@ -624,8 +628,8 @@ function valueOrToggleItems(
   const active = item.mode !== "toggle" || item.enabled === true;
   const result: Item[] = [plateItem(ctx, `${baseId}-plate`, { x, y }, cell.width, cell.height, !active)];
 
-  const tileSize = 30 * s;
-  const tilePos = { x: x + 4 * s, y: y + (cell.height - tileSize) / 2 };
+  const tileSize = 31 * s;
+  const tilePos = { x: x + 5 * s, y: y + (cell.height - tileSize) / 2 };
   result.push(...iconTile(ctx, baseId, item, tilePos, tileSize, active));
 
   const textX = x + VALUE_ICON_SLOT * s;
@@ -633,17 +637,17 @@ function valueOrToggleItems(
   const textHeight = cell.height - 8 * s;
 
   if (item.mode === "toggle") {
-    result.push(textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: textX, y: textY }, cell.width - (VALUE_ICON_SLOT + VALUE_RIGHT_PADDING) * s, textHeight, 17 * s, active ? COLOR_TEXT : COLOR_MUTED, active ? 700 : 580));
+    result.push(textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: textX, y: textY }, cell.width - (VALUE_ICON_SLOT + VALUE_RIGHT_PADDING) * s, textHeight, 16.5 * s, active ? COLOR_TEXT : COLOR_MUTED, active ? 700 : 580));
     return result;
   }
 
   const value = displayValue(item);
-  const valueWidth = estimatedTextWidth(value, 20) * s;
+  const valueWidth = estimatedTextWidth(value, 21) * s;
   const valueX = x + cell.width - VALUE_RIGHT_PADDING * s - valueWidth;
   const nameWidth = Math.max(12 * s, valueX - TEXT_GAP * s - textX);
   result.push(
-    textItem(ctx, `${baseId}-name`, shortName(item.name), { x: textX, y: textY }, nameWidth, textHeight, 15.5 * s, COLOR_TEXT, 600),
-    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: textY }, valueWidth, textHeight, 20 * s, COLOR_VALUE, 780, "RIGHT"),
+    textItem(ctx, `${baseId}-name`, shortName(item.name), { x: textX, y: textY }, nameWidth, textHeight, 15.5 * s, COLOR_TEXT, 650),
+    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: textY }, valueWidth, textHeight, 21 * s, COLOR_VALUE, 760, "RIGHT"),
   );
   return result;
 }
@@ -656,7 +660,7 @@ function barItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCell, o
   const result: Item[] = [plateItem(ctx, `${baseId}-plate`, { x, y }, cell.width, cell.height)];
 
   const tileSize = 38 * s;
-  const tilePos = { x: x + 6 * s, y: y + (cell.height - tileSize) / 2 };
+  const tilePos = { x: x + 7 * s, y: y + (cell.height - tileSize) / 2 };
   result.push(...iconTile(ctx, baseId, item, tilePos, tileSize, true));
 
   const contentX = x + BAR_ICON_SLOT * s;
@@ -666,8 +670,8 @@ function barItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCell, o
   const valueX = x + cell.width - BAR_RIGHT_PADDING * s - valueWidth;
   const nameWidth = Math.max(14 * s, valueX - TEXT_GAP * s - contentX);
   result.push(
-    textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: contentX, y: y + 5 * s }, nameWidth, 18 * s, 15 * s, COLOR_TEXT, 650),
-    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: y + 5 * s }, valueWidth, 18 * s, 19 * s, COLOR_VALUE, 800, "RIGHT"),
+    textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: contentX, y: y + 5 * s }, nameWidth, 19 * s, 15.5 * s, COLOR_TEXT, 650),
+    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: y + 5 * s }, valueWidth, 19 * s, 19 * s, COLOR_VALUE, 760, "RIGHT"),
   );
 
   const trackX = contentX;
