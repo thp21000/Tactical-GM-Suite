@@ -77,7 +77,25 @@ type TextAlign = "LEFT" | "CENTER" | "RIGHT";
 
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 const MAX_TRACKERS = 6;
-const ICON_LOGICAL_SIZE = 1024;
+
+type IconSourceDimensions = {
+  width: number;
+  height: number;
+};
+
+// La majorité des PNG du catalogue font 1254 × 1254. Déclarer 1024 × 1024
+// décalait leur grid.offset de 115 px vers le coin supérieur gauche avant la
+// mise à l'échelle Owlbear, donc le sujet n'était plus centré dans sa tuile.
+const DEFAULT_ICON_SOURCE_DIMENSIONS: IconSourceDimensions = {
+  width: 1254,
+  height: 1254,
+};
+
+const ICON_SOURCE_DIMENSIONS: Record<string, IconSourceDimensions> = {
+  arcane_portal: { width: 1024, height: 1024 },
+  object_arrow_up: { width: 1246, height: 1262 },
+  resource_platinum: { width: 1024, height: 1024 },
+};
 
 // Référence visuelle : token d'une case. Toutes les dimensions suivent ensuite
 // proportionnellement la taille réelle du token.
@@ -206,6 +224,10 @@ function absoluteAssetUrl(path: string | undefined): string | undefined {
   } catch {
     return path;
   }
+}
+
+function getIconSourceDimensions(iconId: string): IconSourceDimensions {
+  return ICON_SOURCE_DIMENSIONS[iconId] ?? DEFAULT_ICON_SOURCE_DIMENSIONS;
 }
 
 function tokenScale(bounds: BoundingBox, sceneDpi: number): number {
@@ -411,6 +433,9 @@ function textItem(
   return buildText()
     .id(id)
     .name(`Stats Dock — ${ctx.token.name}`)
+    // TextBuilder utilise RICH par défaut. Sans ce mode explicite, Owlbear lit
+    // le richText vide du builder et n'affiche jamais la valeur de plainText.
+    .textType("PLAIN")
     .plainText(value)
     .width(Math.max(1, width))
     .height(Math.max(1, height))
@@ -442,10 +467,23 @@ function iconItem(
 ): Item | null {
   const url = absoluteAssetUrl(item.iconSrc);
   if (!url) return null;
+  const sourceDimensions = getIconSourceDimensions(item.iconId);
+  const sourceDpi = Math.max(sourceDimensions.width, sourceDimensions.height);
   const imageScale = size / ctx.sceneDpi;
   return buildImage(
-    { width: ICON_LOGICAL_SIZE, height: ICON_LOGICAL_SIZE, url, mime: "image/png" },
-    { dpi: ICON_LOGICAL_SIZE, offset: { x: ICON_LOGICAL_SIZE / 2, y: ICON_LOGICAL_SIZE / 2 } },
+    {
+      width: sourceDimensions.width,
+      height: sourceDimensions.height,
+      url,
+      mime: "image/png",
+    },
+    {
+      dpi: sourceDpi,
+      offset: {
+        x: sourceDimensions.width / 2,
+        y: sourceDimensions.height / 2,
+      },
+    },
   )
     .id(id)
     .name(`Stats Dock — ${ctx.token.name} — ${item.name}`)

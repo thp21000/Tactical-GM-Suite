@@ -48,8 +48,8 @@ function getPresentation(item: Item, sourceItemId: string): DockPresentation | u
   // Les tests en room montrent que V12 affiche correctement ses Text de scène
   // tant qu'ils restent exactement tels que le builder les a créés. Les
   // changements de layer ou de zIndex appliqués après addItems les font
-  // disparaître. Les Text restent donc à leur zIndex natif (0), et tous les
-  // éléments graphiques sont simplement placés derrière eux.
+  // disparaître. Les Text conservent donc le zIndex natif attribué par le SDK,
+  // et tous les éléments graphiques sont simplement placés derrière eux.
   if (item.type === "TEXT") return undefined;
 
   if (item.type === "SHAPE") {
