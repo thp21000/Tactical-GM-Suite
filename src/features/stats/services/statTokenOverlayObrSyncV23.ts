@@ -1,5 +1,6 @@
 import OBR, {
   buildImage,
+  buildShape,
   buildText,
   type BoundingBox,
   type Item,
@@ -104,9 +105,9 @@ const ICON_SOURCE_DIMENSIONS: Record<string, IconSourceDimensions> = {
   resource_platinum: { width: 1024, height: 1024 },
 };
 
-// V23 construit directement le rendu final. Il n'y a plus de passe V12/V20
-// visible puis une seconde passe de correction : cela supprime le flash de
-// l'ancien design pendant les changements de valeur.
+// V23 reste atomique : aucun ancien renderer n'est créé avant le rendu final.
+// En 0.3.65 les cadres dynamiques utilisent des items Owlbear natifs plutôt
+// que des data: SVG, car ces derniers deviennent des placeholders "Image".
 const TOKEN_GAP = 4.5;
 const AUDIENCE_GAP = 1;
 const ITEM_GAP = 2.5;
@@ -134,8 +135,8 @@ const COLOR_TEXT = "#f5efe3";
 const COLOR_VALUE = "#fff0cf";
 const COLOR_MUTED = "#aaacb1";
 
-const PLATE_ASSET = "assets/stats/stat-plate.svg?v=0.3.63";
-const PLATE_MUTED_ASSET = "assets/stats/stat-plate-muted.svg?v=0.3.63";
+const PLATE_ASSET = "assets/stats/stat-plate.svg?v=0.3.65";
+const PLATE_MUTED_ASSET = "assets/stats/stat-plate-muted.svg?v=0.3.65";
 
 function createResult(
   action: StatOverlayObrManualAction,
@@ -238,32 +239,8 @@ function absoluteAssetUrl(path: string | undefined): string | undefined {
   }
 }
 
-function svgDataUrl(svg: string): string {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
 function safeAccentColor(color: string): string {
   return /^#[0-9a-f]{3,8}$/i.test(color) ? color : "#4fb5ff";
-}
-
-function togglePlateUrl(active: boolean, accentColor: string): string {
-  const accent = safeAccentColor(accentColor);
-  const stroke = active ? accent : "#6b7078";
-  const inner = active ? accent : "#c2c5cb";
-  const top = active ? accent : "#ffffff";
-  const glow = active ? 0.30 : 0;
-  return svgDataUrl(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="96" viewBox="0 0 320 96"><defs><linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#27313c"/><stop offset=".36" stop-color="#141d27"/><stop offset="1" stop-color="#060a0f"/></linearGradient><filter id="shadow" x="-14%" y="-28%" width="128%" height="170%"><feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/><feOffset in="b" dy="5" result="o"/><feColorMatrix in="o" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .56 0" result="s"/><feGaussianBlur in="SourceAlpha" stdDeviation="2.2" result="g"/><feColorMatrix in="g" type="matrix" values="0 0 0 0 0.25 0 0 0 0 0.65 0 0 0 0 1 0 0 0 ${glow} 0" result="glow"/><feMerge><feMergeNode in="glow"/><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="M24 8H296L312 24V72L296 88H24L8 72V24Z" fill="url(#body)" stroke="${stroke}" stroke-width="4" filter="url(#shadow)"/><path d="M29 14H291L306 29V67L291 82H29L14 67V29Z" fill="none" stroke="${inner}" stroke-opacity="${active ? 0.62 : 0.28}" stroke-width="1.6"/><path d="M34 18H286" stroke="${top}" stroke-opacity="${active ? 0.62 : 0.12}" stroke-width="2" stroke-linecap="round"/><path d="M34 78H286" stroke="#000000" stroke-opacity=".58" stroke-width="2" stroke-linecap="round"/></svg>`,
-  );
-}
-
-function unitFrameUrl(active: boolean, accentColor: string): string {
-  const accent = safeAccentColor(accentColor);
-  const stroke = active ? accent : "#666b73";
-  const inner = active ? accent : "#b7bbc2";
-  return svgDataUrl(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><defs><linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#202933"/><stop offset="1" stop-color="#080c11"/></linearGradient></defs><path d="M18 5H78L91 18V78L78 91H18L5 78V18Z" fill="url(#body)" stroke="${stroke}" stroke-width="4"/><path d="M22 11H74L85 22V74L74 85H22L11 74V22Z" fill="none" stroke="${inner}" stroke-opacity="${active ? 0.72 : 0.18}" stroke-width="1.6"/><path d="M27 13H69" stroke="${active ? accent : "#ffffff"}" stroke-opacity="${active ? 0.65 : 0.10}" stroke-width="2" stroke-linecap="round"/></svg>`,
-  );
 }
 
 function getIconSourceDimensions(iconId: string): IconSourceDimensions {
@@ -337,7 +314,7 @@ function cellSize(item: StatTokenSyncItem, scale: number) {
   }
 
   const name = shortName(item.name, item.mode === "toggle" ? 16 : 11);
-  const nameFontSize = item.mode === "toggle" ? 17 : 17;
+  const nameFontSize = 17;
   const nameWidth = estimatedTextWidth(name, nameFontSize);
   const valueWidth = item.mode === "toggle"
     ? 0
@@ -514,6 +491,43 @@ function imageFrame(
     .build();
 }
 
+function nativeFrameItem(
+  ctx: RenderContext,
+  id: string,
+  position: Vector2,
+  width: number,
+  height: number,
+  fillColor: string,
+  fillOpacity: number,
+  strokeColor: string,
+  strokeOpacity: number,
+  strokeWidth: number,
+  zIndex: number,
+): Item {
+  return buildShape()
+    .id(id)
+    .name(`Stats Dock — ${ctx.token.name}`)
+    .width(Math.max(0.5, width))
+    .height(Math.max(0.5, height))
+    .shapeType("RECTANGLE")
+    .fillColor(fillColor)
+    .fillOpacity(fillOpacity)
+    .strokeColor(strokeColor)
+    .strokeOpacity(strokeOpacity)
+    .strokeWidth(Math.max(0, strokeWidth))
+    .position({ x: position.x + width / 2, y: position.y + height / 2 })
+    .rotation(0)
+    .layer("ATTACHMENT")
+    .zIndex(zIndex)
+    .attachedTo(ctx.sourceItemId)
+    .locked(true)
+    .disableHit(true)
+    .disableAutoZIndex(true)
+    .disableAttachmentBehavior(["COPY", "SCALE", "ROTATION"])
+    .metadata(elementMetadata(ctx.metadata, id))
+    .build();
+}
+
 function plateItem(
   ctx: RenderContext,
   id: string,
@@ -523,13 +537,9 @@ function plateItem(
   height: number,
   muted = false,
 ): Item {
-  let url: string;
-  if (item?.mode === "toggle") {
-    url = togglePlateUrl(item.enabled === true, item.accentColor);
-  } else {
-    const asset = muted ? PLATE_MUTED_ASSET : PLATE_ASSET;
-    url = absoluteAssetUrl(asset) ?? asset;
-  }
+  const toggleInactive = item?.mode === "toggle" && item.enabled !== true;
+  const asset = muted || toggleInactive ? PLATE_MUTED_ASSET : PLATE_ASSET;
+  const url = absoluteAssetUrl(asset) ?? asset;
   return imageFrame(
     ctx,
     id,
@@ -552,16 +562,18 @@ function unitFrameItem(
   size: number,
   active: boolean,
 ): Item {
-  return imageFrame(
+  const accent = safeAccentColor(item.accentColor);
+  return nativeFrameItem(
     ctx,
     id,
-    unitFrameUrl(active, item.accentColor),
-    "image/svg+xml",
-    96,
-    96,
     position,
     size,
     size,
+    active ? "#0a1016" : "#242a31",
+    0.96,
+    active ? accent : "#69717b",
+    active ? 0.98 : 0.78,
+    Math.max(0.9, 1.7 * ctx.scale),
     -30,
   );
 }
@@ -621,14 +633,13 @@ function iconItem(
   const url = active
     ? sourceUrl
     : grayscaleImageUrl(sourceUrl, sourceDimensions.width, sourceDimensions.height);
-  const mime = active ? "image/png" : "image/svg+xml";
 
   return buildImage(
     {
       width: sourceDimensions.width,
       height: sourceDimensions.height,
       url,
-      mime,
+      mime: "image/png",
     },
     {
       dpi: sourceDpi,
@@ -687,6 +698,25 @@ function valueOrToggleItems(
   const result: Item[] = [
     plateItem(ctx, `${baseId}-plate`, item, { x, y }, cell.width, cell.height),
   ];
+
+  if (item.mode === "toggle" && active) {
+    const inset = 3.5 * s;
+    result.push(
+      nativeFrameItem(
+        ctx,
+        `${baseId}-accent`,
+        { x: x + inset, y: y + inset },
+        Math.max(1, cell.width - inset * 2),
+        Math.max(1, cell.height - inset * 2),
+        "#000000",
+        0,
+        safeAccentColor(item.accentColor),
+        0.72,
+        Math.max(0.8, 1.2 * s),
+        -22,
+      ),
+    );
+  }
 
   const tileSize = 31 * s;
   const tilePos = {
@@ -770,7 +800,6 @@ function barItems(
   result.push(...iconTile(ctx, baseId, item, tilePos, tileSize, true));
 
   const contentX = x + BAR_ICON_SLOT * s;
-  const contentWidth = cell.width - (BAR_ICON_SLOT + BAR_RIGHT_PADDING) * s;
   const value = displayValue(item);
   const valueWidth = valueTextWidth(item, 18) * s;
   const valueX = x + cell.width - BAR_RIGHT_PADDING * s - valueWidth;
