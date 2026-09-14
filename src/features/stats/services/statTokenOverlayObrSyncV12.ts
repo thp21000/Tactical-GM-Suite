@@ -118,6 +118,8 @@ const TEXT_GAP = 8;
 const MIN_VALUE_CONTENT_WIDTH = 34;
 const MIN_TOGGLE_CONTENT_WIDTH = 42;
 const MIN_BAR_CONTENT_WIDTH = 76;
+const MIN_VALUE_TEXT_WIDTH = 34;
+const MIN_BAR_VALUE_TEXT_WIDTH = 52;
 
 const FONT_FAMILY = "Georgia";
 const COLOR_TEXT = "#f5efe3";
@@ -127,8 +129,8 @@ const COLOR_TRACK = "#080b11";
 const COLOR_TRACK_BORDER = "#635b52";
 const COLOR_GOLD = "#d3ad6b";
 
-const PLATE_ASSET = "assets/stats/stat-plate.svg";
-const PLATE_MUTED_ASSET = "assets/stats/stat-plate-muted.svg";
+const PLATE_ASSET = "assets/stats/stat-plate.svg?v=0.3.54";
+const PLATE_MUTED_ASSET = "assets/stats/stat-plate-muted.svg?v=0.3.54";
 const UNIT_ASSET = "assets/stats/stat-unit.svg";
 const UNIT_MUTED_ASSET = "assets/stats/stat-unit-muted.svg";
 
@@ -274,10 +276,17 @@ function estimatedTextWidth(value: string, fontSize: number): number {
   return Math.ceil(units * fontSize * 1.08);
 }
 
+function valueTextWidth(item: StatTokenSyncItem, fontSize: number): number {
+  const minimum = item.mode === "bar"
+    ? MIN_BAR_VALUE_TEXT_WIDTH
+    : MIN_VALUE_TEXT_WIDTH;
+  return Math.max(minimum, estimatedTextWidth(displayValue(item), fontSize));
+}
+
 function cellSize(item: StatTokenSyncItem, scale: number) {
   if (item.mode === "bar") {
     const nameWidth = estimatedTextWidth(shortName(item.name, 16), 15.5);
-    const valueWidth = estimatedTextWidth(displayValue(item), 19);
+    const valueWidth = valueTextWidth(item, 19);
     const contentWidth = Math.max(
       MIN_BAR_CONTENT_WIDTH,
       nameWidth + TEXT_GAP + valueWidth,
@@ -300,7 +309,7 @@ function cellSize(item: StatTokenSyncItem, scale: number) {
   const nameWidth = estimatedTextWidth(name, nameFontSize);
   const valueWidth = item.mode === "toggle"
     ? 0
-    : estimatedTextWidth(displayValue(item), 21);
+    : valueTextWidth(item, 21);
   const contentWidth = item.mode === "toggle"
     ? Math.max(MIN_TOGGLE_CONTENT_WIDTH, nameWidth)
     : Math.max(MIN_VALUE_CONTENT_WIDTH, nameWidth + TEXT_GAP + valueWidth);
@@ -642,7 +651,7 @@ function valueOrToggleItems(
   }
 
   const value = displayValue(item);
-  const valueWidth = estimatedTextWidth(value, 21) * s;
+  const valueWidth = valueTextWidth(item, 21) * s;
   const valueX = x + cell.width - VALUE_RIGHT_PADDING * s - valueWidth;
   const nameWidth = Math.max(12 * s, valueX - TEXT_GAP * s - textX);
   result.push(
@@ -666,7 +675,7 @@ function barItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCell, o
   const contentX = x + BAR_ICON_SLOT * s;
   const contentWidth = cell.width - (BAR_ICON_SLOT + BAR_RIGHT_PADDING) * s;
   const value = displayValue(item);
-  const valueWidth = estimatedTextWidth(value, 19) * s;
+  const valueWidth = valueTextWidth(item, 19) * s;
   const valueX = x + cell.width - BAR_RIGHT_PADDING * s - valueWidth;
   const nameWidth = Math.max(14 * s, valueX - TEXT_GAP * s - contentX);
   result.push(

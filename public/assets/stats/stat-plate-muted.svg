@@ -1,6 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="96" viewBox="0 0 320 96">
-  <defs><linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#20242b"/><stop offset="1" stop-color="#0d1015"/></linearGradient><filter id="shadow" x="-12%" y="-22%" width="124%" height="158%"><feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/><feOffset dy="5" result="o"/><feColorMatrix in="o" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .48 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#272c34"/><stop offset=".42" stop-color="#171b22"/><stop offset="1" stop-color="#090c11"/></linearGradient>
+    <filter id="shadow" x="-14%" y="-28%" width="128%" height="170%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/><feOffset in="b" dy="5" result="o"/><feColorMatrix in="o" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .56 0" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
   <path d="M24 8H296L312 24V72L296 88H24L8 72V24Z" fill="url(#body)" stroke="#6b7078" stroke-width="4" filter="url(#shadow)"/>
-  <path d="M29 14H291L306 29V67L291 82H29L14 67V29Z" fill="none" stroke="#b4b8bf" stroke-opacity=".22" stroke-width="1.5"/>
-  <path d="M34 18H286" stroke="#ffffff" stroke-opacity=".08" stroke-width="2" stroke-linecap="round"/>
+  <path d="M29 14H291L306 29V67L291 82H29L14 67V29Z" fill="none" stroke="#c2c5cb" stroke-opacity=".28" stroke-width="1.5"/>
+  <path d="M34 18H286" stroke="#ffffff" stroke-opacity=".12" stroke-width="2" stroke-linecap="round"/>
+  <path d="M34 78H286" stroke="#000000" stroke-opacity=".58" stroke-width="2" stroke-linecap="round"/>
 </svg>

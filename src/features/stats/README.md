@@ -219,7 +219,7 @@ Renderer actif :
 statTokenOverlayObrSyncV17
 ```
 
-État : **V17.3**.
+État : **V17.4**.
 
 ### Principe de rendu
 
@@ -242,13 +242,18 @@ La première étape de rapprochement avec la maquette applique une typographie
 Georgia crème, des valeurs légèrement plus grandes et des espacements adaptés,
 sans ajouter de nouvelle primitive graphique Owlbear.
 
+La deuxième étape renforce les plaques existantes avec un fond noir bleuté plus
+profond, des liserés métalliques plus lumineux et une lueur dorée construite
+uniquement avec les primitives SVG déjà validées. Les champs numériques ont
+aussi une largeur minimale afin d'interdire leur retour à la ligne.
+
 ### Règle Owlbear critique
 
 Ne pas muter les objets `Text` de scène après leur création.
 
 Les tests ont montré que modifier leur layer ou leur zIndex après `addItems` peut les faire disparaître.
 
-V17.3 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
+V17.4 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
 
 ```text
 Text natif non muté
