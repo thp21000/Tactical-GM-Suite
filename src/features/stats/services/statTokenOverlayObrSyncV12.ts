@@ -128,6 +128,8 @@ const COLOR_GOLD = "#d3ad6b";
 
 const PLATE_ASSET = "assets/stats/stat-plate.svg";
 const PLATE_MUTED_ASSET = "assets/stats/stat-plate-muted.svg";
+const UNIT_ASSET = "assets/stats/stat-unit.svg";
+const UNIT_MUTED_ASSET = "assets/stats/stat-unit-muted.svg";
 
 function createResult(
   action: StatOverlayObrManualAction,
@@ -453,6 +455,16 @@ function plateItem(
   return imageFrame(ctx, id, muted ? PLATE_MUTED_ASSET : PLATE_ASSET, 320, 96, position, width, height);
 }
 
+function unitFrameItem(
+  ctx: RenderContext,
+  id: string,
+  position: Vector2,
+  size: number,
+  muted = false,
+): Item {
+  return imageFrame(ctx, id, muted ? UNIT_MUTED_ASSET : UNIT_ASSET, 96, 96, position, size, size);
+}
+
 /**
  * Les Label Owlbear sont rendus en screen-space et gardent donc une taille
  * d'écran indépendante du zoom. Le Stat Dock doit au contraire se comporter
@@ -688,6 +700,9 @@ function iconUnitItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCe
     const active = index < current;
     const x = startX + index * (size + gap);
     const unitId = `${baseId}-unit-${index}`;
+    // Dans le mode « icône seule », le cadre représente l'unité elle-même.
+    // Les icônes intégrées aux plaques des autres modes restent sans cadre.
+    result.push(unitFrameItem(ctx, `${unitId}-frame`, { x, y }, size, !active));
     const icon = iconItem(ctx, `${unitId}-icon`, item, { x: x + size / 2, y: y + size / 2 }, size * 0.7);
     if (icon) result.push(icon);
     if (!active) {

@@ -219,7 +219,7 @@ Renderer actif :
 statTokenOverlayObrSyncV17
 ```
 
-État : **V17.1**.
+État : **V17.2**.
 
 ### Principe de rendu
 
@@ -234,20 +234,26 @@ bar              -> nom + current/max + barre
 icon             -> unités répétées
 ```
 
+Les icônes intégrées aux plaques des trois premiers modes n'ont pas de cadre
+propre. Le mode `icon` conserve un cadre par unité afin de distinguer clairement
+les charges actives des charges inactives grisées.
+
 ### Règle Owlbear critique
 
 Ne pas muter les objets `Text` de scène après leur création.
 
 Les tests ont montré que modifier leur layer ou leur zIndex après `addItems` peut les faire disparaître.
 
-V17.1 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
+V17.2 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
 
 ```text
-Text natif       0
+Text natif non muté
 mute shape      -5
 icône PNG       -10
-shape/barre     -20
-plaque SVG      -30
+reflet jauge    -12
+remplissage     -14
+fond de jauge   -20
+plaque/unité    -30
 ```
 
 Tout reste sur `ATTACHMENT`.
