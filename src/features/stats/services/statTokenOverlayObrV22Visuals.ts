@@ -1,4 +1,4 @@
-import { buildShape, type Item } from "@owlbear-rodeo/sdk";
+import { buildImage, type Item } from "@owlbear-rodeo/sdk";
 import type { StatTrackedToken } from "../statTypes";
 import type { StatOverlayObrMetadata } from "./statTokenOverlayObrAdapter";
 import { STAT_OVERLAY_METADATA_KEY } from "./statTokenOverlayObrAdapter";
@@ -15,46 +15,67 @@ function elementMetadata(metadata: StatOverlayObrMetadata, element: string) {
   return { [STAT_OVERLAY_METADATA_KEY]: { ...metadata, element } };
 }
 
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 export function grayscaleImageUrl(url: string, width: number, height: number): string {
-  // Owlbear ne charge pas de façon fiable les images distantes imbriquées dans
-  // un data: SVG. On conserve donc l'URL PNG native ici ; le rendu inactif est
-  // assuré par son cadre atténué tant qu'un pipeline PNG désaturé n'est pas prêt.
-  void width;
-  void height;
-  return url;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs><filter id="gray" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/></filter></defs><image href="${escapeXml(url)}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" filter="url(#gray)"/></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function svgDataUrl(svg: string): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 function safeAccentColor(color: string): string {
   return /^#[0-9a-f]{3,8}$/i.test(color) ? color : "#d85c72";
 }
 
-function shapeItem(
+function trackSvgUrl(): string {
+  return svgDataUrl(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="24" viewBox="0 0 200 24"><defs><linearGradient id="track" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#151a20"/><stop offset="0.45" stop-color="#080a0d"/><stop offset="1" stop-color="#020304"/></linearGradient></defs><rect x="1" y="1" width="198" height="22" rx="11" fill="url(#track)" stroke="#746954" stroke-width="2"/><rect x="3" y="3" width="194" height="18" rx="9" fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="1"/><path d="M12 5H188" stroke="#ffffff" stroke-opacity="0.10" stroke-width="2" stroke-linecap="round"/></svg>`,
+  );
+}
+
+function fillSvgUrl(color: string): string {
+  const accent = safeAccentColor(color);
+  return svgDataUrl(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="24" viewBox="0 0 200 24"><defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.40"/><stop offset="0.20" stop-color="${accent}"/><stop offset="0.72" stop-color="${accent}"/><stop offset="1" stop-color="#000000" stop-opacity="0.30"/></linearGradient></defs><rect x="1" y="1" width="198" height="22" rx="11" fill="${accent}" fill-opacity="0.25"/><rect x="2" y="2" width="196" height="20" rx="10" fill="url(#fill)" stroke="#ffffff" stroke-opacity="0.20" stroke-width="1.2"/><path d="M12 5.5H188" stroke="#ffffff" stroke-opacity="0.38" stroke-width="2" stroke-linecap="round"/></svg>`,
+  );
+}
+
+function pillImage(
   token: StatTrackedToken,
   sourceItemId: string,
   metadata: StatOverlayObrMetadata,
   id: string,
-  shapeType: "RECTANGLE" | "CIRCLE",
+  url: string,
   x: number,
   y: number,
   width: number,
   height: number,
-  fillColor: string,
-  fillOpacity: number,
+  sceneDpi: number,
   zIndex: number,
 ): Item {
-  return buildShape()
+  const logicalWidth = 200;
+  const logicalHeight = 24;
+  return buildImage(
+    { width: logicalWidth, height: logicalHeight, url, mime: "image/svg+xml" },
+    { dpi: logicalWidth, offset: { x: logicalWidth / 2, y: logicalHeight / 2 } },
+  )
     .id(id)
     .name(`Stats Dock — ${token.name}`)
-    .width(Math.max(0.5, width))
-    .height(Math.max(0.5, height))
-    .shapeType(shapeType)
-    .fillColor(fillColor)
-    .fillOpacity(fillOpacity)
-    .strokeColor(fillColor)
-    .strokeOpacity(0)
-    .strokeWidth(0)
     .position({ x: x + width / 2, y: y + height / 2 })
     .rotation(0)
+    .scale({
+      x: width / sceneDpi,
+      y: (height * logicalWidth) / (logicalHeight * sceneDpi),
+    })
     .layer("ATTACHMENT")
     .zIndex(zIndex)
     .attachedTo(sourceItemId)
@@ -64,70 +85,6 @@ function shapeItem(
     .disableAttachmentBehavior(["COPY", "SCALE", "ROTATION"])
     .metadata(elementMetadata(metadata, id))
     .build();
-}
-
-function pillItems(
-  token: StatTrackedToken,
-  sourceItemId: string,
-  metadata: StatOverlayObrMetadata,
-  id: string,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  color: string,
-  opacity: number,
-  zIndex: number,
-): Item[] {
-  const h = Math.max(0.5, height);
-  const w = Math.max(h, width);
-  const radius = h / 2;
-  const centerWidth = Math.max(0.5, w - h);
-
-  return [
-    shapeItem(
-      token,
-      sourceItemId,
-      metadata,
-      `${id}-left`,
-      "CIRCLE",
-      x,
-      y,
-      h,
-      h,
-      color,
-      opacity,
-      zIndex,
-    ),
-    shapeItem(
-      token,
-      sourceItemId,
-      metadata,
-      `${id}-center`,
-      "RECTANGLE",
-      x + radius,
-      y,
-      centerWidth,
-      h,
-      color,
-      opacity,
-      zIndex,
-    ),
-    shapeItem(
-      token,
-      sourceItemId,
-      metadata,
-      `${id}-right`,
-      "CIRCLE",
-      x + w - h,
-      y,
-      h,
-      h,
-      color,
-      opacity,
-      zIndex,
-    ),
-  ];
 }
 
 export function roundedBarItems(
@@ -140,103 +97,50 @@ export function roundedBarItems(
   sceneDpi: number,
   scale: number,
 ): Item[] {
-  void sceneDpi;
-
   const trackX = target.minX + 53 * scale;
   const trackY = target.minY + 34 * scale;
   const trackWidth = Math.max(30 * scale, target.width - 63 * scale);
   const trackHeight = 10 * scale;
-
-  const result: Item[] = [];
-  result.push(
-    ...pillItems(
+  const result: Item[] = [
+    pillImage(
       token,
       sourceItemId,
       metadata,
-      `${baseId}-pill-track-outer`,
+      `${baseId}-pill-track`,
+      trackSvgUrl(),
       trackX,
       trackY,
       trackWidth,
       trackHeight,
-      "#6f6656",
-      1,
-      -22,
-    ),
-  );
-
-  const trackInset = 1.25 * scale;
-  const innerX = trackX + trackInset;
-  const innerY = trackY + trackInset;
-  const innerWidth = Math.max(4 * scale, trackWidth - trackInset * 2);
-  const innerHeight = Math.max(3 * scale, trackHeight - trackInset * 2);
-  result.push(
-    ...pillItems(
-      token,
-      sourceItemId,
-      metadata,
-      `${baseId}-pill-track-inner`,
-      innerX,
-      innerY,
-      innerWidth,
-      innerHeight,
-      "#090c10",
-      1,
+      sceneDpi,
       -20,
     ),
-  );
+  ];
 
   const max = Math.max(0, tracker.max ?? 0);
   const current = Math.max(0, tracker.current ?? 0);
   const ratio = max > 0 ? Math.min(1, current / max) : 0;
   if (ratio <= 0) return result;
 
-  const fillInset = 0.75 * scale;
-  const fillX = innerX + fillInset;
-  const fillY = innerY + fillInset;
-  const fillHeight = Math.max(2 * scale, innerHeight - fillInset * 2);
-  const fillAvailableWidth = Math.max(fillHeight, innerWidth - fillInset * 2);
-  const fillWidth = Math.min(
-    fillAvailableWidth,
-    Math.max(fillHeight, fillAvailableWidth * ratio),
-  );
-  const accent = safeAccentColor(tracker.accentColor);
+  const inset = 1.5 * scale;
+  const innerHeight = Math.max(2 * scale, trackHeight - inset * 2);
+  const innerWidth = Math.max(2 * scale, trackWidth - inset * 2);
+  const fillWidth = Math.min(innerWidth, Math.max(innerHeight, innerWidth * ratio));
 
   result.push(
-    ...pillItems(
+    pillImage(
       token,
       sourceItemId,
       metadata,
       `${baseId}-pill-fill`,
-      fillX,
-      fillY,
+      fillSvgUrl(tracker.accentColor),
+      trackX + inset,
+      trackY + inset,
       fillWidth,
-      fillHeight,
-      accent,
-      1,
-      -16,
+      innerHeight,
+      sceneDpi,
+      -14,
     ),
   );
-
-  const shineInsetX = 1.5 * scale;
-  const shineWidth = Math.max(0, fillWidth - shineInsetX * 2);
-  const shineHeight = Math.max(0.75 * scale, 1.4 * scale);
-  if (shineWidth >= shineHeight) {
-    result.push(
-      ...pillItems(
-        token,
-        sourceItemId,
-        metadata,
-        `${baseId}-pill-shine`,
-        fillX + shineInsetX,
-        fillY + 0.8 * scale,
-        shineWidth,
-        shineHeight,
-        "#ffffff",
-        0.28,
-        -14,
-      ),
-    );
-  }
-
   return result;
 }

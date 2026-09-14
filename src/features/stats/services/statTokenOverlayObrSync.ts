@@ -1,1 +1,1 @@
-export * from "./statTokenOverlayObrSyncV23";
+export * from "./statTokenOverlayObrSyncV22";
