@@ -48,6 +48,9 @@ type ImageGeometry = {
 const AUDIENCES: StatTrackerVisibility[] = ["public", "private", "gm"];
 const VALUE_ITEM_HEIGHT = 40;
 const ICON_UNIT_SIZE = 34;
+const PLATE_LOGICAL_WIDTH = 320;
+const PLATE_LOGICAL_HEIGHT = 96;
+const UNIT_LOGICAL_SIZE = 96;
 
 function getAudienceApi(visibility: StatTrackerVisibility): OverlayMutableApi {
   return visibility === "public" ? OBR.scene.items : OBR.scene.local;
@@ -76,18 +79,38 @@ function elementMetadata(metadata: StatOverlayObrMetadata, element: string) {
   return { [STAT_OVERLAY_METADATA_KEY]: { ...metadata, element } };
 }
 
-function getImageGeometry(item: Item, sceneDpi: number): ImageGeometry | undefined {
+function getImageGeometry(
+  item: Item,
+  sceneDpi: number,
+  logicalWidth: number,
+  logicalHeight: number,
+): ImageGeometry | undefined {
   if (item.type !== "IMAGE") return undefined;
+  if (
+    !Number.isFinite(sceneDpi) ||
+    sceneDpi <= 0 ||
+    !Number.isFinite(logicalWidth) ||
+    logicalWidth <= 0 ||
+    !Number.isFinite(logicalHeight) ||
+    logicalHeight <= 0
+  ) {
+    return undefined;
+  }
 
-  const sourceDpi = item.grid.dpi;
-  if (!Number.isFinite(sourceDpi) || sourceDpi <= 0) return undefined;
-
-  const width =
-    (item.image.width / sourceDpi) * sceneDpi * Math.abs(item.scale.x);
+  // Les images V12 sont construites avec sourceDpi = logicalWidth.
+  // On peut donc retrouver leur géométrie scène uniquement depuis la scale
+  // commune à Item, sans accéder à item.grid / item.image qui ne font pas
+  // partie du type Item exposé par le SDK.
+  const width = sceneDpi * Math.abs(item.scale.x);
   const height =
-    (item.image.height / sourceDpi) * sceneDpi * Math.abs(item.scale.y);
+    sceneDpi * Math.abs(item.scale.y) * (logicalHeight / logicalWidth);
 
-  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
     return undefined;
   }
 
@@ -145,7 +168,12 @@ function activeToggleAccents(
 ): Item[] {
   if (item.mode !== "toggle" || item.enabled !== true) return [];
 
-  const geometry = getImageGeometry(plate, sceneDpi);
+  const geometry = getImageGeometry(
+    plate,
+    sceneDpi,
+    PLATE_LOGICAL_WIDTH,
+    PLATE_LOGICAL_HEIGHT,
+  );
   if (!geometry) return [];
 
   const scale = geometry.height / VALUE_ITEM_HEIGHT;
@@ -205,7 +233,12 @@ function activeIconUnitAccents(
     const frame = itemMap.get(frameId);
     if (!frame) continue;
 
-    const geometry = getImageGeometry(frame, sceneDpi);
+    const geometry = getImageGeometry(
+      frame,
+      sceneDpi,
+      UNIT_LOGICAL_SIZE,
+      UNIT_LOGICAL_SIZE,
+    );
     if (!geometry) continue;
 
     const scale = geometry.height / ICON_UNIT_SIZE;
