@@ -1,6 +1,6 @@
 # Stats module — carte du code et état d’implémentation
 
-> Mise à jour : **5 septembre 2026**.
+> Mise à jour : **14 septembre 2026**.
 
 Le module Stats gère les trackers personnalisables et le sous-système Conditions attachés aux tokens Owlbear Rodeo.
 
@@ -76,6 +76,7 @@ statConditionOverlayObrSync.ts
 statTokenOverlayObrSync.ts
 statTokenOverlayObrSyncV12.ts
 statTokenOverlayObrSyncV17.ts
+statTokenOverlayObrSyncV18.ts
 ```
 
 ## Surfaces runtime
@@ -216,10 +217,10 @@ services/statTokenOverlayObrSync.ts
 Renderer actif :
 
 ```text
-statTokenOverlayObrSyncV17
+statTokenOverlayObrSyncV18
 ```
 
-État : **V17.6**.
+État : **V18.0**.
 
 ### Principe de rendu
 
@@ -257,24 +258,34 @@ sans modifier leur centre : les icônes intégrées occupent désormais 84 à 86
 de leur zone et les unités répétées 76 %. Le voile inactif suit ces nouvelles
 dimensions.
 
+La cinquième étape différencie davantage les quatre familles de la maquette sans
+toucher aux objets Text déjà validés. Les valeurs simples et les barres gardent
+le liseré métallique doré. Les toggles actifs reçoivent une teinte et un reflet
+dans leur couleur d'accent, tandis que les toggles inactifs restent désaturés.
+Les unités répétées actives reçoivent aussi un halo/liseré de leur couleur
+d'accent ; les unités inactives conservent leur rendu grisé.
+
 ### Règle Owlbear critique
 
 Ne pas muter les objets `Text` de scène après leur création.
 
 Les tests ont montré que modifier leur layer ou leur zIndex après `addItems` peut les faire disparaître.
 
-V17.6 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
+V18.0 conserve donc les `Text` créés par V12 tels quels. V17 ordonne les objets
+graphiques existants, puis V18 ajoute uniquement ses accents graphiques derrière
+les icônes et les textes :
 
 ```text
 Text natif non muté
-mute shape      -5
-icône PNG       -10
-reflet jauge    -12
-remplissage     -14
-lueur jauge     -16
-relief jauge    -18
-fond de jauge   -20
-plaque/unité    -30
+mute shape          -5
+icône PNG           -10
+reflet jauge        -12
+remplissage         -14
+lueur jauge         -16
+relief jauge        -18
+fond de jauge       -20
+accent sémantique   -24
+plaque/unité        -30
 ```
 
 Tout reste sur `ATTACHMENT`.
@@ -289,6 +300,7 @@ Le Stat Dock n’est pas final tant que ces points ne sont pas validés en room 
 - zoom stable ;
 - texte dans les plaques ;
 - barres correctement contenues ;
+- accents toggle/icon correctement placés ;
 - tailles 0,5 / 1 / 2 / 3 cases ;
 - top/bottom ;
 - public/private/gm ;
