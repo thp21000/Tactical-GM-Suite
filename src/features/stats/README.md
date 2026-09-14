@@ -219,7 +219,7 @@ Renderer actif :
 statTokenOverlayObrSyncV17
 ```
 
-État : **V17.5**.
+État : **V17.6**.
 
 ### Principe de rendu
 
@@ -252,13 +252,18 @@ de profondeur à leur jauge avec un contour doré, un reflet du fond, une ombre
 interne, une lueur colorée et un reflet sur le remplissage. Elle reste composée
 uniquement de formes rectangulaires déjà prises en charge par Owlbear.
 
+La quatrième étape augmente la présence visuelle des PNG dans leur emplacement
+sans modifier leur centre : les icônes intégrées occupent désormais 84 à 86 %
+de leur zone et les unités répétées 76 %. Le voile inactif suit ces nouvelles
+dimensions.
+
 ### Règle Owlbear critique
 
 Ne pas muter les objets `Text` de scène après leur création.
 
 Les tests ont montré que modifier leur layer ou leur zIndex après `addItems` peut les faire disparaître.
 
-V17.5 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
+V17.6 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
 
 ```text
 Text natif non muté

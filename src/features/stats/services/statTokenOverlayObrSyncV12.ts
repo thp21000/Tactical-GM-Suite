@@ -615,11 +615,11 @@ function iconTile(
     `${baseId}-icon`,
     item,
     { x: position.x + size / 2, y: position.y + size / 2 },
-    size * 0.72,
+    size * (item.mode === "bar" ? 0.84 : 0.86),
   );
   if (icon) result.push(icon);
   if (!active) {
-    result.push(shapeItem(ctx, `${baseId}-mute`, { x: position.x + size * 0.18, y: position.y + size * 0.18 }, size * 0.64, size * 0.64, "#888b91", 0.56));
+    result.push(shapeItem(ctx, `${baseId}-mute`, { x: position.x + size * 0.12, y: position.y + size * 0.12 }, size * 0.76, size * 0.76, "#888b91", 0.56));
   }
   return result;
 }
@@ -724,10 +724,10 @@ function iconUnitItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCe
     // Dans le mode « icône seule », le cadre représente l'unité elle-même.
     // Les icônes intégrées aux plaques des autres modes restent sans cadre.
     result.push(unitFrameItem(ctx, `${unitId}-frame`, { x, y }, size, !active));
-    const icon = iconItem(ctx, `${unitId}-icon`, item, { x: x + size / 2, y: y + size / 2 }, size * 0.7);
+    const icon = iconItem(ctx, `${unitId}-icon`, item, { x: x + size / 2, y: y + size / 2 }, size * 0.76);
     if (icon) result.push(icon);
     if (!active) {
-      result.push(shapeItem(ctx, `${unitId}-mute`, { x: x + size * 0.16, y: y + size * 0.16 }, size * 0.68, size * 0.68, "#85888e", 0.58));
+      result.push(shapeItem(ctx, `${unitId}-mute`, { x: x + size * 0.12, y: y + size * 0.12 }, size * 0.76, size * 0.76, "#85888e", 0.58));
     }
   }
   return result;
