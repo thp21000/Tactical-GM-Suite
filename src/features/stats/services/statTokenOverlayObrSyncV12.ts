@@ -126,7 +126,7 @@ const COLOR_TEXT = "#f5efe3";
 const COLOR_VALUE = "#fff0cf";
 const COLOR_MUTED = "#aaacb1";
 const COLOR_TRACK = "#080b11";
-const COLOR_TRACK_BORDER = "#635b52";
+const COLOR_TRACK_BORDER = "#8c795b";
 const COLOR_GOLD = "#d3ad6b";
 
 const PLATE_ASSET = "assets/stats/stat-plate.svg?v=0.3.54";
@@ -679,22 +679,30 @@ function barItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCell, o
   const valueX = x + cell.width - BAR_RIGHT_PADDING * s - valueWidth;
   const nameWidth = Math.max(14 * s, valueX - TEXT_GAP * s - contentX);
   result.push(
-    textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: contentX, y: y + 5 * s }, nameWidth, 19 * s, 15.5 * s, COLOR_TEXT, 650),
-    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: y + 5 * s }, valueWidth, 19 * s, 19 * s, COLOR_VALUE, 760, "RIGHT"),
+    textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: contentX, y: y + 7 * s }, nameWidth, 19 * s, 15.5 * s, COLOR_TEXT, 650),
+    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: y + 7 * s }, valueWidth, 19 * s, 19 * s, COLOR_VALUE, 760, "RIGHT"),
   );
 
   const trackX = contentX;
-  const trackY = y + 31 * s;
+  const trackY = y + 34 * s;
   const trackWidth = Math.max(30 * s, contentWidth);
-  const trackHeight = 9 * s;
+  const trackHeight = 10 * s;
   const max = Math.max(0, item.max ?? 0);
   const current = Math.max(0, item.current ?? 0);
   const ratio = max > 0 ? Math.min(1, current / max) : 0;
 
   result.push(shapeItem(ctx, `${baseId}-track`, { x: trackX, y: trackY }, trackWidth, trackHeight, COLOR_TRACK, 0.98, COLOR_TRACK_BORDER, 0.95, Math.max(1, 1.2 * s)));
+  result.push(
+    shapeItem(ctx, `${baseId}-track-highlight`, { x: trackX + 2 * s, y: trackY + 1.5 * s }, Math.max(1, trackWidth - 4 * s), 1.1 * s, "#ffffff", 0.13),
+    shapeItem(ctx, `${baseId}-track-shadow`, { x: trackX + 2 * s, y: trackY + trackHeight - 2.4 * s }, Math.max(1, trackWidth - 4 * s), 1.2 * s, "#000000", 0.72),
+  );
   if (ratio > 0) {
-    result.push(shapeItem(ctx, `${baseId}-fill`, { x: trackX + 1.4 * s, y: trackY + 1.4 * s }, Math.max(1.5 * s, (trackWidth - 2.8 * s) * ratio), trackHeight - 2.8 * s, item.accentColor, 0.98));
-    result.push(shapeItem(ctx, `${baseId}-fill-shine`, { x: trackX + 2.3 * s, y: trackY + 2.1 * s }, Math.max(1, (trackWidth - 4.6 * s) * ratio), 1.2 * s, "#ffffff", 0.24));
+    const fillWidth = Math.max(1.5 * s, (trackWidth - 3.2 * s) * ratio);
+    result.push(
+      shapeItem(ctx, `${baseId}-fill-glow`, { x: trackX + 1.1 * s, y: trackY + 1.1 * s }, fillWidth + 1 * s, trackHeight - 2.2 * s, item.accentColor, 0.28),
+      shapeItem(ctx, `${baseId}-fill`, { x: trackX + 1.6 * s, y: trackY + 1.6 * s }, fillWidth, trackHeight - 3.2 * s, item.accentColor, 0.98),
+      shapeItem(ctx, `${baseId}-fill-shine`, { x: trackX + 2.5 * s, y: trackY + 2.2 * s }, Math.max(1, fillWidth - 1.8 * s), 1.25 * s, "#ffffff", 0.38),
+    );
   }
   return result;
 }

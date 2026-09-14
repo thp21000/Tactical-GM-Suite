@@ -219,7 +219,7 @@ Renderer actif :
 statTokenOverlayObrSyncV17
 ```
 
-État : **V17.4**.
+État : **V17.5**.
 
 ### Principe de rendu
 
@@ -247,13 +247,18 @@ profond, des liserés métalliques plus lumineux et une lueur dorée construite
 uniquement avec les primitives SVG déjà validées. Les champs numériques ont
 aussi une largeur minimale afin d'interdire leur retour à la ligne.
 
+La troisième étape descend le libellé des indicateurs à maximum et donne plus
+de profondeur à leur jauge avec un contour doré, un reflet du fond, une ombre
+interne, une lueur colorée et un reflet sur le remplissage. Elle reste composée
+uniquement de formes rectangulaires déjà prises en charge par Owlbear.
+
 ### Règle Owlbear critique
 
 Ne pas muter les objets `Text` de scène après leur création.
 
 Les tests ont montré que modifier leur layer ou leur zIndex après `addItems` peut les faire disparaître.
 
-V17.4 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
+V17.5 conserve donc les `Text` créés par V12 tels quels et recule uniquement les objets graphiques :
 
 ```text
 Text natif non muté
@@ -261,6 +266,8 @@ mute shape      -5
 icône PNG       -10
 reflet jauge    -12
 remplissage     -14
+lueur jauge     -16
+relief jauge    -18
 fond de jauge   -20
 plaque/unité    -30
 ```

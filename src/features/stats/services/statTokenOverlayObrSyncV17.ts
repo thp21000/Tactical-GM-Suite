@@ -56,6 +56,9 @@ function getPresentation(item: Item, sourceItemId: string): DockPresentation | u
     if (element.endsWith("-mute")) return { zIndex: -5 };
     if (element.endsWith("-fill-shine")) return { zIndex: -12 };
     if (element.endsWith("-fill")) return { zIndex: -14 };
+    if (element.endsWith("-fill-glow")) return { zIndex: -16 };
+    if (element.endsWith("-track-highlight")) return { zIndex: -18 };
+    if (element.endsWith("-track-shadow")) return { zIndex: -18 };
     if (element.endsWith("-track")) return { zIndex: -20 };
     return { zIndex: -20 };
   }
