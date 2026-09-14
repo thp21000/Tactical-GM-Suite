@@ -103,15 +103,21 @@ const TOKEN_GAP = 9;
 const AUDIENCE_GAP = 2;
 const ITEM_GAP = 5;
 const ROW_GAP = 5;
-const VALUE_WIDTH = 118;
-const TOGGLE_WIDTH = 148;
 const ITEM_HEIGHT = 38;
-const BAR_WIDTH = 198;
 const BAR_HEIGHT = 54;
 const ICON_UNIT_SIZE = 34;
 const ICON_UNIT_GAP = 4;
 const OVERFLOW_WIDTH = 48;
 const OVERFLOW_HEIGHT = 28;
+
+const VALUE_ICON_SLOT = 39;
+const BAR_ICON_SLOT = 51;
+const VALUE_RIGHT_PADDING = 8;
+const BAR_RIGHT_PADDING = 9;
+const TEXT_GAP = 8;
+const MIN_VALUE_CONTENT_WIDTH = 34;
+const MIN_TOGGLE_CONTENT_WIDTH = 42;
+const MIN_BAR_CONTENT_WIDTH = 76;
 
 const COLOR_TEXT = "#f4efe4";
 const COLOR_VALUE = "#fff5dc";
@@ -122,8 +128,6 @@ const COLOR_GOLD = "#d3ad6b";
 
 const PLATE_ASSET = "assets/stats/stat-plate.svg";
 const PLATE_MUTED_ASSET = "assets/stats/stat-plate-muted.svg";
-const UNIT_ASSET = "assets/stats/stat-unit.svg";
-const UNIT_MUTED_ASSET = "assets/stats/stat-unit-muted.svg";
 
 function createResult(
   action: StatOverlayObrManualAction,
@@ -240,8 +244,44 @@ function iconUnitCount(item: StatTokenSyncItem): number {
   return Math.min(6, Math.max(1, Math.round(item.max ?? 1)));
 }
 
+function shortName(value: string, max = 11): string {
+  const trimmed = value.trim();
+  return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max - 1)}…`;
+}
+
+function displayValue(item: StatTokenSyncItem): string {
+  if (item.visualType === "counter" || item.visualType === "readonly") {
+    return String(item.value ?? item.current ?? 0);
+  }
+  if (item.visualType === "bar") return `${item.current ?? 0}/${item.max ?? 0}`;
+  return "";
+}
+
+function estimatedTextWidth(value: string, fontSize: number): number {
+  const units = Array.from(value).reduce((width, character) => {
+    if (/\s/u.test(character)) return width + 0.32;
+    if (/[MW@%]/u.test(character)) return width + 0.86;
+    if (/[ilI1|.,:;!'`]/u.test(character)) return width + 0.3;
+    if (/[A-ZÀ-ÖØ-Þ]/u.test(character)) return width + 0.66;
+    if (/[0-9]/u.test(character)) return width + 0.56;
+    return width + 0.54;
+  }, 0);
+  return Math.ceil(units * fontSize);
+}
+
 function cellSize(item: StatTokenSyncItem, scale: number) {
-  if (item.mode === "bar") return { width: BAR_WIDTH * scale, height: BAR_HEIGHT * scale };
+  if (item.mode === "bar") {
+    const nameWidth = estimatedTextWidth(shortName(item.name, 16), 15);
+    const valueWidth = estimatedTextWidth(displayValue(item), 19);
+    const contentWidth = Math.max(
+      MIN_BAR_CONTENT_WIDTH,
+      nameWidth + TEXT_GAP + valueWidth,
+    );
+    return {
+      width: (BAR_ICON_SLOT + contentWidth + BAR_RIGHT_PADDING) * scale,
+      height: BAR_HEIGHT * scale,
+    };
+  }
   if (item.mode === "icon") {
     const units = iconUnitCount(item);
     return {
@@ -249,8 +289,19 @@ function cellSize(item: StatTokenSyncItem, scale: number) {
       height: ICON_UNIT_SIZE * scale,
     };
   }
+
+  const name = shortName(item.name, item.mode === "toggle" ? 16 : 11);
+  const nameFontSize = item.mode === "toggle" ? 17 : 15.5;
+  const nameWidth = estimatedTextWidth(name, nameFontSize);
+  const valueWidth = item.mode === "toggle"
+    ? 0
+    : estimatedTextWidth(displayValue(item), 20);
+  const contentWidth = item.mode === "toggle"
+    ? Math.max(MIN_TOGGLE_CONTENT_WIDTH, nameWidth)
+    : Math.max(MIN_VALUE_CONTENT_WIDTH, nameWidth + TEXT_GAP + valueWidth);
+
   return {
-    width: (item.mode === "toggle" ? TOGGLE_WIDTH : VALUE_WIDTH) * scale,
+    width: (VALUE_ICON_SLOT + contentWidth + VALUE_RIGHT_PADDING) * scale,
     height: ITEM_HEIGHT * scale,
   };
 }
@@ -402,16 +453,6 @@ function plateItem(
   return imageFrame(ctx, id, muted ? PLATE_MUTED_ASSET : PLATE_ASSET, 320, 96, position, width, height);
 }
 
-function unitFrameItem(
-  ctx: RenderContext,
-  id: string,
-  position: Vector2,
-  size: number,
-  muted = false,
-): Item {
-  return imageFrame(ctx, id, muted ? UNIT_MUTED_ASSET : UNIT_ASSET, 96, 96, position, size, size);
-}
-
 /**
  * Les Label Owlbear sont rendus en screen-space et gardent donc une taille
  * d'écran indépendante du zoom. Le Stat Dock doit au contraire se comporter
@@ -535,19 +576,6 @@ function shapeItem(
     .build();
 }
 
-function shortName(value: string, max = 11): string {
-  const trimmed = value.trim();
-  return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max - 1)}…`;
-}
-
-function displayValue(item: StatTokenSyncItem): string {
-  if (item.visualType === "counter" || item.visualType === "readonly") {
-    return String(item.value ?? item.current ?? 0);
-  }
-  if (item.visualType === "bar") return `${item.current ?? 0}/${item.max ?? 0}`;
-  return "";
-}
-
 function iconTile(
   ctx: RenderContext,
   baseId: string,
@@ -556,7 +584,7 @@ function iconTile(
   size: number,
   active = true,
 ): Item[] {
-  const result: Item[] = [unitFrameItem(ctx, `${baseId}-tile`, position, size, !active)];
+  const result: Item[] = [];
   const icon = iconItem(
     ctx,
     `${baseId}-icon`,
@@ -588,26 +616,22 @@ function valueOrToggleItems(
   const tilePos = { x: x + 4 * s, y: y + (cell.height - tileSize) / 2 };
   result.push(...iconTile(ctx, baseId, item, tilePos, tileSize, active));
 
-  // Fine ligne de couleur : elle reprend l'accent de l'icône sans transformer
-  // toute la plaque en aplat coloré.
-  if (active) {
-    result.push(shapeItem(ctx, `${baseId}-accent`, { x: x + 38 * s, y: y + cell.height - 6 * s }, Math.max(8 * s, cell.width - 46 * s), 2.2 * s, item.accentColor, 0.92));
-  }
-
-  const textX = x + 39 * s;
+  const textX = x + VALUE_ICON_SLOT * s;
   const textY = y + 4 * s;
   const textHeight = cell.height - 8 * s;
 
   if (item.mode === "toggle") {
-    result.push(textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: textX, y: textY }, cell.width - 46 * s, textHeight, 17 * s, active ? COLOR_TEXT : COLOR_MUTED, active ? 700 : 580));
+    result.push(textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: textX, y: textY }, cell.width - (VALUE_ICON_SLOT + VALUE_RIGHT_PADDING) * s, textHeight, 17 * s, active ? COLOR_TEXT : COLOR_MUTED, active ? 700 : 580));
     return result;
   }
 
-  const valueWidth = 31 * s;
-  const nameWidth = Math.max(12 * s, cell.width - 46 * s - valueWidth);
+  const value = displayValue(item);
+  const valueWidth = estimatedTextWidth(value, 20) * s;
+  const valueX = x + cell.width - VALUE_RIGHT_PADDING * s - valueWidth;
+  const nameWidth = Math.max(12 * s, valueX - TEXT_GAP * s - textX);
   result.push(
     textItem(ctx, `${baseId}-name`, shortName(item.name), { x: textX, y: textY }, nameWidth, textHeight, 15.5 * s, COLOR_TEXT, 600),
-    textItem(ctx, `${baseId}-value`, displayValue(item), { x: x + cell.width - valueWidth - 8 * s, y: textY }, valueWidth, textHeight, 20 * s, COLOR_VALUE, 780, "RIGHT"),
+    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: textY }, valueWidth, textHeight, 20 * s, COLOR_VALUE, 780, "RIGHT"),
   );
   return result;
 }
@@ -623,11 +647,15 @@ function barItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCell, o
   const tilePos = { x: x + 6 * s, y: y + (cell.height - tileSize) / 2 };
   result.push(...iconTile(ctx, baseId, item, tilePos, tileSize, true));
 
-  const contentX = x + 51 * s;
-  const contentWidth = cell.width - 60 * s;
+  const contentX = x + BAR_ICON_SLOT * s;
+  const contentWidth = cell.width - (BAR_ICON_SLOT + BAR_RIGHT_PADDING) * s;
+  const value = displayValue(item);
+  const valueWidth = estimatedTextWidth(value, 19) * s;
+  const valueX = x + cell.width - BAR_RIGHT_PADDING * s - valueWidth;
+  const nameWidth = Math.max(14 * s, valueX - TEXT_GAP * s - contentX);
   result.push(
-    textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: contentX, y: y + 5 * s }, Math.max(14 * s, contentWidth - 50 * s), 18 * s, 15 * s, COLOR_TEXT, 650),
-    textItem(ctx, `${baseId}-value`, displayValue(item), { x: x + cell.width - 55 * s, y: y + 5 * s }, 46 * s, 18 * s, 19 * s, COLOR_VALUE, 800, "RIGHT"),
+    textItem(ctx, `${baseId}-name`, shortName(item.name, 16), { x: contentX, y: y + 5 * s }, nameWidth, 18 * s, 15 * s, COLOR_TEXT, 650),
+    textItem(ctx, `${baseId}-value`, value, { x: valueX, y: y + 5 * s }, valueWidth, 18 * s, 19 * s, COLOR_VALUE, 800, "RIGHT"),
   );
 
   const trackX = contentX;
@@ -660,7 +688,6 @@ function iconUnitItems(ctx: RenderContext, item: StatTokenSyncItem, cell: DockCe
     const active = index < current;
     const x = startX + index * (size + gap);
     const unitId = `${baseId}-unit-${index}`;
-    result.push(unitFrameItem(ctx, `${unitId}-frame`, { x, y }, size, !active));
     const icon = iconItem(ctx, `${unitId}-icon`, item, { x: x + size / 2, y: y + size / 2 }, size * 0.7);
     if (icon) result.push(icon);
     if (!active) {
